@@ -1,6 +1,6 @@
 #include "../include/vulkan_absraction.h"
 
-void vk::abstraction::get_queue_family_properties(const VkPhysicalDevice& device, std::vector<VkQueueFamilyProperties>& queue_families)
+void vka::get_queue_family_properties(const VkPhysicalDevice& device, std::vector<VkQueueFamilyProperties>& queue_families)
 {
 	queue_families.clear();
 
@@ -23,9 +23,9 @@ bool queue_family_has_count(const VkQueueFamilyProperties& properties, uint32_t 
 	return properties.queueCount >= req_count;
 }
 
-vk::abstraction::QueueFamilyError vk::abstraction::find_suited_queue_family(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority, size_t& index)
+vka::QueueFamilyError vka::find_suited_queue_family(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority, size_t& index)
 {
-	using namespace vk::abstraction;
+	using namespace vka;
 
 	if (begin >= queue_families.size()) return VKA_QUEUE_FAMILY_ERROR_INVALID_PARAMETER;
 
@@ -94,9 +94,9 @@ vk::abstraction::QueueFamilyError vk::abstraction::find_suited_queue_family(cons
 	return VKA_QUEUE_FAMILY_ERROR_NONE;
 }
 
-const char* vk::abstraction::queue_family_strerror(QueueFamilyError error)
+const char* vka::queue_family_strerror(QueueFamilyError error)
 {
-	using namespace vk::abstraction;
+	using namespace vka;
 
 	switch (error)
 	{
@@ -113,7 +113,7 @@ const char* vk::abstraction::queue_family_strerror(QueueFamilyError error)
 	}
 }
 
-bool vk::abstraction::validate_queue_families(const std::vector<VkQueueFamilyProperties>& queue_families, const std::vector<QueueInfo>& queue_infos)
+bool vka::validate_queue_families(const std::vector<VkQueueFamilyProperties>& queue_families, const std::vector<QueueInfo>& queue_infos)
 {
 	std::vector<QueueInfo> maximum_queue_infos;
 	for (size_t i = 0; i < queue_families.size(); i++)
@@ -134,7 +134,7 @@ bool vk::abstraction::validate_queue_families(const std::vector<VkQueueFamilyPro
 	return true;
 }
 
-bool vk::abstraction::is_device_layer_supported(VkPhysicalDevice device, const char* layer_name, VkLayerProperties* _property)
+bool vka::is_device_layer_supported(VkPhysicalDevice device, const char* layer_name, VkLayerProperties* _property)
 {
 	uint32_t n_layers;
 	VkResult res = vkEnumerateDeviceLayerProperties(device, &n_layers, nullptr);	// get number of layers
@@ -157,7 +157,7 @@ bool vk::abstraction::is_device_layer_supported(VkPhysicalDevice device, const c
 	return false;
 }
 
-bool vk::abstraction::are_device_layers_supported(VkPhysicalDevice device, std::vector<const char*> layer_names, std::vector<VkLayerProperties>* _properties)
+bool vka::are_device_layers_supported(VkPhysicalDevice device, std::vector<const char*> layer_names, std::vector<VkLayerProperties>* _properties)
 {
 	uint32_t n_layers;
 	VkResult res = vkEnumerateDeviceLayerProperties(device, &n_layers, nullptr);	// get number of layers
@@ -191,7 +191,7 @@ bool vk::abstraction::are_device_layers_supported(VkPhysicalDevice device, std::
 	return true;
 }
 
-bool vk::abstraction::is_device_extension_supported(VkPhysicalDevice device, const char* extension_name, VkExtensionProperties* _property)
+bool vka::is_device_extension_supported(VkPhysicalDevice device, const char* extension_name, VkExtensionProperties* _property)
 {
 	uint32_t n_extensions;
 	VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &n_extensions, nullptr);	// get number of extensions
@@ -214,7 +214,7 @@ bool vk::abstraction::is_device_extension_supported(VkPhysicalDevice device, con
 	return false;
 }
 
-bool vk::abstraction::are_device_extensions_supported(VkPhysicalDevice device, std::vector<const char*> extension_names, std::vector<VkExtensionProperties>* _properties)
+bool vka::are_device_extensions_supported(VkPhysicalDevice device, std::vector<const char*> extension_names, std::vector<VkExtensionProperties>* _properties)
 {
 	uint32_t n_extensions;
 	VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &n_extensions, nullptr);	// get number of layers

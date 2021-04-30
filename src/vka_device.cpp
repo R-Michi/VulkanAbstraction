@@ -1,7 +1,7 @@
 #include "../include/vulkan_absraction.h"
 #include <string>
 
-void vk::abstraction::get_physical_devices(const VkInstance& instance, std::vector<VkPhysicalDevice>& physical_devices)
+void vka::get_physical_devices(const VkInstance& instance, std::vector<VkPhysicalDevice>& physical_devices)
 {
 	physical_devices.clear();
 
@@ -14,7 +14,7 @@ void vk::abstraction::get_physical_devices(const VkInstance& instance, std::vect
 		physical_devices.push_back(devices[i]);
 }
 
-void vk::abstraction::get_physical_device_properties(const std::vector<VkPhysicalDevice>& devices, std::vector<VkPhysicalDeviceProperties>& properties)
+void vka::get_physical_device_properties(const std::vector<VkPhysicalDevice>& devices, std::vector<VkPhysicalDeviceProperties>& properties)
 {
 	properties.clear();
 	for (const VkPhysicalDevice& device : devices)
@@ -64,22 +64,6 @@ bool device_has_image_usage_flags(const VkSurfaceCapabilitiesKHR& surface_capabi
 	return ((surface_capabilities.supportedUsageFlags & flags) == flags);
 }
 
-bool device_has_color_formats(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkFormat>& formats)
-{
-	for (VkFormat format : formats)
-	{
-		bool found = false;
-		for (size_t i = 0; i < n; i++)
-		{
-			if (surface_format[i].format == format)
-				found = true;
-		}
-		if (!found)
-			return false;
-	}
-	return true;
-}
-
 bool device_has_color_spaces(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkColorSpaceKHR> color_spaces)
 {
 	for (VkColorSpaceKHR space : color_spaces)
@@ -88,6 +72,22 @@ bool device_has_color_spaces(const VkSurfaceFormatKHR* surface_format, size_t n,
 		for (size_t i = 0; i < n; i++)
 		{
 			if (surface_format[i].colorSpace == space)
+				found = true;
+		}
+		if (!found)
+			return false;
+	}
+	return true;
+}
+
+bool device_has_color_formats(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkFormat>& formats)
+{
+	for (VkFormat format : formats)
+	{
+		bool found = false;
+		for (size_t i = 0; i < n; i++)
+		{
+			if (surface_format[i].format == format)
 				found = true;
 		}
 		if (!found)
@@ -128,11 +128,11 @@ bool device_has_queue_flags(const VkQueueFamilyProperties* queue_family_properti
 	return true;
 }
 
-vk::abstraction::PhysicalDeviceError vk::abstraction::find_suited_physical_device(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter, size_t& index)
+vka::PhysicalDeviceError vka::find_suited_physical_device(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter, size_t& index)
 {
 	if (begin >= devices.size()) return VKA_PYHSICAL_DEVICE_ERROR_INVALID_PARAMETER;
 
-	using namespace vk::abstraction;
+	using namespace vka;
 	PhysicalDeviceError error;
 	uint32_t error_mask = 0;
 
@@ -288,9 +288,9 @@ vk::abstraction::PhysicalDeviceError vk::abstraction::find_suited_physical_devic
 	return VKA_PYHSICAL_DEVICE_ERROR_NONE;
 }
 
-const char* vk::abstraction::physical_device_strerror(vk::abstraction::PhysicalDeviceError error)
+const char* vka::physical_device_strerror(vka::PhysicalDeviceError error)
 {
-	using namespace vk::abstraction;
+	using namespace vka;
 
 	switch (error)
 	{

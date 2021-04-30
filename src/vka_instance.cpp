@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdexcept>
 
-bool vk::abstraction::is_instance_layer_supported(const char* layer_name, VkLayerProperties* _property)
+bool vka::is_instance_layer_supported(const char* layer_name, VkLayerProperties* _property)
 {
 	uint32_t n_layers;
 	VkResult res = vkEnumerateInstanceLayerProperties(&n_layers, nullptr);	// get number of layers
@@ -25,7 +25,7 @@ bool vk::abstraction::is_instance_layer_supported(const char* layer_name, VkLaye
 	return false;
 }
 
-bool vk::abstraction::are_instance_layers_supported(std::vector<const char*> layer_names, std::vector<VkLayerProperties>* _properties)
+bool vka::are_instance_layers_supported(std::vector<const char*> layer_names, std::vector<VkLayerProperties>* _properties)
 {
 	uint32_t n_layers;
 	VkResult res = vkEnumerateInstanceLayerProperties(&n_layers, nullptr);	// get number of layers
@@ -59,7 +59,7 @@ bool vk::abstraction::are_instance_layers_supported(std::vector<const char*> lay
 	return true;
 }
 
-bool vk::abstraction::is_instance_extension_supported(const char* extension_name, VkExtensionProperties* _property)
+bool vka::is_instance_extension_supported(const char* extension_name, VkExtensionProperties* _property)
 {
 	uint32_t n_extensions;
 	VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &n_extensions, nullptr);	// get number of extensions
@@ -82,7 +82,7 @@ bool vk::abstraction::is_instance_extension_supported(const char* extension_name
 	return false;
 }
 
-bool vk::abstraction::are_instance_extensions_supported(std::vector<const char*> extension_names, std::vector<VkExtensionProperties>* _properties)
+bool vka::are_instance_extensions_supported(std::vector<const char*> extension_names, std::vector<VkExtensionProperties>* _properties)
 {
 	uint32_t n_extensions;
 	VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &n_extensions, nullptr);	// get number of layers
@@ -116,7 +116,7 @@ bool vk::abstraction::are_instance_extensions_supported(std::vector<const char*>
 	return true;
 }
 
-void vk::abstraction::get_requiered_glfw_extensions(std::vector<const char*>& glfw_extensions)
+void vka::get_requiered_glfw_extensions(std::vector<const char*>& glfw_extensions)
 {
 	if (!glfwVulkanSupported())
 		throw std::runtime_error("Tried to read requiered GLFW extensions, but vulkan is not supported!");

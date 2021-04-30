@@ -1,6 +1,6 @@
 #include "../include/vulkan_absraction.h"
 
-VkResult vk::abstraction::setup_swapchain(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, std::vector<VkImageView>& image_views)
+VkResult vka::setup_swapchain(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, std::vector<VkImageView>& image_views)
 {
 	VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain);
 	if (result != VK_SUCCESS)

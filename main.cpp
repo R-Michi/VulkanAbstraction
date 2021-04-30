@@ -1,3 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include "VulkanApp.h"
 #include <iostream>
 
@@ -11,7 +12,11 @@ int main()
 	}
 	catch (std::runtime_error& e)
 	{
-		std::cout << "Runtime error ocurred!\nWhat: " << e.what() << std::endl;
+		std::cerr << "Runtime error ocurred!\nWhat: " << e.what() << std::endl;
+	}
+	catch (std::invalid_argument& e)
+	{
+		std::cerr << "Invalid argument error occured!\nWhat: " << e.what() << std::endl;
 	}
 	return 0;
 }
