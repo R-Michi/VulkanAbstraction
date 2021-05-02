@@ -756,9 +756,11 @@ void VulkanApp::create_textures(void)
 	this->texture.set_image_type(VK_IMAGE_TYPE_2D);
 	this->texture.set_image_format(VK_FORMAT_R8G8B8A8_UNORM);
 	this->texture.set_image_extent({ static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1 });
-	this->texture.set_image_mip_levels(1);
 	this->texture.set_image_array_layers(1);
 	this->texture.set_image_queue_families(this->graphics_queue_info.queueFamilyIndex);
+
+	this->texture.mipmap_generate(true);
+	this->texture.mipmap_filter(VK_FILTER_LINEAR);
 
 	this->texture.set_view_type(VK_IMAGE_VIEW_TYPE_2D);
 	this->texture.set_view_format(VK_FORMAT_R8G8B8A8_UNORM);
@@ -767,14 +769,14 @@ void VulkanApp::create_textures(void)
 	
 	this->texture.set_sampler_min_filter(VK_FILTER_LINEAR);
 	this->texture.set_sampler_mag_filter(VK_FILTER_LINEAR);
-	this->texture.set_sampler_mipmap_mode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+	this->texture.set_sampler_mipmap_mode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
 	this->texture.set_sampler_address_mode(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+	this->texture.set_sampler_lod(0.0f, static_cast<float>(this->texture.mip_levels()));
 	this->texture.set_sampler_mip_lod_bias(0.0f);
 	this->texture.set_sampler_anisotropy_enable(false);
 	this->texture.set_sampler_max_anisotropy(0.0f);
 	this->texture.set_sampler_compare_enable(false);
 	this->texture.set_sampler_compare_op(VK_COMPARE_OP_ALWAYS);
-	this->texture.set_sampler_lod(0.0f, 1.0f);
 	this->texture.set_sampler_border_color(VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
 	this->texture.set_sampler_unnormalized_coordinates(false);
 

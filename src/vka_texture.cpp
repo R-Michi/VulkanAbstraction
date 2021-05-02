@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+#include <initializer_list>
+#include <algorithm>
 
 vka::Texture::Texture(void) noexcept
 {
@@ -21,6 +23,8 @@ vka::Texture::Texture(void) noexcept
 	this->_memory			= VK_NULL_HANDLE;
 	this->_view				= VK_NULL_HANDLE;
 	this->_sampler			= VK_NULL_HANDLE;
+	this->_mipmap			= false;
+	this->_mipfilter		= VK_FILTER_NEAREST;
 
 	this->_size				= 0;
 	this->_px_count			= 0;
@@ -48,8 +52,9 @@ void vka::Texture::_default_img_create_info(void) noexcept
 	this->_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	this->_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	this->_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	this->_image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	this->_image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	this->_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	this->_image_create_info.mipLevels = 1;
 }
 
 void vka::Texture::_default_view_create_info(void) noexcept
@@ -83,11 +88,6 @@ void vka::Texture::set_image_format(VkFormat format) noexcept
 void vka::Texture::set_image_extent(VkExtent3D extent) noexcept
 {
 	this->_image_create_info.extent = extent;
-}
-
-void vka::Texture::set_image_mip_levels(uint32_t levels) noexcept
-{
-	this->_image_create_info.mipLevels = levels;
 }
 
 void vka::Texture::set_image_array_layers(uint32_t layers) noexcept
@@ -227,6 +227,17 @@ void vka::Texture::set_queue(VkQueue queue) noexcept
 }
 
 
+void vka::Texture::mipmap_generate(bool generate) noexcept
+{
+	this->_mipmap = generate;
+}
+
+void vka::Texture::mipmap_filter(VkFilter filter) noexcept
+{
+	this->_mipfilter = filter;
+}
+
+
 VkResult vka::Texture::create(const void* pdata, size_t pixel_stride)
 {
 	if (this->_image != VK_NULL_HANDLE)
@@ -243,6 +254,14 @@ VkResult vka::Texture::create(const void* pdata, size_t pixel_stride)
 	const VkExtent3D& extent = this->_image_create_info.extent;
 	this->_size = extent.width * extent.height * extent.depth * pixel_stride;
 	this->_px_count = extent.width * extent.height * extent.depth;
+
+	// calculate mip levels
+	if (this->_mipmap)
+	{
+		std::initializer_list<uint32_t> list = { extent.width, extent.height, extent.depth };
+		this->_image_create_info.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(list)))) + 1;
+	}
+	
 
 	// create staging buffer for image
 	Buffer staging_buffer(this->_physical_device, this->_device);
@@ -290,12 +309,23 @@ VkResult vka::Texture::create(const void* pdata, size_t pixel_stride)
 	result = this->buffer_copy(staging_buffer.handle(), this->_image, 0, this->_image_create_info.arrayLayers, { 0,0,0 }, extent);
 	if (result != VK_SUCCESS) return result;
 
-	// change layout again that the shader can read the texture most efficient
-	result = this->transform_image_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	if (this->_mipmap)
+	{
+		// generate mipmaps and the image gets automatically transisioned to the VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL layout.
+		result = this->generate_mipmaps();
+	}
+	else
+	{
+		// change layout again that the shader can read the texture most efficient
+		// transision the whole image if no mipmaps should be generated
+		result = this->transform_image_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	}
 	if (result != VK_SUCCESS) return result;
 
 	// create view out of image
 	this->_view_create_info.image = this->_image;
+	this->_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	this->_view_create_info.subresourceRange.levelCount = this->_image_create_info.mipLevels;
 	result = vkCreateImageView(this->_device, &this->_view_create_info, nullptr, &this->_view);
 	if (result != VK_SUCCESS) return result;
 
@@ -354,6 +384,19 @@ size_t vka::Texture::size(void) const noexcept
 size_t vka::Texture::count(void) const noexcept
 {
 	return this->_px_count;
+}
+
+uint32_t vka::Texture::mip_levels(void) const noexcept
+{
+	const VkExtent3D& extent = this->_image_create_info.extent;
+	std::initializer_list<uint32_t> list = { extent.width, extent.height, extent.depth };
+
+	return (this->_mipmap) ? static_cast<uint32_t>(std::floor(std::log2(std::max(list)))) + 1 : 1;
+}
+
+uint32_t vka::Texture::array_layers(void) const noexcept
+{
+	return this->_image_create_info.arrayLayers;
 }
 
 VkResult vka::Texture::buffer_copy(VkBuffer buffer, VkImage image, uint32_t mip_level, uint32_t array_layers, VkOffset3D offset, VkExtent3D extent)
@@ -507,5 +550,134 @@ VkResult vka::Texture::transform_image_layout(VkImageLayout _old, VkImageLayout 
 	if (result != VK_SUCCESS) return result;
 
 	vkFreeCommandBuffers(this->_device, this->_command_pool, cmd_buffer_alloc_info.commandBufferCount, &command_buffer);
+	return VK_SUCCESS;
+}
+
+VkResult vka::Texture::generate_mipmaps(void)
+{
+	// check if mipmap filter operations are supported
+	VkFormatProperties format_properties = {};
+	vkGetPhysicalDeviceFormatProperties(this->_physical_device, this->_image_create_info.format, &format_properties);
+
+	if (this->_mipfilter == VK_FILTER_LINEAR && !(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+	{
+		std::stringstream ss;
+		ss << "The current image format (" << this->_image_create_info.format << ") does not support linear filtering on mipmaps.";
+		throw std::invalid_argument(ss.str());
+	}
+	else if (this->_mipfilter == VK_FILTER_CUBIC_IMG && !(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG))
+	{
+		std::stringstream ss;
+		ss << "The current image format (" << this->_image_create_info.format << ") does not support cubic filtering on mipmaps.";
+		throw std::invalid_argument(ss.str());
+	}
+	else
+	{
+		this->_mipfilter = VK_FILTER_NEAREST;
+	}
+
+	VkCommandBufferAllocateInfo cmd_buffer_alloc_info = {};
+	cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmd_buffer_alloc_info.pNext = nullptr;
+	cmd_buffer_alloc_info.commandPool = this->_command_pool;
+	cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cmd_buffer_alloc_info.commandBufferCount = 1;
+
+	VkCommandBuffer command_buffer;
+	VkResult result = vkAllocateCommandBuffers(this->_device, &cmd_buffer_alloc_info, &command_buffer);
+	if (result != VK_SUCCESS) return result;
+
+	VkCommandBufferBeginInfo begin_info = {};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.pNext = nullptr;
+	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	begin_info.pInheritanceInfo = nullptr;
+
+	result = vkBeginCommandBuffer(command_buffer, &begin_info);
+	if (result != VK_SUCCESS) return result;
+
+	VkImageMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.pNext = nullptr;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = this->_image;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = this->_image_create_info.arrayLayers;
+
+	VkExtent3D mip_extent = this->_image_create_info.extent;
+	for (uint32_t i = 1; i < this->_image_create_info.mipLevels; i++)
+	{
+		barrier.subresourceRange.baseMipLevel = i - 1;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+		vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		VkImageBlit blit = {};
+		blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blit.srcSubresource.mipLevel = i - 1;
+		blit.srcSubresource.baseArrayLayer = 0;
+		blit.srcSubresource.layerCount = this->_image_create_info.arrayLayers;
+		blit.srcOffsets[0] = { 0,0,0 };
+		blit.srcOffsets[1] = { static_cast<int32_t>(mip_extent.width), static_cast<int32_t>(mip_extent.height), static_cast<int32_t>(mip_extent.depth) };
+		blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blit.dstSubresource.mipLevel = i;
+		blit.dstSubresource.baseArrayLayer = 0;
+		blit.dstSubresource.layerCount = this->_image_create_info.arrayLayers;
+		blit.dstOffsets[0] = { 0,0,0 };
+		blit.dstOffsets[1] = { static_cast<int32_t>((mip_extent.width  > 1) ? mip_extent.width  / 2 : 1), 
+							   static_cast<int32_t>((mip_extent.height > 1) ? mip_extent.height / 2 : 1),
+							   static_cast<int32_t>((mip_extent.depth  > 1) ? mip_extent.depth  / 2 : 1) };
+
+		if(mip_extent.width  > 1) mip_extent.width	/= 2;
+		if(mip_extent.height > 1) mip_extent.height	/= 2;
+		if(mip_extent.depth  > 1) mip_extent.depth	/= 2;
+
+		vkCmdBlitImage(command_buffer, this->_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, this->_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, this->_mipfilter);
+
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+	}
+
+	// make a layout transition for the last mipmap level
+	barrier.subresourceRange.baseMipLevel = this->_image_create_info.mipLevels - 1;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+	vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	result = vkEndCommandBuffer(command_buffer);
+	if (result != VK_SUCCESS) return result;
+
+	VkSubmitInfo submit_info = {};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit_info.pNext = nullptr;
+	submit_info.waitSemaphoreCount = 0;
+	submit_info.pWaitSemaphores = nullptr;
+	submit_info.pWaitDstStageMask = 0;
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &command_buffer;
+	submit_info.signalSemaphoreCount = 0;
+	submit_info.pSignalSemaphores = nullptr;
+
+	result = vkQueueSubmit(this->_command_queue, 1, &submit_info, VK_NULL_HANDLE);
+	if (result != VK_SUCCESS) return result;
+
+	result = vkQueueWaitIdle(this->_command_queue);
+	if (result != VK_SUCCESS) return result;
+
+	vkFreeCommandBuffers(this->_device, this->_command_pool, 1, &command_buffer);
+
 	return VK_SUCCESS;
 }

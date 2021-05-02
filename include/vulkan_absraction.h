@@ -364,6 +364,8 @@ namespace vka
 		VkDeviceMemory _memory;
 		VkImageView _view;
 		VkSampler _sampler;
+		bool _mipmap;
+		VkFilter _mipfilter;
 
 		size_t _size;
 		size_t _px_count;
@@ -377,6 +379,9 @@ namespace vka
 
 		/** @brief Performs an image layout transision. */
 		VkResult transform_image_layout(VkImageLayout _old, VkImageLayout _new);
+
+		/** @brief Generates the mipmaps. */
+		VkResult generate_mipmaps(void);
 
 	public:
 		Texture(void) noexcept;
@@ -404,7 +409,6 @@ namespace vka
 		void set_image_type(VkImageType type) noexcept;
 		void set_image_format(VkFormat format) noexcept;
 		void set_image_extent(VkExtent3D extent) noexcept;
-		void set_image_mip_levels(uint32_t levels) noexcept;
 		void set_image_array_layers(uint32_t layers) noexcept;
 		void set_image_queue_families(uint32_t queue_family_index) noexcept;
 		void set_image_create_info(const VkImageCreateInfo& create_info) noexcept;
@@ -434,6 +438,12 @@ namespace vka
 		void set_sampler_border_color(VkBorderColor border_color) noexcept;
 		void set_sampler_unnormalized_coordinates(bool unnormalized) noexcept;
 		void set_sampler_create_info(const VkSamplerCreateInfo& create_info) noexcept;
+
+		/** @brief Sets wether mipmaps should be generated or not. */
+		void mipmap_generate(bool generate) noexcept;
+
+		/** @brief Sets the mipmap filter. */
+		void mipmap_filter(VkFilter filter) noexcept;
 
 		/** @param physical_device The physical device that is used by the texture. */
 		void set_pyhsical_device(VkPhysicalDevice physical_device) noexcept;
@@ -469,6 +479,12 @@ namespace vka
 
 		/** @return Number of pixel within the texture image. */
 		size_t count(void) const noexcept;
+
+		/** @return Number of mipmap levels. */
+		uint32_t mip_levels(void) const noexcept;
+
+		/** @return Number of array layers. */
+		uint32_t array_layers(void) const noexcept;
 	};
 
 	/**
