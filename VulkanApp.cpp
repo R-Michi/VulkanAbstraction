@@ -5,6 +5,10 @@
 #include <stb/stb_image.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 VulkanApp::VulkanApp(void)
 {
 	this->vertices = {
@@ -214,7 +218,7 @@ void VulkanApp::create_physical_device(void)
 	filter.reqQueueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
 
 	size_t idx;
-	vka::PhysicalDeviceError error = vka::find_suited_physical_device(physical_devices, 0, filter, idx);
+	vka::PhysicalDeviceError error = vka::find_matching_physical_device(physical_devices, 0, filter, idx);
 	if (error != vka::VKA_PYHSICAL_DEVICE_ERROR_NONE)
 	{
 		throw std::runtime_error(vka::physical_device_strerror(error));
@@ -234,7 +238,7 @@ void VulkanApp::create_queues(void)
 	queue_fam_filter.reqQueueCount = 4;
 
 	size_t idx;
-	vka::QueueFamilyError error = vka::find_suited_queue_family(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL, idx);
+	vka::QueueFamilyError error = vka::find_matching_queue_family(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL, idx);
 	if (error != vka::VKA_QUEUE_FAMILY_ERROR_NONE)
 	{
 		throw std::runtime_error(vka::queue_family_strerror(error));
@@ -1006,7 +1010,7 @@ void VulkanApp::update_frame_contents(void)
 	UniformTranformMatrices utm;
 
 	glm::mat4 model(1.0f);
-	model = glm::rotate(model, glm::radians(30.0f * static_cast<float>(glfwGetTime())), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, static_cast<float>(M_PI * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 100.0f);
 	projection[1][1] *= -1.0f;

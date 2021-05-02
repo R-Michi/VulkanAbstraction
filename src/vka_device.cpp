@@ -128,7 +128,7 @@ bool device_has_queue_flags(const VkQueueFamilyProperties* queue_family_properti
 	return true;
 }
 
-vka::PhysicalDeviceError vka::find_suited_physical_device(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter, size_t& index)
+vka::PhysicalDeviceError vka::find_matching_physical_device(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter, size_t& index)
 {
 	if (begin >= devices.size()) return VKA_PYHSICAL_DEVICE_ERROR_INVALID_PARAMETER;
 

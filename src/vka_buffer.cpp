@@ -1,7 +1,7 @@
 #include "../include/vulkan_absraction.h"
 #include <stdexcept>
 
-vka::Buffer::Buffer(void)
+vka::Buffer::Buffer(void) noexcept
 {
 	this->_create_info			= {};
 	this->_create_info.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -16,7 +16,7 @@ vka::Buffer::Buffer(void)
 	this->_cmd_queue			= VK_NULL_HANDLE;
 }
 
-vka::Buffer::Buffer(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue) : Buffer()
+vka::Buffer::Buffer(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue) noexcept : Buffer()
 {
 	this->_physical_device = physical_device;
 	this->_device = device;
@@ -49,33 +49,33 @@ vka::Buffer::~Buffer(void)
 	this->clear();
 }
 
-void vka::Buffer::set_create_flags(VkBufferCreateFlags flags)
+void vka::Buffer::set_create_flags(VkBufferCreateFlags flags) noexcept
 {
 	this->_create_info.flags = flags;
 }
 
-void vka::Buffer::set_create_size(VkDeviceSize size)
+void vka::Buffer::set_create_size(VkDeviceSize size) noexcept
 {
 	this->_create_info.size = size;
 }
 
-void vka::Buffer::set_create_usage(VkBufferUsageFlags usage)
+void vka::Buffer::set_create_usage(VkBufferUsageFlags usage) noexcept
 {
 	this->_create_info.usage = usage;
 }
 
-void vka::Buffer::set_create_sharing_mode(VkSharingMode sharing_mode)
+void vka::Buffer::set_create_sharing_mode(VkSharingMode sharing_mode) noexcept
 {
 	this->_create_info.sharingMode = sharing_mode;
 }
 
-void vka::Buffer::set_create_queue_families(const uint32_t* indices, uint32_t count)
+void vka::Buffer::set_create_queue_families(const uint32_t* indices, uint32_t count) noexcept
 {
 	this->_create_info.queueFamilyIndexCount = count;
 	this->_create_info.pQueueFamilyIndices = indices;
 }
 
-void vka::Buffer::set_create_info(const VkBufferCreateInfo& create_info)
+void vka::Buffer::set_create_info(const VkBufferCreateInfo& create_info) noexcept
 {
 	// this code can be reduced to this->_create_info = create_info
 	// but this may destroy the default initalization and can cause troubles
@@ -87,27 +87,27 @@ void vka::Buffer::set_create_info(const VkBufferCreateInfo& create_info)
 	this->_create_info.pQueueFamilyIndices		= create_info.pQueueFamilyIndices;
 }
 
-void vka::Buffer::set_memory_properties(VkMemoryPropertyFlags properties)
+void vka::Buffer::set_memory_properties(VkMemoryPropertyFlags properties) noexcept
 {
 	this->_properties = properties;
 }
 
-void vka::Buffer::set_queue(VkQueue queue)
+void vka::Buffer::set_queue(VkQueue queue) noexcept
 {
 	this->_cmd_queue = queue;
 }
 
-void vka::Buffer::set_command_pool(VkCommandPool cmd_pool)
+void vka::Buffer::set_command_pool(VkCommandPool cmd_pool) noexcept
 {
 	this->_cmd_pool = cmd_pool;
 }
 
-void vka::Buffer::set_physical_device(VkPhysicalDevice physical_device)
+void vka::Buffer::set_physical_device(VkPhysicalDevice physical_device) noexcept
 {
 	this->_physical_device = physical_device;
 }
 
-void vka::Buffer::set_device(VkDevice device)
+void vka::Buffer::set_device(VkDevice device) noexcept
 {
 	this->_device = device;
 }
@@ -172,12 +172,12 @@ void vka::Buffer::unmap(void)
 	vkUnmapMemory(this->_device, this->_memory);
 }
 
-size_t vka::Buffer::size(void)
+size_t vka::Buffer::size(void) const noexcept
 {
 	return this->_create_info.size;
 }
 
-VkBuffer vka::Buffer::handle(void)
+VkBuffer vka::Buffer::handle(void) const noexcept
 {
 	return this->_buffer;
 }

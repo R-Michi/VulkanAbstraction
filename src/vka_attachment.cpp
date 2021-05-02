@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <sstream>
 
-vka::AttachmentImage::AttachmentImage(void)
+vka::AttachmentImage::AttachmentImage(void) noexcept
 {
 	this->_physical_device = VK_NULL_HANDLE;
 	this->_device = VK_NULL_HANDLE;
@@ -19,7 +19,7 @@ vka::AttachmentImage::AttachmentImage(void)
 	this->_view_create_info.image = VK_NULL_HANDLE;
 }
 
-vka::AttachmentImage::AttachmentImage(VkPhysicalDevice physical_device, VkDevice device) : AttachmentImage()
+vka::AttachmentImage::AttachmentImage(VkPhysicalDevice physical_device, VkDevice device) noexcept : AttachmentImage()
 {
 	this->_physical_device = physical_device;
 	this->_device = device;
@@ -30,7 +30,7 @@ vka::AttachmentImage::~AttachmentImage(void)
 	this->clear();
 }
 
-void vka::AttachmentImage::_default_img_create_info(void)
+void vka::AttachmentImage::_default_img_create_info(void) noexcept
 {
 	this->_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	this->_image_create_info.pNext = nullptr;
@@ -43,7 +43,7 @@ void vka::AttachmentImage::_default_img_create_info(void)
 	this->_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-void vka::AttachmentImage::_default_view_create_info(void)
+void vka::AttachmentImage::_default_view_create_info(void) noexcept
 {
 	this->_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	this->_view_create_info.pNext = nullptr;
@@ -56,55 +56,55 @@ void vka::AttachmentImage::_default_view_create_info(void)
 }
 
 // image create info setter
-void vka::AttachmentImage::set_image_format(VkFormat format)
+void vka::AttachmentImage::set_image_format(VkFormat format) noexcept
 {
 	this->_image_create_info.format = format;
 }
 
-void vka::AttachmentImage::set_image_extent(VkExtent2D extent)
+void vka::AttachmentImage::set_image_extent(VkExtent2D extent) noexcept
 {
 	this->_image_create_info.extent = {extent.width, extent.height, 1};
 }
 
-void vka::AttachmentImage::set_image_samples(VkSampleCountFlagBits samples)
+void vka::AttachmentImage::set_image_samples(VkSampleCountFlagBits samples) noexcept
 {
 	this->_image_create_info.samples = samples;
 }
 
-void vka::AttachmentImage::set_image_usage(VkImageUsageFlags usage)
+void vka::AttachmentImage::set_image_usage(VkImageUsageFlags usage) noexcept
 {
 	this->_image_create_info.usage = usage;
 }
 
-void vka::AttachmentImage::set_image_queue_family_index(uint32_t index)
+void vka::AttachmentImage::set_image_queue_family_index(uint32_t index) noexcept
 {
 	this->_image_create_info.queueFamilyIndexCount = 1;
 	this->_image_create_info.pQueueFamilyIndices = &index;
 }
 
 // view create info setter
-void vka::AttachmentImage::set_view_format(VkFormat format)
+void vka::AttachmentImage::set_view_format(VkFormat format) noexcept
 {
 	this->_view_create_info.format = format;
 }
 
-void vka::AttachmentImage::set_view_components(VkComponentMapping component_mapping)
+void vka::AttachmentImage::set_view_components(VkComponentMapping component_mapping) noexcept
 {
 	this->_view_create_info.components = component_mapping;
 }
 
-void vka::AttachmentImage::set_view_aspect_mask(VkImageAspectFlags aspect_mask)
+void vka::AttachmentImage::set_view_aspect_mask(VkImageAspectFlags aspect_mask) noexcept
 {
 	this->_view_create_info.subresourceRange.aspectMask = aspect_mask;
 }
 
 // set internal requiered handles
-void vka::AttachmentImage::set_physical_device(VkPhysicalDevice physical_device)
+void vka::AttachmentImage::set_physical_device(VkPhysicalDevice physical_device) noexcept
 {
 	this->_physical_device = physical_device;
 }
 
-void vka::AttachmentImage::set_device(VkDevice device)
+void vka::AttachmentImage::set_device(VkDevice device) noexcept
 {
 	this->_device = device;
 }
@@ -256,12 +256,12 @@ void vka::AttachmentImage::clear(void)
 	}
 }
 
-VkImageView vka::AttachmentImage::view(void)
+VkImageView vka::AttachmentImage::view(void) const noexcept
 {
 	return this->_view;
 }
 
-bool vka::AttachmentImage::is_image_format_supported(void)
+bool vka::AttachmentImage::is_image_format_supported(void) const noexcept
 {
 	return utility::image_format_supported(
 		this->_physical_device,
@@ -271,7 +271,7 @@ bool vka::AttachmentImage::is_image_format_supported(void)
 	);
 }
 
-void vka::AttachmentImage::get_color_formats(std::vector<VkFormat>& formats)
+void vka::AttachmentImage::get_color_formats(std::vector<VkFormat>& formats) const noexcept
 {
 	utility::get_supported_color_formats(
 		this->_physical_device,
@@ -281,7 +281,7 @@ void vka::AttachmentImage::get_color_formats(std::vector<VkFormat>& formats)
 	);
 }
 
-void vka::AttachmentImage::get_depth_formats(std::vector<VkFormat>& formats)
+void vka::AttachmentImage::get_depth_formats(std::vector<VkFormat>& formats) const noexcept
 {
 	utility::get_supported_depth_formats(
 		this->_physical_device,
@@ -291,7 +291,7 @@ void vka::AttachmentImage::get_depth_formats(std::vector<VkFormat>& formats)
 	);
 }
 
-void vka::AttachmentImage::get_stencil_formats(std::vector<VkFormat>& formats)
+void vka::AttachmentImage::get_stencil_formats(std::vector<VkFormat>& formats) const noexcept
 {
 	utility::get_supported_stencil_formats(
 		this->_physical_device,
@@ -301,7 +301,7 @@ void vka::AttachmentImage::get_stencil_formats(std::vector<VkFormat>& formats)
 	);
 }
 
-void vka::AttachmentImage::get_depth_stencil_formats(std::vector<VkFormat>& formats)
+void vka::AttachmentImage::get_depth_stencil_formats(std::vector<VkFormat>& formats) const noexcept
 {
 	utility::get_supported_depth_stencil_formats(
 		this->_physical_device,

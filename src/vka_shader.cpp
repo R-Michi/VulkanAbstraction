@@ -55,7 +55,7 @@ vka::Shader& vka::Shader::operator= (Shader&& shader)
 VkResult vka::Shader::load(const std::string& path, VkShaderStageFlagBits stage)
 {
 	if (this->_device == VK_NULL_HANDLE)
-		throw std::invalid_argument("Device of Shader is VK_NULL_HANDLE!");
+		throw std::invalid_argument("Device of Shader is VK_NULL_HANDLE! Requiered from shader create");
 
 	if (this->_loaded)
 		throw std::runtime_error("Shader already loaded!");
@@ -91,7 +91,7 @@ void vka::Shader::clear(void)
 	if (this->_loaded)
 	{
 		if (this->_device == VK_NULL_HANDLE)
-			throw std::invalid_argument("Device of Shader is VK_NULL_HANDLE!");
+			throw std::invalid_argument("Device of Shader is VK_NULL_HANDLE! Requiered from shader clear.");
 
 		vkDestroyShaderModule(this->_device, this->_module, nullptr);
 		this->_module = VK_NULL_HANDLE;
@@ -147,7 +147,7 @@ vka::ShaderProgram::~ShaderProgram(void) noexcept {}
 void vka::ShaderProgram::attach(Shader& shader)
 {
 	if (shader.get_module() == VK_NULL_HANDLE)
-		throw std::invalid_argument("Module of Shader is a VK_NULL_HANDLE!");
+		throw std::invalid_argument("Module of Shader is a VK_NULL_HANDLE! Requiered from shader program attach.");
 
 
 	VkPipelineShaderStageCreateInfo shader_stage_create_info = {};

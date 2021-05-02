@@ -23,7 +23,7 @@ bool queue_family_has_count(const VkQueueFamilyProperties& properties, uint32_t 
 	return properties.queueCount >= req_count;
 }
 
-vka::QueueFamilyError vka::find_suited_queue_family(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority, size_t& index)
+vka::QueueFamilyError vka::find_matching_queue_family(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority, size_t& index)
 {
 	using namespace vka;
 

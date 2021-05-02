@@ -45,7 +45,7 @@ namespace vka
 	*	@param reqSurfaceColorFormats Only searches devices which support those color formats on the surface.
 	*	@param reqSurfaceColorSpaces Only searches devices which support those color spaces on the surface.
 	*	@param reqPresentModes Only searches devices which support those presentation modes.
-	*	@param reqQueueFamilyFlags Only searches devices which support at least the given queue flags
+	*	@param reqQueueFamilyFlags Only searches devices which support at least the requiered queue flags.
 	*/
 	struct PhysicalDeviceFilter
 	{
@@ -65,7 +65,7 @@ namespace vka
 	/**
 	*	@brief Used to filter out queue families.
 	*	@param reqQueueFlags Only searches queues families with the requiered queue flags.
-	*	@param reqQueueCount Only searches queues families with at least the given number of queues.
+	*	@param reqQueueCount Only searches queues families with at least the requiered number of queues.
 	*/
 	struct QueueFamilyFilter
 	{
@@ -73,6 +73,14 @@ namespace vka
 		uint32_t		reqQueueCount;
 	};
 
+	/**
+	*	@brief Stores information about the queues you are using. This struct must be initialized by yourself.
+	*		   Its only purpose is to increase the clarity of the used queues. Additionally its also used by the queue validation.
+	*	@param queueFamilyIndex Stores the queue family index of your queues.
+	*	@param usedQueueCount Stores how many queues you are using from that one queue family.
+	*	@param queueBaseIndex Stores the base index of the used queues. Is useful if you have multiple QueueInfo structs,
+	*						  so that the queue indices do not overlap.
+	*/
 	struct QueueInfo
 	{
 		uint32_t queueFamilyIndex;
@@ -80,6 +88,9 @@ namespace vka
 		uint32_t queueBaseIndex;
 	};
 
+	/**
+	*	@brief All possible errors returned by find_matching_physical_device(...) function.
+	*/
 	enum PhysicalDeviceError : uint32_t
 	{
 		VKA_PYHSICAL_DEVICE_ERROR_NONE = 0x00000000,
@@ -98,13 +109,21 @@ namespace vka
 		VKA_PYHSICAL_DEVICE_ERROR_MAX_ENUM = 0x7FFFFFFF
 	};
 
+	/**
+	*	@brief Priority enum to search the best matching queue family in the function find_matching_queue_family(...).
+	*	VKA_QUEUE_FAMILY_PRIORITY_FIRST searches the first queue family that has the requiered properties given by QueueFamilyFilter struct.
+	*	VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL searches the most optimal queue family that has the requiered properties given by QueueFamilyFilter struct.
+	*/
 	enum QueueFamilyPriority
 	{
-		VKA_QUEUE_FAMILY_PRIORITY_FIRST = 0x0,
-		VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL = 0x1,
+		VKA_QUEUE_FAMILY_PRIORITY_FIRST = 0x1,
+		VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL = 0x2,
 		VKA_QUEUE_FAMILY_PRIORITY_MAX_ENUM = 0x7FFFFFFF
 	};
 
+	/**
+	*	@brief All possible errors returned by find_matching_queue_family(...) function.
+	*/
 	enum QueueFamilyError : uint32_t
 	{
 		VKA_QUEUE_FAMILY_ERROR_NONE = 0x00000000,
@@ -114,18 +133,26 @@ namespace vka
 		VKA_QUEUE_FAMILY_ERROR_MAX_ENUM = 0x7FFFFFFF
 	};
 
+	/**
+	*	@brief This class represents a single shader stage in the rendering pipeline
+	*/
 	class Shader
 	{
 	private:
-		VkDevice				_device;
-		char*					_entry_point;
-		VkShaderStageFlagBits	_stage;
-		VkShaderModule			_module;
-		size_t					_size;
-		bool					_loaded;
+		VkDevice _device;
+		char* _entry_point;
+		VkShaderStageFlagBits _stage;
+		VkShaderModule _module;
+		size_t _size;
+		bool _loaded;
 
 	public:
 		Shader(void) noexcept;
+
+		/**
+		*	@param device The logical device that is used for the shader.
+		*	@param entry_point Entry point of the shader, main by default.
+		*/
 		explicit Shader(VkDevice device, const std::string& entry_point = "main") noexcept;
 
 		Shader(const Shader&) = delete;
@@ -136,18 +163,40 @@ namespace vka
 
 		virtual ~Shader(void) noexcept;
 
+		/**
+		*	@brief Loads the pre-compiled shader file (file extension: .spv).
+		*	@param path Path to the shader file.
+		*	@param stage The stage of the shader (vertex, geometry, fragment,...).
+		*	@return Vulkan result.
+		*/
 		VkResult load(const std::string& path, VkShaderStageFlagBits stage);
-		void	 clear(void);
 
+		/** @brief Clears the shader. The shader can be reloaded again. */
+		void clear(void);
+
+		/** @param device The logical device that is used for the shader. */
 		void set_device(VkDevice device) noexcept;
+
+		/** @param entry_point Entry point of the shader, main by default. */
 		void set_entry_point(const std::string& entry_point) noexcept;
 
-		VkShaderModule			get_module(void) const noexcept;
-		VkShaderStageFlagBits	get_stage(void) const noexcept;
-		const char*				get_entry_point(void) const noexcept;
-		size_t					size(void) const noexcept;
+		/** @return The module created module of the sahder. */
+		VkShaderModule get_module(void) const noexcept;
+
+		/** @return The stage of that shader. */
+		VkShaderStageFlagBits get_stage(void) const noexcept;
+
+		/** @return The entry point of the shader code. */
+		const char* get_entry_point(void) const noexcept;
+
+		/** @return The size in bytes of the shader code. */
+		size_t size(void) const noexcept;
 	};
 
+	/**
+	*	@brief All shader stages are linked to a shader program that contains all shader
+	*		   stages the rendering pipeline will use.
+	*/
 	class ShaderProgram
 	{
 	private:
@@ -156,6 +205,11 @@ namespace vka
 
 	public:
 		ShaderProgram(void) noexcept;
+
+		/**
+		*	@brief Construct or to attach multiple shaders.
+		*	@param shaders A std::vector of shaders to attach.
+		*/
 		explicit ShaderProgram(std::vector<Shader>& shaders);
 
 		ShaderProgram(const ShaderProgram&) = delete;
@@ -166,20 +220,33 @@ namespace vka
 
 		virtual ~ShaderProgram(void) noexcept;
 
+		/**
+		*	@brief Attaches a shader to the shader program.
+		*	@param shader The shader to attach.
+		*/
 		void attach(Shader& shader);
+
+		/** @brief Cleares the shader program. No shaders are attached anymore after clear. */
 		void clear(void) noexcept;
 
+		/** @return The amount of shaders attached to the shader program. */
 		uint32_t count(void) const noexcept;
+
+		/** @return An array of VkPipelineShaderStageCreateInfo structs for the rendering pipeline. */
 		const VkPipelineShaderStageCreateInfo* get_stages(void) const noexcept;
 	};
 
+	/**
+	*	@brief Class to create any buffer object to store vertices, indices, uniforms, etc.
+	*		   Buffer creation is more easily and straight forward.
+	*/
 	class Buffer
 	{
 	private:
 		VkDevice _device;
 		VkPhysicalDevice _physical_device;
 		VkCommandPool _cmd_pool;
-		VkQueue _cmd_queue;
+		VkQueue	_cmd_queue;
 		
 		VkBufferCreateInfo _create_info;
 		VkBuffer _buffer;
@@ -187,45 +254,100 @@ namespace vka
 		VkDeviceMemory _memory;
 
 	public:
-		Buffer(void);
-		explicit Buffer(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool = VK_NULL_HANDLE, VkQueue queue = VK_NULL_HANDLE);
+		Buffer(void) noexcept;
 
+		/**
+		*	@param physical_device The physical device that is used by the buffer.
+		*	@param device The logical device that is used by the buffer.
+		*	@param cmd_pool The command pool that is used for buffer copy operations.
+		*	@param queue The command queue that is used for buffer copy operations.
+		*/
+		explicit Buffer(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool = VK_NULL_HANDLE, VkQueue queue = VK_NULL_HANDLE) noexcept;
+
+		/** @brief Copy constructor and copy operator. */
 		Buffer(const Buffer& src);
 		Buffer& operator= (const Buffer& src);
 
+		/** @brief Move constructor and move operator. */
 		Buffer(Buffer&& src);
 		Buffer& operator= (Buffer&& src);
 
 		virtual ~Buffer(void);
 
-		// buffer create info setter
-		void set_create_flags(VkBufferCreateFlags flags);
-		void set_create_size(VkDeviceSize size);
-		void set_create_usage(VkBufferUsageFlags usage);
-		void set_create_sharing_mode(VkSharingMode sharing_mode);
-		void set_create_queue_families(const uint32_t* indices, uint32_t count);
-		void set_create_info(const VkBufferCreateInfo& create_info);
+		/** @brief setter for the buffer create info. */
+		void set_create_flags(VkBufferCreateFlags flags) noexcept;
+		void set_create_size(VkDeviceSize size) noexcept;
+		void set_create_usage(VkBufferUsageFlags usage) noexcept;
+		void set_create_sharing_mode(VkSharingMode sharing_mode) noexcept;
+		void set_create_queue_families(const uint32_t* indices, uint32_t count) noexcept;
+		void set_create_info(const VkBufferCreateInfo& create_info) noexcept;
 
-		// memory properties setter
-		void set_memory_properties(VkMemoryPropertyFlags properties);
+		/** @brief Sets the memory properties of the buffer. */
+		void set_memory_properties(VkMemoryPropertyFlags properties) noexcept;
 
-		// set handles for internal usage
-		void set_physical_device(VkPhysicalDevice physical_device);
-		void set_device(VkDevice device);
-		void set_queue(VkQueue queue);
-		void set_command_pool(VkCommandPool cmd_pool);
+		/** @param physical_device The physical device that is used by the buffer. */
+		void set_physical_device(VkPhysicalDevice physical_device) noexcept;
 
-		VkResult	create(void);
-		void*		map(VkDeviceSize size, VkDeviceSize offset);
-		void		unmap(void);
-		size_t		size(void);
-		VkBuffer	handle(void);
+		/** @param device The logical device that is used by the buffer. */
+		void set_device(VkDevice device) noexcept;
 
+		/** @param cmd_pool The command pool that is used for buffer copy operations. */
+		void set_queue(VkQueue queue) noexcept;
+
+		/** @param queue The command queue that is used for buffer copy operations. */
+		void set_command_pool(VkCommandPool cmd_pool) noexcept;
+
+		/**
+		*	@brief Creates the buffer.
+		*	@return Vulkan result.
+		*/
+		VkResult create(void);
+
+		/**
+		*	@brief Maps the buffer for direct buffer access.
+		*	@param size The size of the buffer to map.
+		*	@param offset Offset in the buffer memory.
+		*	@return A pointer to the buffer memory
+		*/
+		void* map(VkDeviceSize size, VkDeviceSize offset);
+
+		/** @brief Unampps the buffer again. */
+		void unmap(void);
+
+		/** @return The size in bytes of the buffer. */
+		size_t size(void) const noexcept;
+
+		/** @return The VkBuffer handle. */
+		VkBuffer handle(void) const noexcept;
+
+		/**
+		*	@brief Copies a buffer. Buffer copy operation requieres command pool and command queue to be set.
+		*		   The buffer create info or the memory properties of the destination buffer can change how the buffer is copied.
+		*		   If the create info and the memory properties of the destination buffer contain their default values then the copy operation is a 1:1 copy.
+		*		   If the create info or the memory properties of the destination buffer have been modified then the buffer can also copy
+		*		   memory into another memory target (e.g. host memory -> device memory or cached memory -> host memory).
+		*		   This description counts for the copy operator. The copy constructor is always a 1:1 copy.
+		*	@param src The source buffer of the copy operation. The destination buffer is always 'this'.
+		*	@return The destination buffer of the copy operatrion ('this').
+		*/
 		Buffer& copy(const Buffer& src);
+
+		/**
+		*	@brief Move is a copy operation followed by a clear of the source buffer.
+		*		   After a move the source buffer is not aviable anymore.
+		*		   The same description counts for the move operator and the move constructor.
+		*	@param src The source buffer of the move operatrion. The destination is always 'this'.
+		*	@return The destination buffer of the move operatrion ('this').
+		*/
 		Buffer& move(Buffer&& src);
-		void	clear(void);
+
+		/** @brief Cleares the buffer. The buffer is no longer aviable after a clear. */
+		void clear(void);
 	};
 
+	/**
+	*	@brief Class to create textures more easily and straight forward.
+	*/
 	class Texture
 	{
 	private:
@@ -246,16 +368,26 @@ namespace vka
 		size_t _size;
 		size_t _px_count;
 
-		void _default_img_create_info(void);
-		void _default_view_create_info(void);
-		void _default_sampler_create_info(void);
+		void _default_img_create_info(void) noexcept;
+		void _default_view_create_info(void) noexcept;
+		void _default_sampler_create_info(void) noexcept;
 
+		/** @brief Copies a buffer into an image. */
 		VkResult buffer_copy(VkBuffer buffer, VkImage image, uint32_t mip_levels, uint32_t array_layers, VkOffset3D offset, VkExtent3D extent);
+
+		/** @brief Performs an image layout transision. */
 		VkResult transform_image_layout(VkImageLayout _old, VkImageLayout _new);
 
 	public:
-		Texture(void);
-		Texture(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue);
+		Texture(void) noexcept;
+
+		/**
+		*	@param physical_device The physical device that is used by the texture.
+		*	@param device The logical device that is used by the texture.
+		*	@param cmd_pool The command pool that is used by the texture.
+		*	@param queue The command queue that is used by the texture.
+		*/
+		Texture(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue) noexcept;
 
 		Texture(const Texture&) = delete;
 		Texture& operator= (const Texture&) = delete;
@@ -265,57 +397,86 @@ namespace vka
 
 		virtual ~Texture(void);
 
-		// image create info setter
-		void set_image_flags(VkImageCreateFlags flags);
-		void set_image_type(VkImageType type);
-		void set_image_format(VkFormat format);
-		void set_image_extent(VkExtent3D extent);
-		void set_image_mip_levels(uint32_t levels);
-		void set_image_array_layers(uint32_t layers);
-		void set_image_queue_families(uint32_t queue_family_index);
-		void set_image_create_info(const VkImageCreateInfo& create_info);
+		/**
+		*	@brief Setter for the parameter of the VkImageCreateInfo.
+		*/
+		void set_image_flags(VkImageCreateFlags flags) noexcept;
+		void set_image_type(VkImageType type) noexcept;
+		void set_image_format(VkFormat format) noexcept;
+		void set_image_extent(VkExtent3D extent) noexcept;
+		void set_image_mip_levels(uint32_t levels) noexcept;
+		void set_image_array_layers(uint32_t layers) noexcept;
+		void set_image_queue_families(uint32_t queue_family_index) noexcept;
+		void set_image_create_info(const VkImageCreateInfo& create_info) noexcept;
 
-		// view create info setter
-		void set_view_type(VkImageViewType type);
-		void set_view_format(VkFormat format);
-		void set_view_components(VkComponentMapping component_mapping);
-		void set_view_subresource_range(VkImageSubresourceRange subressource_range);
-		void set_view_create_info(const VkImageViewCreateInfo& create_info);
+		/**
+		*	@brief Setter for the parameter of the VkImageViewCreateInfo.
+		*/
+		void set_view_type(VkImageViewType type) noexcept;
+		void set_view_format(VkFormat format) noexcept;
+		void set_view_components(VkComponentMapping component_mapping) noexcept;
+		void set_view_subresource_range(VkImageSubresourceRange subressource_range) noexcept;
+		void set_view_create_info(const VkImageViewCreateInfo& create_info) noexcept;
 
-		// sampler create info setter
-		void set_sampler_mag_filter(VkFilter mag_filter);
-		void set_sampler_min_filter(VkFilter min_filter);
-		void set_sampler_mipmap_mode(VkSamplerMipmapMode mode);
-		void set_sampler_address_mode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w);
-		void set_sampler_mip_lod_bias(float bias);
-		void set_sampler_anisotropy_enable(bool enable);
-		void set_sampler_max_anisotropy(float max);
-		void set_sampler_compare_enable(bool enable);
-		void set_sampler_compare_op(VkCompareOp op);
-		void set_sampler_lod(float min_lod, float max_lod);
-		void set_sampler_border_color(VkBorderColor border_color);
-		void set_sampler_unnormalized_coordinates(bool unnormalized);
-		void set_sampler_create_info(const VkSamplerCreateInfo& create_info);
+		/**
+		*	@brief Setter for the parameter of the VkSamplerCreateInfo.
+		*/
+		void set_sampler_mag_filter(VkFilter mag_filter) noexcept;
+		void set_sampler_min_filter(VkFilter min_filter) noexcept;
+		void set_sampler_mipmap_mode(VkSamplerMipmapMode mode) noexcept;
+		void set_sampler_address_mode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w) noexcept;
+		void set_sampler_mip_lod_bias(float bias) noexcept;
+		void set_sampler_anisotropy_enable(bool enable) noexcept;
+		void set_sampler_max_anisotropy(float max) noexcept;
+		void set_sampler_compare_enable(bool enable) noexcept;
+		void set_sampler_compare_op(VkCompareOp op) noexcept;
+		void set_sampler_lod(float min_lod, float max_lod) noexcept;
+		void set_sampler_border_color(VkBorderColor border_color) noexcept;
+		void set_sampler_unnormalized_coordinates(bool unnormalized) noexcept;
+		void set_sampler_create_info(const VkSamplerCreateInfo& create_info) noexcept;
 
-		// set handles for internal usage
-		void set_pyhsical_device(VkPhysicalDevice physical_device);
-		void set_device(VkDevice device);
-		void set_command_pool(VkCommandPool command_pool);
-		void set_queue(VkQueue queue);
+		/** @param physical_device The physical device that is used by the texture. */
+		void set_pyhsical_device(VkPhysicalDevice physical_device) noexcept;
 
-		VkResult	create(const uint8_t* pdata, size_t pixel_stride);
-		void		clear(void);
+		/** @param device The logical device that is used by the texture. */
+		void set_device(VkDevice device) noexcept;
 
-		VkImageView view(void);
-		VkSampler	sampler(void);
+		/** @param cmd_pool The command pool that is used by the texture. */
+		void set_command_pool(VkCommandPool command_pool) noexcept;
 
-		size_t size(void);
-		size_t count(void);
+		/** @param queue The command queue that is used by the texture. */
+		void set_queue(VkQueue queue) noexcept;
+
+		/**
+		*	@brief Creates the texture object.
+		*	@param pdata Pointer to the pixel data.
+		*	@param pixel_stride Stride (size) of one pixel.
+		*	@return Vulkan result.
+		*/
+		VkResult create(const void* pdata, size_t pixel_stride);
+
+		/** @brief Cleares the texture. The texture is no longer aviable after a clear. */
+		void clear(void);
+
+		/** @return The view handle. */
+		VkImageView view(void) const noexcept;
+
+		/** @return The sampler handle. */
+		VkSampler sampler(void) const noexcept;
+
+		/** @return Size of the texture in bytes. */
+		size_t size(void) const noexcept;
+
+		/** @return Number of pixel within the texture image. */
+		size_t count(void) const noexcept;
 	};
 
+	/**
+	*	@brief Class to create any attachment image more easily and straigt forward.
+	*/
 	class AttachmentImage
 	{
-	protected:
+	private:
 		VkPhysicalDevice _physical_device;
 		VkDevice _device;
 
@@ -326,19 +487,24 @@ namespace vka
 		VkDeviceMemory _memory;
 		VkImageView _view;
 
-		void _default_img_create_info(void);
-		void _default_view_create_info(void);
+		void _default_img_create_info(void) noexcept;
+		void _default_view_create_info(void) noexcept;
 
-		bool is_image_format_supported(void);
-		void get_color_formats(std::vector<VkFormat>& formats);
-		void get_depth_formats(std::vector<VkFormat>& formats);
-		void get_stencil_formats(std::vector<VkFormat>& formats);
-		void get_depth_stencil_formats(std::vector<VkFormat>& formats);
+		bool is_image_format_supported(void) const noexcept;
+		void get_color_formats(std::vector<VkFormat>& formats) const noexcept;
+		void get_depth_formats(std::vector<VkFormat>& formats) const noexcept;
+		void get_stencil_formats(std::vector<VkFormat>& formats) const noexcept;
+		void get_depth_stencil_formats(std::vector<VkFormat>& formats) const noexcept;
 		void throw_unsupported_format(const std::vector<VkFormat>& formats, size_t block_size);
 
 	public:
-		AttachmentImage(void);
-		AttachmentImage(VkPhysicalDevice physical_device, VkDevice device);
+		AttachmentImage(void) noexcept;
+
+		/**
+		*	@param physical_device The physical device that is used by the attachment image.
+		*	@param device The logical device that is used by the attachment image.
+		*/
+		explicit AttachmentImage(VkPhysicalDevice physical_device, VkDevice device) noexcept;
 		
 		AttachmentImage(const AttachmentImage&) = delete;
 		AttachmentImage& operator= (const AttachmentImage&) = delete;
@@ -348,26 +514,39 @@ namespace vka
 
 		virtual ~AttachmentImage(void);
 
-		// image create info setter
-		void set_image_format(VkFormat format);
-		void set_image_extent(VkExtent2D extent);
-		void set_image_samples(VkSampleCountFlagBits samples);
-		void set_image_usage(VkImageUsageFlags usage);
-		void set_image_queue_family_index(uint32_t index);
+		/**
+		*	@brief Setter for the parameter of the VkImageViewCreateInfo.
+		*/
+		void set_image_format(VkFormat format) noexcept;
+		void set_image_extent(VkExtent2D extent) noexcept;
+		void set_image_samples(VkSampleCountFlagBits samples) noexcept;
+		void set_image_usage(VkImageUsageFlags usage) noexcept;
+		void set_image_queue_family_index(uint32_t index) noexcept;
 
-		// view create info setter
-		void set_view_format(VkFormat format);
-		void set_view_components(VkComponentMapping component_mapping);
-		void set_view_aspect_mask(VkImageAspectFlags aspect_mask);
+		/**
+		*	@brief Setter for the parameter of the VkImageViewCreateInfo.
+		*/
+		void set_view_format(VkFormat format) noexcept;
+		void set_view_components(VkComponentMapping component_mapping) noexcept;
+		void set_view_aspect_mask(VkImageAspectFlags aspect_mask) noexcept;
 
-		// set internal requiered handles
-		void set_physical_device(VkPhysicalDevice physical_device);
-		void set_device(VkDevice device);
+		/** @param physical_device The physical device that is used by the attachment image. */
+		void set_physical_device(VkPhysicalDevice physical_device) noexcept;
 
+		/** @param device The logical device that is used by the texture. */
+		void set_device(VkDevice device) noexcept;
+
+		/**
+		*	@brief Creates the attachment image.
+		*	@return Vulkan result.
+		*/
 		VkResult create(void);
-		void	 clear(void);
 
-		VkImageView view(void);
+		/** @brief Cleares the attachment image. The attachment image is no longer aviable after a clear. */
+		void clear(void);
+
+		/** @return The view handle. */
+		VkImageView view(void) const noexcept;
 	};
 
 	/**
@@ -429,7 +608,7 @@ namespace vka
 	*	@return @param index Index of the device in the @param devices vector.
 	*	@return Error if no physical device was found.
 	*/
-	PhysicalDeviceError find_suited_physical_device(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter, size_t& index);
+	PhysicalDeviceError find_matching_physical_device(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter, size_t& index);
 
 	/**
 	*	@brief Converts FindPhysicalDeviceError enum to string.
@@ -477,7 +656,7 @@ namespace vka
 	/**
 	*	@brief Returns all queue families of a physical device.
 	*	@param device The physical device to read the queue families from.
-	*	@return @param queue_families A vector of queue family properties.
+	*	@param queue_families A std::vector where the queue family properties will be stored.
 	*/
 	void get_queue_family_properties(const VkPhysicalDevice& device, std::vector<VkQueueFamilyProperties>& queue_families);
 
@@ -487,9 +666,9 @@ namespace vka
 	*	@param begin Index to begin searching for queue families.
 	*	@param filter Filter of the queue families.
 	*	@param priority Priority for the searching algorithm.
-	*	@reurn @param index Index of the queue familiy in the @param queue_families vector. 
+	*	@param index Value where the found queue family index will be stored.
 	*/
-	QueueFamilyError find_suited_queue_family(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority, size_t& index);
+	QueueFamilyError find_matching_queue_family(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority, size_t& index);
 		
 	/**
 	*	@brief Converts QueueFamiliyError enum to string.

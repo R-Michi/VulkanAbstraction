@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iostream>
 
-vka::Texture::Texture(void)
+vka::Texture::Texture(void) noexcept
 {
 	this->_image_create_info = {};
 	this->_default_img_create_info();
@@ -28,7 +28,7 @@ vka::Texture::Texture(void)
 	this->_view_create_info.image = this->_image;
 }
 
-vka::Texture::Texture(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue) : Texture()
+vka::Texture::Texture(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue) noexcept : Texture()
 {
 	this->_physical_device = physical_device;
 	this->_device = device;
@@ -41,7 +41,7 @@ vka::Texture::~Texture(void)
 	this->clear();
 }
 
-void vka::Texture::_default_img_create_info(void)
+void vka::Texture::_default_img_create_info(void) noexcept
 {
 	this->_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	this->_image_create_info.pNext = nullptr;
@@ -52,83 +52,83 @@ void vka::Texture::_default_img_create_info(void)
 	this->_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 }
 
-void vka::Texture::_default_view_create_info(void)
+void vka::Texture::_default_view_create_info(void) noexcept
 {
 	this->_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	this->_view_create_info.pNext = nullptr;
 }
 
-void vka::Texture::_default_sampler_create_info(void)
+void vka::Texture::_default_sampler_create_info(void) noexcept
 {
 	this->_sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	this->_sampler_create_info.pNext = nullptr;
 }
 
 // image create info
-void vka::Texture::set_image_flags(VkImageCreateFlags flags)
+void vka::Texture::set_image_flags(VkImageCreateFlags flags) noexcept
 {
 	this->_image_create_info.flags = flags;
 }
 
-void vka::Texture::set_image_type(VkImageType type)
+void vka::Texture::set_image_type(VkImageType type) noexcept
 {
 	this->_image_create_info.imageType = type;
 }
 
-void vka::Texture::set_image_format(VkFormat format)
+void vka::Texture::set_image_format(VkFormat format) noexcept
 {
 	this->_image_create_info.format = format;
 }
-
-void vka::Texture::set_image_extent(VkExtent3D extent)
+ 
+void vka::Texture::set_image_extent(VkExtent3D extent) noexcept
 {
 	this->_image_create_info.extent = extent;
 }
 
-void vka::Texture::set_image_mip_levels(uint32_t levels)
+void vka::Texture::set_image_mip_levels(uint32_t levels) noexcept
 {
 	this->_image_create_info.mipLevels = levels;
 }
 
-void vka::Texture::set_image_array_layers(uint32_t layers)
+void vka::Texture::set_image_array_layers(uint32_t layers) noexcept
 {
 	this->_image_create_info.arrayLayers = layers;
 }
 
-void vka::Texture::set_image_queue_families(uint32_t queue_family_index)
+void vka::Texture::set_image_queue_families(uint32_t queue_family_index) noexcept
 {
 	this->_image_create_info.queueFamilyIndexCount = 1;
 	this->_image_create_info.pQueueFamilyIndices = &queue_family_index;
 }
 
-void vka::Texture::set_image_create_info(const VkImageCreateInfo& create_info)
+void vka::Texture::set_image_create_info(const VkImageCreateInfo& create_info) noexcept
 {
 	this->_image_create_info = create_info;
 	this->_default_img_create_info();
 }
 
 // image view create info
-void vka::Texture::set_view_type(VkImageViewType type)
+void vka::Texture::set_view_type(VkImageViewType type) noexcept
 {
 	this->_view_create_info.viewType = type;
 }
 
-void vka::Texture::set_view_format(VkFormat format)
+void vka::Texture::set_view_format(VkFormat format) noexcept
 {
 	this->_view_create_info.format = format;
 }
 
-void vka::Texture::set_view_components(VkComponentMapping component_mapping)
+void vka::Texture::set_view_components(VkComponentMapping component_mapping) noexcept
 {
 	this->_view_create_info.components = component_mapping;
 }
 
-void vka::Texture::set_view_subresource_range(VkImageSubresourceRange subressource_range)
+void vka::Texture::set_view_subresource_range(VkImageSubresourceRange subressource_range) noexcept
 {
 	this->_view_create_info.subresourceRange = subressource_range;
 }
 
-void vka::Texture::set_view_create_info(const VkImageViewCreateInfo& create_info)
+void vka::Texture::set_view_create_info(const VkImageViewCreateInfo& create_info) noexcept
 {
 	this->_view_create_info = create_info;
 	this->_view_create_info.image = this->_image;
@@ -136,98 +136,98 @@ void vka::Texture::set_view_create_info(const VkImageViewCreateInfo& create_info
 }
 
 // sampler create info
-void vka::Texture::set_sampler_mag_filter(VkFilter mag_filter)
+void vka::Texture::set_sampler_mag_filter(VkFilter mag_filter) noexcept
 {
 	this->_sampler_create_info.magFilter = mag_filter;
 }
 
-void vka::Texture::set_sampler_min_filter(VkFilter min_filter)
+void vka::Texture::set_sampler_min_filter(VkFilter min_filter) noexcept
 {
 	this->_sampler_create_info.minFilter = min_filter;
 }
 
-void vka::Texture::set_sampler_mipmap_mode(VkSamplerMipmapMode mode)
+void vka::Texture::set_sampler_mipmap_mode(VkSamplerMipmapMode mode) noexcept
 {
 	this->_sampler_create_info.mipmapMode = mode;
 }
 
-void vka::Texture::set_sampler_address_mode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w)
+void vka::Texture::set_sampler_address_mode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w) noexcept
 {
 	this->_sampler_create_info.addressModeU = u;
 	this->_sampler_create_info.addressModeV = v;
 	this->_sampler_create_info.addressModeW = w;
 }
 
-void vka::Texture::set_sampler_mip_lod_bias(float bias)
+void vka::Texture::set_sampler_mip_lod_bias(float bias) noexcept
 {
 	this->_sampler_create_info.mipLodBias = bias;
 }
 
-void vka::Texture::set_sampler_anisotropy_enable(bool enable)
+void vka::Texture::set_sampler_anisotropy_enable(bool enable) noexcept
 {
 	this->_sampler_create_info.anisotropyEnable = (enable) ? VK_TRUE : VK_FALSE;
 }
 
-void vka::Texture::set_sampler_max_anisotropy(float max)
+void vka::Texture::set_sampler_max_anisotropy(float max) noexcept
 {
 	this->_sampler_create_info.maxAnisotropy = max;
 }
 
-void vka::Texture::set_sampler_compare_enable(bool enable)
+void vka::Texture::set_sampler_compare_enable(bool enable) noexcept
 {
 	this->_sampler_create_info.compareEnable = (enable) ? VK_TRUE : VK_FALSE;
 }
 
-void vka::Texture::set_sampler_compare_op(VkCompareOp op)
+void vka::Texture::set_sampler_compare_op(VkCompareOp op) noexcept
 {
 	this->_sampler_create_info.compareOp = op;
 }
 
-void vka::Texture::set_sampler_lod(float min_lod, float max_lod)
-{
+void vka::Texture::set_sampler_lod(float min_lod, float max_lod) noexcept
+{ 
 	this->_sampler_create_info.minLod = min_lod;
 	this->_sampler_create_info.maxLod = max_lod;
 }
 
-void vka::Texture::set_sampler_border_color(VkBorderColor border_color)
+void vka::Texture::set_sampler_border_color(VkBorderColor border_color) noexcept
 {
 	this->_sampler_create_info.borderColor = border_color;
 }
 
-void vka::Texture::set_sampler_unnormalized_coordinates(bool unnormalized)
+void vka::Texture::set_sampler_unnormalized_coordinates(bool unnormalized) noexcept
 {
 	this->_sampler_create_info.unnormalizedCoordinates = (unnormalized) ? VK_TRUE : VK_FALSE;
 }
 
-void vka::Texture::set_sampler_create_info(const VkSamplerCreateInfo& create_info)
+void vka::Texture::set_sampler_create_info(const VkSamplerCreateInfo& create_info) noexcept
 {
 	this->_sampler_create_info = create_info;
 	this->_default_sampler_create_info();
 }
 
 // set handles for internal usage
-void vka::Texture::set_pyhsical_device(VkPhysicalDevice physical_device)
+void vka::Texture::set_pyhsical_device(VkPhysicalDevice physical_device) noexcept
 {
 	this->_physical_device = physical_device;
 }
 
-void vka::Texture::set_device(VkDevice device)
+void vka::Texture::set_device(VkDevice device) noexcept
 {
 	this->_device = device;
 }
 
-void vka::Texture::set_command_pool(VkCommandPool command_pool)
+void vka::Texture::set_command_pool(VkCommandPool command_pool) noexcept
 {
 	this->_command_pool = command_pool;
 }
 
-void vka::Texture::set_queue(VkQueue queue)
+void vka::Texture::set_queue(VkQueue queue) noexcept
 {
 	this->_command_queue = queue;
 }
 
 
-VkResult vka::Texture::create(const uint8_t* pdata, size_t pixel_stride)
+VkResult vka::Texture::create(const void* pdata, size_t pixel_stride)
 {
 	if (this->_image != VK_NULL_HANDLE)
 		throw std::runtime_error("Can not create texture withot deleting the old one!");
@@ -336,22 +336,22 @@ void vka::Texture::clear(void)
 	}
 }
 
-VkImageView vka::Texture::view(void)
+VkImageView vka::Texture::view(void) const noexcept
 {
 	return this->_view;
 }
 
-VkSampler vka::Texture::sampler(void)
+VkSampler vka::Texture::sampler(void) const noexcept
 {
 	return this->_sampler;
 }
 
-size_t vka::Texture::size(void)
+size_t vka::Texture::size(void) const noexcept
 {
 	return this->_size;
 }
 
-size_t vka::Texture::count(void)
+size_t vka::Texture::count(void) const noexcept
 {
 	return this->_px_count;
 }
