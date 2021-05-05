@@ -8,13 +8,13 @@
 	#else
 		#define VULKAN_ASSERT(result)\
 		if(result != VK_SUCCESS) \
-			asm("int $3")
-	#endif
+			asm("int $3")	// causes a debug break (sort of)
+		#endif
 #else
 	#define VULKAN_ASSERT(result)
 #endif
 
-#ifdef __clang__  
+#ifdef __clang__	// suppress waring "empty body" for clang for include file stb_image.h
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wempty-body"
 		#include <stb/stb_image.h>
@@ -577,6 +577,24 @@ namespace vka
 	};
 
 #ifdef VULKAN_ABSTRACTION_EXPERIMENTAL
+
+	/**
+	*	This is just an experimental implementation of model loading.
+	*	It is not the final version, the implementation can not determine 
+	*	at runtime how many components there are for: vertices, texture coordinates
+	*	and normal vectors. Additionally the library is restricted to only be 
+	*	capable of loading .obj files. The final version will support the
+	*	most (common) model formats.
+	* 
+	*	Now, the tiny object loader library will be used in the background.
+	*	Which is, like i mentioned before, only capable of loading
+	*	.obj files. For future implementation I will use assimp in the
+	*	background, which is a more powerful library.
+	*/
+
+	/**
+	*	@brief Stores position, texture coordinate and normal vector of a vertex.
+	*/
 	template<uint32_t _vc, uint32_t _tc, uint32_t _nc>
 	struct vertex_t
 	{
@@ -584,16 +602,49 @@ namespace vka
 		static_assert(_tc <= 4U && _tc >= 1, "Texture coordinate component count of vka::Mesh::vertex_t is greater than 4 or less than 1!");
 		static_assert(_nc <= 4U && _nc >= 1, "Normal vector component count of vka::Mesh::vertex_t is greater than 4 or less than 1!");
 
-		glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp> position{ 0.0f };
-		glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp> texcoord{ 0.0f };
-		glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp> normal{ 0.0f };
+		glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp> position;
+		glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp> texcoord;
+		glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp> normal;
 
+		vertex_t(const glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp>& pos		= glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp>(0.0f),
+				 const glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp>& texcoord	= glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp>(0.0f),
+				 const glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp>& normal		= glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp>(0.0f))
+		{
+			this->position	= pos;
+			this->texcoord	= texcoord;
+			this->normal	= normal;
+		}
+
+		vertex_t(const vertex_t& other) { *this = other; }
+		vertex_t& operator= (const vertex_t& other)
+		{
+			this->position	= other.position;
+			this->texcoord	= other.texcoord;
+			this->normal	= other.normal;
+			return *this;
+		}
+
+		vertex_t(vertex_t&& other)		{ *this = (vertex_t&&)other; }
+		vertex_t& operator= (vertex_t&& other)
+		{
+			this->position	= other.position;
+			this->texcoord	= other.texcoord;
+			this->normal	= other.normal;
+
+			other.position	= glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp>(0.0f);
+			other.texcoord	= glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp>(0.0f);
+			other.normal	= glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp>(0.0f);
+			return *this;
+		}
+
+		// used for std::unordered_map
 		bool operator== (const vertex_t& other) const noexcept
 		{
 			//return (this->position == other.position && this->texcoord == other.texcoord && this->normal == other.normal);
 			return (memcmp(this, &other, sizeof(*this)) == 0);
 		}
 
+		// used for std::unordered_map
 		struct hasher
 		{
 			size_t operator()(const vertex_t& other) const noexcept
@@ -605,32 +656,39 @@ namespace vka
 		};
 	};
 
+	/**
+	*	@brief Contains the data for rendering: vertices, indices and an ID
+	*	to the corresponding materials.
+	*/
 	template<uint32_t _vc, uint32_t _tc, uint32_t _nc>
 	class Mesh
 	{
 	private:
-		std::vector<vertex_t<_vc, _tc, _nc> > _vertices;
-		std::vector<uint32_t> _indices;
-		std::string _name;
+		std::vector<vertex_t<_vc, _tc, _nc> > _vertices;	// vertices of mesh
+		std::vector<uint32_t> _indices;						// indices of mesh
+		std::vector<int> _materials;						// corresponding material ID's
+		std::string _name;									// name of mesh
 
 	public:
-		Mesh(void) = default;
+		Mesh(void) = default;	// not needed
 
 		Mesh(const Mesh& other) { *this = other; }
 		Mesh& operator= (const Mesh& other)
 		{
-			this->_vertices = other._vertices;
-			this->_indices	= other._indices;
-			this->_name		= other._name;
+			this->_vertices		= other._vertices;
+			this->_indices		= other._indices;
+			this->_materials	= other._materials;
+			this->_name			= other._name;
 			return *this;
 		}
 
-		Mesh(Mesh&& other) { *this = std::move(other); }
+		Mesh(Mesh&& other) { *this = (Mesh&&)other; }
 		Mesh& operator= (Mesh&& other)
 		{
-			this->_vertices = other._vertices;
-			this->_indices = other._indices;
-			this->_name = other._name;
+			this->_vertices		= other._vertices;
+			this->_indices		= other._indices;
+			this->_materials	= other._materials;
+			this->_name			= other._name;
 
 			this->clear();
 			return *this;
@@ -638,11 +696,20 @@ namespace vka
 
 		virtual ~Mesh(void) {}
 
+		/**
+		*	@brief Creates and initializes the mesh.
+		*	@param attribute Attribute type from tiny object loader of current model.
+		*	@param shape Shaüe type from tiny object loader of current model.
+		*/
 		void create(const tinyobj::attrib_t& attribute, const tinyobj::shape_t& shape)
 		{
 			this->_name = shape.name;
-			std::unordered_map<vertex_t<_vc, _tc, _nc>, uint32_t, typename vertex_t<_vc, _tc, _nc>::hasher> map;
+			this->_materials = shape.mesh.material_ids;
 
+			// Hash map to store only unique vertices and their corresponding index.
+			// It's only purpose is to deduplicate vertices (to figure out if a vertex already exists or not).
+			// Uses a hash map to have direct access to the vertex as this is faster than using a tree or list map.
+			std::unordered_map<vertex_t<_vc, _tc, _nc>, uint32_t, typename vertex_t<_vc, _tc, _nc>::hasher> map;
 			for (const tinyobj::index_t index : shape.mesh.indices)
 			{
 				vertex_t<_vc, _tc, _nc> vertex;
@@ -650,68 +717,112 @@ namespace vka
 				tinyobj::real_t* texcoord	= (tinyobj::real_t*)&vertex.texcoord;
 				tinyobj::real_t* normal		= (tinyobj::real_t*)&vertex.normal;
 
+				// read positions
 				for (uint32_t i = 0; i < _vc; i++)
 				{
 					if (attribute.vertices.size() > 0)
 						pos[i] = attribute.vertices[_vc * index.vertex_index + i];
 				}
 
+				// read texture coordinates
 				for (uint32_t i = 0; i < _tc; i++)
 				{
 					if (attribute.texcoords.size() > 0)
 						texcoord[i] = attribute.texcoords[_tc * index.texcoord_index + i];
 				}
 
+				// read normal vectors
 				for (uint32_t i = 0; i < _nc; i++)
 				{
 					if (attribute.normals.size() > 0)
 						normal[i] = attribute.normals[_nc * index.normal_index + i];
 				}
-			
+				
+				// only store vertex if it doesnt exist in the hash map
 				if (map.count(vertex) == 0)
 				{
+					// the current size of the _vertices vector is the index of the current UNIQUE vertex
 					map[vertex] = static_cast<uint32_t>(_vertices.size());
+					// ... also store the UNIQUE vertex
 					this->_vertices.push_back(vertex);
 				}
-
+				// store index of the current vertex
 				this->_indices.push_back(map[vertex]);
 			}	
 		}
 
-		const std::vector<vertex_t<_vc, _tc, _nc> >& vertices(void) const noexcept { return this->_vertices; }
-		const std::vector<uint32_t>& indices(void) const noexcept { return this->_indices; }
-		const std::string& name(void) const noexcept { return this->_name; }
+		/** @return a vector of vertices. */
+		const std::vector< vertex_t<_vc, _tc, _nc> >& vertices(void) const noexcept { return this->_vertices; }
 
-		const void* vertex_data(void) const noexcept { return this->_vertices.data(); }
-		const void* index_data(void) const noexcept { return this->_indices.data(); }
+		/** @return a vector of indices to address the vertices. */
+		const std::vector<uint32_t>& indices(void) const noexcept					{ return this->_indices; }
 
-		size_t vertex_size(void) const noexcept { return this->_vertices.size() * sizeof(vertex_t<_vc, _tc, _nc>); }
-		size_t index_size(void) const noexcept { return this->_indices.size() * sizeof(uint32_t); }
+		/** @return a vector of the corresponding material ID's for the current mesh. */
+		const std::vector<int>& material_ids(void) const noexcept					{ return this->_materials; }
 
+		/** @return the name of the mesh.  */
+		const std::string& name(void) const noexcept								{ return this->_name; }
+
+		/** @return a pointer to the vertex data.  */
+		const void* vertex_data(void) const noexcept								{ return this->_vertices.data(); }
+
+		/** @return a pointer to the index data. */
+		const void* index_data(void) const noexcept									{ return this->_indices.data(); }
+
+		/** @return the size in bytes of all vertices.  */
+		size_t vertex_size(void) const noexcept										{ return this->_vertices.size() * sizeof(vertex_t<_vc, _tc, _nc>); }
+
+		/** @return the size in bytes of all indices. */
+		size_t index_size(void) const noexcept										{ return this->_indices.size() * sizeof(uint32_t); }
+
+		/** @brief Cleares the mesh / cleares all internal vectors. */
 		void clear(void) noexcept
 		{
 			this->_vertices.clear();
 			this->_indices.clear();
+			this->_materials.clear();
 			this->_name.clear();
-		}
 
-		// for std::map
-		bool operator< (const Mesh& other) const noexcept { return this->_name < other._name; }
+			this->_vertices.shrink_to_fit();
+			this->_indices.shrink_to_fit();
+			this->_materials.shrink_to_fit();
+		}
 	};
 
+	/**
+	*	@brief Contains one or more meshes and materials.
+	*/
 	template<uint32_t _vc, uint32_t _tc, uint32_t _nc>
 	class Model
 	{
 	private:
-		// stores mesh and the material index
-		std::map<Mesh<_vc, _tc, _nc>, std::vector<int>> _meshes;
-		std::vector<tinyobj::material_t> _materials;
+		std::vector< Mesh<_vc, _tc, _nc> > _meshes;		// all meshes of the model
+		std::vector<tinyobj::material_t> _materials;	// all materials of the model
 
 	public:
 		Model(void) = default;
 		virtual ~Model(void) {}
 
-		bool load(const std::string& path)
+		Model(const Model& other) { *this = other; }
+		Model& operator= (const Model& other)
+		{
+			this->_meshes		= other._meshes;
+			this->_materials	= other._materials;
+		}
+
+		Model(Model&& other) { *this = (Model&&)other; }
+		Model& operator= (Model&& other)
+		{
+			this->_meshes		= other._meshes;
+			this->_materials	= other._materials;
+			this->clear();
+		}
+
+		/**
+		*	@brief Loads the model into the memory.
+		*	@param path Path to the model file.
+		*/
+		void load(const std::string& path)
 		{
 			tinyobj::ObjReaderConfig config = {};
 			config.vertex_color = false;
@@ -719,27 +830,32 @@ namespace vka
 
 			tinyobj::ObjReader obj_file;
 			if (!obj_file.ParseFromFile(path, config))
-				return false;
+				throw std::invalid_argument("Failed to load object file \"" + path + "\".");
 
 			for (const tinyobj::shape_t& shape : obj_file.GetShapes())
 			{
 				Mesh<_vc, _tc, _nc> mesh;
 				mesh.create(obj_file.GetAttrib(), shape);
-				this->_meshes.insert({ mesh, shape.mesh.material_ids });
+				this->_meshes.push_back(mesh);
 			}
 			this->_materials = obj_file.GetMaterials();
-			return true;
 		}
-		void combine(std::vector<vertex_t<_vc, _tc, _nc> >& vertices, std::vector<uint32_t>& indices)
+
+		/**
+		*	@brief Combines vertices and indices of all meshes into a single vertex and index vector.
+		*	NOTE: Materials for different meshes will become useless!
+		*	@param[out] vertices Resulting vertices vector.
+		*	@param[out] indices Resulting indices vector.
+		*/
+		void combine(std::vector< vertex_t<_vc, _tc, _nc> >& vertices, std::vector<uint32_t>& indices)
 		{
 			vertices.clear();
 			indices.clear();
 
 			uint32_t base_index = 0;
-			for (auto iter = this->_meshes.begin(); iter != this->_meshes.end(); iter++)
+			for (const Mesh<_vc, _tc, _nc>& cur_mesh : this->_meshes)
 			{
-				const Mesh<_vc, _tc, _nc>& cur_mesh = iter->first;
-				for (const vertex_t<_vc, _tc, _nc>& v : cur_mesh.vertices())
+				for (const vertex_t<_vc, _tc, _nc>&v : cur_mesh.vertices())
 					vertices.push_back(v);
 				for (uint32_t i : cur_mesh.indices())
 					indices.push_back(base_index + i);
@@ -747,13 +863,19 @@ namespace vka
 			}
 		}
 
-		const std::map<Mesh<_vc, _tc, _nc>, std::vector<int>>& meshes(void) const noexcept { return this->_meshes; }
+		/** @return a vector of all meshes. */
+		const std::vector< Mesh<_vc, _tc, _nc> >& meshes(void) const noexcept { return this->_meshes; }
+
+		/** @return a vector of all materials. */
 		const std::vector<tinyobj::material_t> materials(void) const noexcept { return this->_materials; }
 
+		/** @brief Cleares the model / cleares all internal vectors. */
 		void clear(void) noexcept
 		{
 			this->_meshes.clear();
 			this->_materials.clear();
+			this->_meshes.shrink_to_fit();
+			this->_materials.shrink_to_fit();
 		}
 	};
 

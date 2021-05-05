@@ -136,9 +136,7 @@ void VulkanApp::vulkan_destroy(void)
 void VulkanApp::load_models(void)
 {
 	vka::Model323 dragon;
-	if (!dragon.load("../../../assets/models/fountain.obj"))
-		throw std::invalid_argument("Failed to load file.");
-		 
+	dragon.load("../../../assets/models/fountain.obj");
 	dragon.combine(this->vertices, this->indices);
 
 	std::cout << "Number of vertices: " << this->vertices.size() << std::endl;

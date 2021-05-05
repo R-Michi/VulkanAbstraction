@@ -36,6 +36,7 @@ void vka::AttachmentImage::_default_img_create_info(void) noexcept
 	this->_image_create_info.pNext = nullptr;
 	this->_image_create_info.flags = 0;
 	this->_image_create_info.imageType = VK_IMAGE_TYPE_2D;
+	this->_image_create_info.extent.depth = 1;
 	this->_image_create_info.mipLevels = 1;
 	this->_image_create_info.arrayLayers = 1;
 	this->_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -63,7 +64,8 @@ void vka::AttachmentImage::set_image_format(VkFormat format) noexcept
 
 void vka::AttachmentImage::set_image_extent(VkExtent2D extent) noexcept
 {
-	this->_image_create_info.extent = {extent.width, extent.height, 1};
+	this->_image_create_info.extent.width = extent.width;
+	this->_image_create_info.extent.height = extent.height;
 }
 
 void vka::AttachmentImage::set_image_samples(VkSampleCountFlagBits samples) noexcept
