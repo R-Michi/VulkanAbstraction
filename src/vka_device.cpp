@@ -1,5 +1,4 @@
 #include "../include/vulkan_absraction.h"
-#include <string>
 
 void vka::get_physical_devices(const VkInstance& instance, std::vector<VkPhysicalDevice>& physical_devices)
 {

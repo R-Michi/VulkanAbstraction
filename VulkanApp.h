@@ -6,20 +6,11 @@
 #include <vector>
 
 #define VULKAN_ABSTRACTION_DEBUG
+#define VULKAN_ABSTRACTION_EXPERIMENTAL
 #include "include/vulkan_absraction.h"
 
 class VulkanApp
 {
-	struct vertex_t
-	{
-		glm::vec3 position;
-		glm::vec4 color;
-		glm::vec2 tex_coords;
-
-		static void binding_description(std::vector<VkVertexInputBindingDescription>& binding_descriptions);
-		static void attribute_description(std::vector<VkVertexInputAttributeDescription>& attribute_descriptions);
-	};
-
 	struct UniformTranformMatrices
 	{
 		glm::mat4 MVP;
@@ -48,9 +39,10 @@ private:
 	VkCommandPool command_pool;
 	std::vector<VkCommandBuffer> swapchain_command_buffers;
 
-	std::vector<vertex_t> vertices;
-	vka::Buffer vertex_buffer;
+	std::vector<vka::vertex323_t> vertices;
 	std::vector<uint32_t> indices;
+	size_t n_indices;
+	vka::Buffer vertex_buffer;
 	vka::Buffer index_buffer;
 	vka::Buffer uniform_buffer;
 
@@ -82,6 +74,8 @@ private:
 	// vulkan methods
 	void vulkan_init(void);
 	void vulkan_destroy(void);
+
+	void load_models(void);
 
 	void make_application_info(void);
 	void create_instance(void);

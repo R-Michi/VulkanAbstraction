@@ -12,17 +12,17 @@
 VulkanApp::VulkanApp(void)
 {
 	this->vertices = {
-		{{-1.0f, 0.75f, +1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-		{{-1.0f, 0.75f, -1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-		{{+1.0f, 0.75f, -1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
-		{{+1.0f, 0.75f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+		{{-1.0f, 0.75f, +1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
+		{{-1.0f, 0.75f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+		{{+1.0f, 0.75f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+		{{+1.0f, 0.75f, +1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
 
-		{{-1.0f, 0.0f, +1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-		{{-1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-		{{+1.0f, 0.0f, -1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
-		{{+1.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+		{{-1.0f, 0.0f, +1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
+		{{-1.0f, 0.0f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+		{{+1.0f, 0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+		{{+1.0f, 0.0f, +1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
 	};
-	this->indices = { 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7};
+	this->indices = { 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7 };
 }
 
 VulkanApp::~VulkanApp(void)
@@ -130,6 +130,19 @@ void VulkanApp::vulkan_destroy(void)
 	vkDestroyDevice(this->device, nullptr);
 	vkDestroySurfaceKHR(this->instance, this->window_surface, nullptr);
 	vkDestroyInstance(this->instance, nullptr);
+}
+
+
+void VulkanApp::load_models(void)
+{
+	vka::Model323 dragon;
+	if (!dragon.load("../../../assets/models/fountain.obj"))
+		throw std::invalid_argument("Failed to load file.");
+		 
+	dragon.combine(this->vertices, this->indices);
+
+	std::cout << "Number of vertices: " << this->vertices.size() << std::endl;
+	std::cout << "Number of indices: " << this->indices.size() << std::endl;
 }
 
 
@@ -446,21 +459,40 @@ void VulkanApp::create_shaders(void)
 
 void VulkanApp::create_pipeline(void)
 {
-	std::vector<VkVertexInputBindingDescription> binding_descriptions;
-	vertex_t::binding_description(binding_descriptions);
+	std::vector<VkVertexInputBindingDescription> bindings(1);
+	bindings[0] = {};
+	bindings[0].binding = 0;
+	bindings[0].stride = sizeof(vka::vertex323_t);
+	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	std::vector<VkVertexInputAttributeDescription> attrib_descriptions;
-	vertex_t::attribute_description(attrib_descriptions);
+	std::vector<VkVertexInputAttributeDescription> attributes(3);
+	attributes[0] = {};
+	attributes[0].location = 0;
+	attributes[0].binding = 0;
+	attributes[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributes[0].offset = 0;
+
+	attributes[1] = {};
+	attributes[1].location = 1;
+	attributes[1].binding = 0;
+	attributes[1].format = VK_FORMAT_R32G32_SFLOAT;
+	attributes[1].offset = sizeof(glm::vec3);
+
+	attributes[2] = {};
+	attributes[2].location = 2;
+	attributes[2].binding = 0;
+	attributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributes[2].offset = sizeof(glm::vec3) + sizeof(glm::vec2);
 
 	VkPipelineVertexInputStateCreateInfo vertex_input_create_info = {};
 	vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertex_input_create_info.pNext = nullptr;
 	vertex_input_create_info.flags = 0;
-	vertex_input_create_info.vertexBindingDescriptionCount = binding_descriptions.size();
-	vertex_input_create_info.pVertexBindingDescriptions = binding_descriptions.data();
-	vertex_input_create_info.vertexAttributeDescriptionCount = attrib_descriptions.size();
-	vertex_input_create_info.pVertexAttributeDescriptions = attrib_descriptions.data();
-
+	vertex_input_create_info.vertexBindingDescriptionCount = bindings.size();
+	vertex_input_create_info.pVertexBindingDescriptions = bindings.data();
+	vertex_input_create_info.vertexAttributeDescriptionCount = attributes.size();
+	vertex_input_create_info.pVertexAttributeDescriptions = attributes.data();
+	
 	VkViewport view_port = {};
 	view_port.x = 0.0f;
 	view_port.y = 0.0f;
@@ -659,7 +691,7 @@ void VulkanApp::create_global_command_buffers(void)
 
 void VulkanApp::create_vertex_buffers(void)
 {
-	VkDeviceSize size = this->vertices.size() * sizeof(vertex_t);
+	VkDeviceSize size = sizeof(vka::vertex323_t) * this->vertices.size();
 
 	vka::Buffer staging_buffer;
 	staging_buffer.set_create_flags(0);
@@ -677,8 +709,10 @@ void VulkanApp::create_vertex_buffers(void)
 	void* _map = staging_buffer.map(size, 0);
 	memcpy(_map, this->vertices.data(), size);
 	staging_buffer.unmap();
+	this->vertices.clear();
+	this->vertices.shrink_to_fit();
 
-	this->vertex_buffer.set_create_usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+	this->vertex_buffer.set_create_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	this->vertex_buffer.set_memory_properties(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	this->vertex_buffer.set_command_pool(this->command_pool);
 	this->vertex_buffer.set_queue(this->graphics_queues[0]);
@@ -705,12 +739,16 @@ void VulkanApp::create_index_buffers(void)
 	void* _map = staging_buffer.map(size, 0);
 	memcpy(_map, this->indices.data(), size);
 	staging_buffer.unmap();
+	this->n_indices = this->indices.size();
+	this->indices.clear();
+	this->indices.shrink_to_fit();
 
 	this->index_buffer.set_create_usage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 	this->index_buffer.set_memory_properties(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	this->index_buffer.set_command_pool(this->command_pool);
 	this->index_buffer.set_queue(this->graphics_queues[0]);
 	this->index_buffer = std::move(staging_buffer);
+	staging_buffer.clear();
 }
 
 void VulkanApp::create_uniform_buffers(void)
@@ -732,7 +770,7 @@ void VulkanApp::create_uniform_buffers(void)
 void VulkanApp::create_textures(void)
 {
 	int w, h, c;
-	uint8_t* data = stbi_load("../../../assets/textures/texture.jpg", &w, &h, &c, STBI_rgb_alpha);
+	uint8_t* data = stbi_load("../../../assets/textures/fountain_tex.jpg", &w, &h, &c, STBI_rgb_alpha);
 
 	VkComponentMapping component_mapping = {};
 	component_mapping.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -957,8 +995,8 @@ void VulkanApp::record_command_buffers(void)
 
 		// bind descriptor sets
 		vkCmdBindDescriptorSets(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, this->descriptor_sets.size(), this->descriptor_sets.data(), 0, nullptr);
-
-		vkCmdDrawIndexed(this->swapchain_command_buffers.at(i), this->indices.size(), 1, 0, 0, 0);
+		
+		vkCmdDrawIndexed(this->swapchain_command_buffers.at(i), this->n_indices, 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(this->swapchain_command_buffers.at(i));
 
@@ -969,6 +1007,7 @@ void VulkanApp::record_command_buffers(void)
 
 void VulkanApp::init(void)
 {
+	this->load_models();
 	this->glfw_init();
 	this->vulkan_init();
 }
@@ -1012,9 +1051,10 @@ void VulkanApp::update_frame_contents(void)
 	UniformTranformMatrices utm;
 
 	glm::mat4 model(1.0f);
-	model = glm::rotate(model, static_cast<float>(M_PI * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 projection = glm::perspective(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 100.0f);
+	model = glm::rotate(model, static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 100.0f, -200.0f), glm::vec3(0.0f, 50.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 projection = glm::perspective(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 1000.0f);
 	projection[1][1] *= -1.0f;
 	utm.MVP = projection * view * model;
 
@@ -1040,34 +1080,4 @@ void VulkanApp::run(void)
 		this->frame_times.push_back(t_render);
 	}
 	std::cout << std::endl;
-}
-
-void VulkanApp::vertex_t::binding_description(std::vector<VkVertexInputBindingDescription>& binding_descriptions)
-{
-	binding_descriptions.resize(1, {});
-
-	binding_descriptions[0].binding = 0;
-	binding_descriptions[0].stride = sizeof(vertex_t);
-	binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-}
-
-void VulkanApp::vertex_t::attribute_description(std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
-{
-	attribute_descriptions.resize(3, {});
-
-	attribute_descriptions[0].location = 0;
-	attribute_descriptions[0].binding = 0;
-	attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attribute_descriptions[0].offset = 0;
-
-	attribute_descriptions[1].location = 1;
-	attribute_descriptions[1].binding = 0;
-	attribute_descriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	attribute_descriptions[1].offset = sizeof(glm::vec3);
-
-	attribute_descriptions[2].location = 2;
-	attribute_descriptions[2].binding = 0;
-	attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-	attribute_descriptions[2].offset = sizeof(glm::vec3) + sizeof(glm::vec4);
-
 }

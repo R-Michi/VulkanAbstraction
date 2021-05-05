@@ -1,17 +1,17 @@
 #pragma once
 
 #ifdef VULKAN_ABSTRACTION_DEBUG
-#ifdef _MSVC_VER
-#define VULKAN_ASSERT(result)\
-if(result != VK_SUCCESS)\
-	__debugbreak();
+	#ifdef _MSVC_VER
+		#define VULKAN_ASSERT(result)\
+		if(result != VK_SUCCESS)\
+			__debugbreak();
+	#else
+		#define VULKAN_ASSERT(result)\
+		if(result != VK_SUCCESS) \
+			asm("int $3")
+	#endif
 #else
-#define VULKAN_ASSERT(result)\
-if(result != VK_SUCCESS) \
-	asm("int $3")
-#endif
-#else
-#define VULKAN_ASSERT(result)
+	#define VULKAN_ASSERT(result)
 #endif
 
 #ifdef __clang__  
@@ -24,12 +24,17 @@ if(result != VK_SUCCESS) \
 #endif
 
 #ifndef GLFW_INCLUDE_VULKAN
-#define GLFW_INCLUDE_VULKAN
+	#define GLFW_INCLUDE_VULKAN
 #endif
 	
-#include <GLFW/glfw3.h>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
+#include <tiny_obj_loader.h>
 
 namespace vka
 {
@@ -374,14 +379,20 @@ namespace vka
 		void _default_view_create_info(void) noexcept;
 		void _default_sampler_create_info(void) noexcept;
 
+		/** @brief Begins command buffer recording. */
+		VkResult record_commands(VkCommandBuffer& command_buffer);
+
+		/** @brief Executes command buffer.  */
+		VkResult execute_commands(VkCommandBuffer command_buffer);
+
 		/** @brief Copies a buffer into an image. */
-		VkResult buffer_copy(VkBuffer buffer, VkImage image, uint32_t mip_levels, uint32_t array_layers, VkOffset3D offset, VkExtent3D extent);
+		void buffer_copy(VkCommandBuffer command_buffer, VkBuffer buffer, VkImage image, uint32_t array_layers, VkExtent3D extent);
 
 		/** @brief Performs an image layout transision. */
-		VkResult transform_image_layout(VkImageLayout _old, VkImageLayout _new);
+		void transform_image_layout(VkCommandBuffer command_buffer, VkImageLayout _old, VkImageLayout _new);
 
 		/** @brief Generates the mipmaps. */
-		VkResult generate_mipmaps(void);
+		void generate_mipmaps(VkCommandBuffer command_buffer);
 
 	public:
 		Texture(void) noexcept;
@@ -564,6 +575,204 @@ namespace vka
 		/** @return The view handle. */
 		VkImageView view(void) const noexcept;
 	};
+
+#ifdef VULKAN_ABSTRACTION_EXPERIMENTAL
+	template<uint32_t _vc, uint32_t _tc, uint32_t _nc>
+	struct vertex_t
+	{
+		static_assert(_vc <= 4U && _vc >= 1, "Vertex component count of vka::Mesh::vertex_t is greater than 4 or less than 1!");
+		static_assert(_tc <= 4U && _tc >= 1, "Texture coordinate component count of vka::Mesh::vertex_t is greater than 4 or less than 1!");
+		static_assert(_nc <= 4U && _nc >= 1, "Normal vector component count of vka::Mesh::vertex_t is greater than 4 or less than 1!");
+
+		glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp> position{ 0.0f };
+		glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp> texcoord{ 0.0f };
+		glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp> normal{ 0.0f };
+
+		bool operator== (const vertex_t& other) const noexcept
+		{
+			//return (this->position == other.position && this->texcoord == other.texcoord && this->normal == other.normal);
+			return (memcmp(this, &other, sizeof(*this)) == 0);
+		}
+
+		struct hasher
+		{
+			size_t operator()(const vertex_t& other) const noexcept
+			{
+				return ((std::hash<glm::vec<_vc, tinyobj::real_t, glm::qualifier::defaultp>>()(other.position) ^
+						(std::hash<glm::vec<_tc, tinyobj::real_t, glm::qualifier::defaultp>>()(other.texcoord) << 1)) >> 1) ^
+						(std::hash<glm::vec<_nc, tinyobj::real_t, glm::qualifier::defaultp>>()(other.normal)   << 1);
+			}
+		};
+	};
+
+	template<uint32_t _vc, uint32_t _tc, uint32_t _nc>
+	class Mesh
+	{
+	private:
+		std::vector<vertex_t<_vc, _tc, _nc> > _vertices;
+		std::vector<uint32_t> _indices;
+		std::string _name;
+
+	public:
+		Mesh(void) = default;
+
+		Mesh(const Mesh& other) { *this = other; }
+		Mesh& operator= (const Mesh& other)
+		{
+			this->_vertices = other._vertices;
+			this->_indices	= other._indices;
+			this->_name		= other._name;
+			return *this;
+		}
+
+		Mesh(Mesh&& other) { *this = std::move(other); }
+		Mesh& operator= (Mesh&& other)
+		{
+			this->_vertices = other._vertices;
+			this->_indices = other._indices;
+			this->_name = other._name;
+
+			this->clear();
+			return *this;
+		}
+
+		virtual ~Mesh(void) {}
+
+		void create(const tinyobj::attrib_t& attribute, const tinyobj::shape_t& shape)
+		{
+			this->_name = shape.name;
+			std::unordered_map<vertex_t<_vc, _tc, _nc>, uint32_t, typename vertex_t<_vc, _tc, _nc>::hasher> map;
+
+			for (const tinyobj::index_t index : shape.mesh.indices)
+			{
+				vertex_t<_vc, _tc, _nc> vertex;
+				tinyobj::real_t* pos		= (tinyobj::real_t*)&vertex.position;
+				tinyobj::real_t* texcoord	= (tinyobj::real_t*)&vertex.texcoord;
+				tinyobj::real_t* normal		= (tinyobj::real_t*)&vertex.normal;
+
+				for (uint32_t i = 0; i < _vc; i++)
+				{
+					if (attribute.vertices.size() > 0)
+						pos[i] = attribute.vertices[_vc * index.vertex_index + i];
+				}
+
+				for (uint32_t i = 0; i < _tc; i++)
+				{
+					if (attribute.texcoords.size() > 0)
+						texcoord[i] = attribute.texcoords[_tc * index.texcoord_index + i];
+				}
+
+				for (uint32_t i = 0; i < _nc; i++)
+				{
+					if (attribute.normals.size() > 0)
+						normal[i] = attribute.normals[_nc * index.normal_index + i];
+				}
+			
+				if (map.count(vertex) == 0)
+				{
+					map[vertex] = static_cast<uint32_t>(_vertices.size());
+					this->_vertices.push_back(vertex);
+				}
+
+				this->_indices.push_back(map[vertex]);
+			}	
+		}
+
+		const std::vector<vertex_t<_vc, _tc, _nc> >& vertices(void) const noexcept { return this->_vertices; }
+		const std::vector<uint32_t>& indices(void) const noexcept { return this->_indices; }
+		const std::string& name(void) const noexcept { return this->_name; }
+
+		const void* vertex_data(void) const noexcept { return this->_vertices.data(); }
+		const void* index_data(void) const noexcept { return this->_indices.data(); }
+
+		size_t vertex_size(void) const noexcept { return this->_vertices.size() * sizeof(vertex_t<_vc, _tc, _nc>); }
+		size_t index_size(void) const noexcept { return this->_indices.size() * sizeof(uint32_t); }
+
+		void clear(void) noexcept
+		{
+			this->_vertices.clear();
+			this->_indices.clear();
+			this->_name.clear();
+		}
+
+		// for std::map
+		bool operator< (const Mesh& other) const noexcept { return this->_name < other._name; }
+	};
+
+	template<uint32_t _vc, uint32_t _tc, uint32_t _nc>
+	class Model
+	{
+	private:
+		// stores mesh and the material index
+		std::map<Mesh<_vc, _tc, _nc>, std::vector<int>> _meshes;
+		std::vector<tinyobj::material_t> _materials;
+
+	public:
+		Model(void) = default;
+		virtual ~Model(void) {}
+
+		bool load(const std::string& path)
+		{
+			tinyobj::ObjReaderConfig config = {};
+			config.vertex_color = false;
+			config.triangulate = true;	// always triangulate faces
+
+			tinyobj::ObjReader obj_file;
+			if (!obj_file.ParseFromFile(path, config))
+				return false;
+
+			for (const tinyobj::shape_t& shape : obj_file.GetShapes())
+			{
+				Mesh<_vc, _tc, _nc> mesh;
+				mesh.create(obj_file.GetAttrib(), shape);
+				this->_meshes.insert({ mesh, shape.mesh.material_ids });
+			}
+			this->_materials = obj_file.GetMaterials();
+			return true;
+		}
+		void combine(std::vector<vertex_t<_vc, _tc, _nc> >& vertices, std::vector<uint32_t>& indices)
+		{
+			vertices.clear();
+			indices.clear();
+
+			uint32_t base_index = 0;
+			for (auto iter = this->_meshes.begin(); iter != this->_meshes.end(); iter++)
+			{
+				const Mesh<_vc, _tc, _nc>& cur_mesh = iter->first;
+				for (const vertex_t<_vc, _tc, _nc>& v : cur_mesh.vertices())
+					vertices.push_back(v);
+				for (uint32_t i : cur_mesh.indices())
+					indices.push_back(base_index + i);
+				base_index += cur_mesh.vertices().size();
+			}
+		}
+
+		const std::map<Mesh<_vc, _tc, _nc>, std::vector<int>>& meshes(void) const noexcept { return this->_meshes; }
+		const std::vector<tinyobj::material_t> materials(void) const noexcept { return this->_materials; }
+
+		void clear(void) noexcept
+		{
+			this->_meshes.clear();
+			this->_materials.clear();
+		}
+	};
+
+	// typical definitions
+	typedef vertex_t<3, 2, 3>	vertex323_t;
+	typedef vertex_t<4, 2, 3>	vertex423_t;
+	typedef vertex_t<3, 3, 3>	vertex333_t;
+	typedef vertex_t<4, 3, 3>	vertex433_t;
+
+	typedef Mesh<3, 2, 3>		Mesh323;
+	typedef Mesh<4, 2, 3>		Mesh423;
+	typedef Mesh<3, 3, 3>		Mesh333;
+	typedef Mesh<4, 3, 3>		Mesh433;
+
+	typedef Model<3, 2, 3>		Model323;
+	typedef Model<4, 2, 3>		Model423;
+	typedef Model<3, 3, 3>		Model333;
+	typedef Model<4, 3, 3>		Model433;
+#endif
 
 	/**
 	*	@brief Checks if one layer at instance level is supported.
@@ -768,4 +977,4 @@ namespace vka
 		*/
 		VkFormatFeatureFlags image_usage_to_format_feature(VkImageUsageFlags image_usage);
 	};
-};
+}

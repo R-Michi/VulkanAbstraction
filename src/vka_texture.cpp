@@ -1,7 +1,6 @@
 #include "../include/vulkan_absraction.h"
 #include <stdexcept>
 #include <sstream>
-#include <iostream>
 #include <initializer_list>
 #include <algorithm>
 
@@ -302,24 +301,29 @@ VkResult vka::Texture::create(const void* pdata, size_t pixel_stride)
 	result = vkBindImageMemory(this->_device, this->_image, this->_memory, 0);
 	if (result != VK_SUCCESS) return result;
 
+	// begin recording of commands
+	VkCommandBuffer command_buffer;
+	result = this->record_commands(command_buffer);
+	if (result != VK_SUCCESS) return result;
+
 	// change layout to be able to copy data into the image
-	result = this->transform_image_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	if (result != VK_SUCCESS) return result;
-
-	result = this->buffer_copy(staging_buffer.handle(), this->_image, 0, this->_image_create_info.arrayLayers, { 0,0,0 }, extent);
-	if (result != VK_SUCCESS) return result;
-
+	this->transform_image_layout(command_buffer, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	// copy staging buffer to image
+	this->buffer_copy(command_buffer, staging_buffer.handle(), this->_image, this->_image_create_info.arrayLayers, extent);
 	if (this->_mipmap)
 	{
 		// generate mipmaps and the image gets automatically transisioned to the VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL layout.
-		result = this->generate_mipmaps();
+		this->generate_mipmaps(command_buffer);
 	}
 	else
 	{
 		// change layout again that the shader can read the texture most efficient
 		// transision the whole image if no mipmaps should be generated
-		result = this->transform_image_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		this->transform_image_layout(command_buffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
+
+	// execute recorded commands
+	result = this->execute_commands(command_buffer);
 	if (result != VK_SUCCESS) return result;
 
 	// create view out of image
@@ -399,9 +403,9 @@ uint32_t vka::Texture::array_layers(void) const noexcept
 	return this->_image_create_info.arrayLayers;
 }
 
-VkResult vka::Texture::buffer_copy(VkBuffer buffer, VkImage image, uint32_t mip_level, uint32_t array_layers, VkOffset3D offset, VkExtent3D extent)
+
+VkResult vka::Texture::record_commands(VkCommandBuffer& command_buffer)
 {
-	// command buffer for copy operation
 	VkCommandBufferAllocateInfo command_buffer_alloc_info = {};
 	command_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	command_buffer_alloc_info.pNext = nullptr;
@@ -409,41 +413,26 @@ VkResult vka::Texture::buffer_copy(VkBuffer buffer, VkImage image, uint32_t mip_
 	command_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	command_buffer_alloc_info.commandBufferCount = 1;
 
-	VkCommandBuffer command_buffer;
 	VkResult result = vkAllocateCommandBuffers(this->_device, &command_buffer_alloc_info, &command_buffer);
 	if (result != VK_SUCCESS) return result;
 
-	// command buffer is only used once (one time submit)
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.pNext = nullptr;
 	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	begin_info.pInheritanceInfo = nullptr;
 
-	// begin recording
 	result = vkBeginCommandBuffer(command_buffer, &begin_info);
 	if (result != VK_SUCCESS) return result;
 
-	// copy information
-	VkBufferImageCopy buffer_image_copy = {};
-	buffer_image_copy.bufferOffset = 0;
-	buffer_image_copy.bufferRowLength = 0;
-	buffer_image_copy.bufferImageHeight = 0;
-	buffer_image_copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	buffer_image_copy.imageSubresource.mipLevel = mip_level;
-	buffer_image_copy.imageSubresource.baseArrayLayer = 0;
-	buffer_image_copy.imageSubresource.layerCount = array_layers;
-	buffer_image_copy.imageOffset = offset;
-	buffer_image_copy.imageExtent = extent;
+	return VK_SUCCESS;
+}
 
-	// copy...
-	vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy);
-
-	// end recording
-	vkEndCommandBuffer(command_buffer);
+VkResult vka::Texture::execute_commands(VkCommandBuffer command_buffer)
+{
+	VkResult result = vkEndCommandBuffer(command_buffer);
 	if (result != VK_SUCCESS) return result;
 
-	// submit info
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.pNext = nullptr;
@@ -455,41 +444,37 @@ VkResult vka::Texture::buffer_copy(VkBuffer buffer, VkImage image, uint32_t mip_
 	submit_info.signalSemaphoreCount = 0;
 	submit_info.pSignalSemaphores = nullptr;
 
-	// submit command buffer to command queue
 	result = vkQueueSubmit(this->_command_queue, 1, &submit_info, VK_NULL_HANDLE);
 	if (result != VK_SUCCESS) return result;
 
-	// wait for queue to be aviable
-	vkQueueWaitIdle(this->_command_queue);
+	result = vkQueueWaitIdle(this->_command_queue);
 	if (result != VK_SUCCESS) return result;
 
-	// command buffers not used anymore
-	vkFreeCommandBuffers(this->_device, this->_command_pool, command_buffer_alloc_info.commandBufferCount, &command_buffer);
+	vkFreeCommandBuffers(this->_device, this->_command_pool, 1, &command_buffer);
 	return VK_SUCCESS;
 }
 
-VkResult vka::Texture::transform_image_layout(VkImageLayout _old, VkImageLayout _new)
+
+void vka::Texture::buffer_copy(VkCommandBuffer command_buffer, VkBuffer buffer, VkImage image, uint32_t array_layers, VkExtent3D extent)
 {
-	VkCommandBufferAllocateInfo cmd_buffer_alloc_info = {};
-	cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmd_buffer_alloc_info.pNext = nullptr;
-	cmd_buffer_alloc_info.commandPool = this->_command_pool;
-	cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmd_buffer_alloc_info.commandBufferCount = 1;
+	// copy information
+	VkBufferImageCopy buffer_image_copy = {};
+	buffer_image_copy.bufferOffset = 0;
+	buffer_image_copy.bufferRowLength = 0;
+	buffer_image_copy.bufferImageHeight = 0;
+	buffer_image_copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	buffer_image_copy.imageSubresource.mipLevel = 0;	// the mip levels are generated by the GPU via commands, there is only one in the staging buffer
+	buffer_image_copy.imageSubresource.baseArrayLayer = 0;
+	buffer_image_copy.imageSubresource.layerCount = array_layers;
+	buffer_image_copy.imageOffset = { 0,0,0 };
+	buffer_image_copy.imageExtent = extent;
 
-	VkCommandBuffer command_buffer;
-	VkResult result = vkAllocateCommandBuffers(this->_device, &cmd_buffer_alloc_info, &command_buffer);
-	if (result != VK_SUCCESS) return result;
+	// copy...
+	vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy);
+}
 
-	VkCommandBufferBeginInfo command_buffer_begin_info = {};
-	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	command_buffer_begin_info.pNext = nullptr;
-	command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	command_buffer_begin_info.pInheritanceInfo = nullptr;
-
-	result = vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info);
-	if (result != VK_SUCCESS) return result;
-
+void vka::Texture::transform_image_layout(VkCommandBuffer command_buffer, VkImageLayout _old, VkImageLayout _new)
+{
 	VkPipelineStageFlags src_flags, dst_flags;
 	VkImageMemoryBarrier image_memory_barrier = {};
 	image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -529,31 +514,9 @@ VkResult vka::Texture::transform_image_layout(VkImageLayout _old, VkImageLayout 
 	image_memory_barrier.subresourceRange.layerCount = this->_image_create_info.arrayLayers;
 
 	vkCmdPipelineBarrier(command_buffer, src_flags, dst_flags, 0, 0, nullptr, 0, nullptr, 1, &image_memory_barrier);
-
-	result = vkEndCommandBuffer(command_buffer);
-	if (result != VK_SUCCESS) return result;
-
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.pNext = nullptr;
-	submit_info.waitSemaphoreCount = 0;
-	submit_info.pWaitSemaphores = nullptr;
-	submit_info.pWaitDstStageMask = nullptr;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-	submit_info.signalSemaphoreCount = 0;
-	submit_info.pSignalSemaphores = nullptr;
-
-	result = vkQueueSubmit(this->_command_queue, 1, &submit_info, VK_NULL_HANDLE);
-	if (result != VK_SUCCESS) return result;
-	result = vkQueueWaitIdle(this->_command_queue);
-	if (result != VK_SUCCESS) return result;
-
-	vkFreeCommandBuffers(this->_device, this->_command_pool, cmd_buffer_alloc_info.commandBufferCount, &command_buffer);
-	return VK_SUCCESS;
 }
 
-VkResult vka::Texture::generate_mipmaps(void)
+void vka::Texture::generate_mipmaps(VkCommandBuffer command_buffer)
 {
 	// check if mipmap filter operations are supported
 	VkFormatProperties format_properties = {};
@@ -575,26 +538,6 @@ VkResult vka::Texture::generate_mipmaps(void)
 	{
 		this->_mipfilter = VK_FILTER_NEAREST;
 	}
-
-	VkCommandBufferAllocateInfo cmd_buffer_alloc_info = {};
-	cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmd_buffer_alloc_info.pNext = nullptr;
-	cmd_buffer_alloc_info.commandPool = this->_command_pool;
-	cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmd_buffer_alloc_info.commandBufferCount = 1;
-
-	VkCommandBuffer command_buffer;
-	VkResult result = vkAllocateCommandBuffers(this->_device, &cmd_buffer_alloc_info, &command_buffer);
-	if (result != VK_SUCCESS) return result;
-
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.pNext = nullptr;
-	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	begin_info.pInheritanceInfo = nullptr;
-
-	result = vkBeginCommandBuffer(command_buffer, &begin_info);
-	if (result != VK_SUCCESS) return result;
 
 	VkImageMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -656,28 +599,4 @@ VkResult vka::Texture::generate_mipmaps(void)
 	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 	vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-	result = vkEndCommandBuffer(command_buffer);
-	if (result != VK_SUCCESS) return result;
-
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.pNext = nullptr;
-	submit_info.waitSemaphoreCount = 0;
-	submit_info.pWaitSemaphores = nullptr;
-	submit_info.pWaitDstStageMask = 0;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-	submit_info.signalSemaphoreCount = 0;
-	submit_info.pSignalSemaphores = nullptr;
-
-	result = vkQueueSubmit(this->_command_queue, 1, &submit_info, VK_NULL_HANDLE);
-	if (result != VK_SUCCESS) return result;
-
-	result = vkQueueWaitIdle(this->_command_queue);
-	if (result != VK_SUCCESS) return result;
-
-	vkFreeCommandBuffers(this->_device, this->_command_pool, 1, &command_buffer);
-
-	return VK_SUCCESS;
 }
