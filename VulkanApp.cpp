@@ -768,7 +768,7 @@ void VulkanApp::create_uniform_buffers(void)
 void VulkanApp::create_textures(void)
 {
 	int w, h, c;
-	uint8_t* data = stbi_load("../../../assets/textures/fountain_tex.jpg", &w, &h, &c, STBI_rgb_alpha);
+	uint8_t* data = stbi_load("../../../assets/textures/fountain_tex2.jpg", &w, &h, &c, STBI_rgb_alpha);
 
 	VkComponentMapping component_mapping = {};
 	component_mapping.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -1050,8 +1050,7 @@ void VulkanApp::update_frame_contents(void)
 
 	glm::mat4 model(1.0f);
 	model = glm::rotate(model, static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 100.0f, -200.0f), glm::vec3(0.0f, 50.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.0f, -3.5f), glm::vec3(0.0f, 0.7f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 1000.0f);
 	projection[1][1] *= -1.0f;
 	utm.MVP = projection * view * model;

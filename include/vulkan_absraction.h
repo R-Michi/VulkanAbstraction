@@ -1,3 +1,28 @@
+/*********************************************************************************************************************
+* 
+* Title:    vulkan abstraction
+* Author:   R-Michi (github name)
+* Date:     05.05.2021
+* 
+* Libraries:
+*   - C++ std library
+*   - vulkan SDK https://www.lunarg.com/vulkan-sdk/
+*   - glfw3 https://github.com/glfw/glfw
+*   - glm https://github.com/g-truc/glm
+*   - stb (stb_image.h) https://github.com/nothings/stb
+*   - tiny obj loader (tiny_obj_loader.h) https://github.com/tinyobjloader/tinyobjloader/blob/master/tiny_obj_loader.h
+* 
+* Description:
+*   Abstraction library for vulkan.
+*
+* @version 1.0.0
+* @copyright (C) Michael Reim, this software is free to use.
+*
+* If there are any bugs, or suggestions for improvement write to:
+* https://github.com/R-Michi/VulkanAbstraction/issues
+* 
+*********************************************************************************************************************/
+
 #pragma once
 
 #ifdef VULKAN_ABSTRACTION_DEBUG
@@ -36,7 +61,7 @@
 #include <glm/gtx/hash.hpp>
 #include <tiny_obj_loader.h>
 
-namespace vka
+namespace vka	
 {
 	/**
 	*	@brief Used to filter out physical devices.
@@ -699,7 +724,7 @@ namespace vka
 		/**
 		*	@brief Creates and initializes the mesh.
 		*	@param attribute Attribute type from tiny object loader of current model.
-		*	@param shape Shaüe type from tiny object loader of current model.
+		*	@param shape Shaï¿½e type from tiny object loader of current model.
 		*/
 		void create(const tinyobj::attrib_t& attribute, const tinyobj::shape_t& shape)
 		{
