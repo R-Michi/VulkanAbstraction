@@ -329,7 +329,6 @@ VkResult vka::Texture::create(const void* pdata, size_t pixel_stride)
 	// create view out of image
 	this->_view_create_info.image = this->_image;
 	this->_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	this->_view_create_info.subresourceRange.levelCount = this->_image_create_info.mipLevels;
 	result = vkCreateImageView(this->_device, &this->_view_create_info, nullptr, &this->_view);
 	if (result != VK_SUCCESS) return result;
 

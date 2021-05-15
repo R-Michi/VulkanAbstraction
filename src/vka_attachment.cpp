@@ -115,92 +115,18 @@ void vka::AttachmentImage::set_device(VkDevice device) noexcept
 VkResult vka::AttachmentImage::create(void)
 {
 	if (this->_image != VK_NULL_HANDLE)
-		throw std::runtime_error("Can not create attachment image withot deleting the old one!");
+		throw std::runtime_error("Can not create attachment image without deleting the old one!");
 	if (this->_physical_device == VK_NULL_HANDLE)
 		throw std::invalid_argument("Physical device of attachment image is a VK_NULL_HANDLE! Requiered from attachment image create.");
 	if(this->_device == VK_NULL_HANDLE)
 		throw std::invalid_argument("Device of attachment image is a VK_NULL_HANDLE! Requiered from attachment image create.");
 
-	// check if image usage is valid
-	if (this->_image_create_info.usage != VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT &&
-		this->_image_create_info.usage != VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT &&
-		this->_image_create_info.usage != VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT &&
-		this->_image_create_info.usage != VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
+	// check if image format is supported
+	if (!this->is_image_format_supported())
 	{
-		std::stringstream ss;
-		ss  << "AttachmentImage does not support image usage (" << this->_image_create_info.usage << ") given by VkImageCreateInfo.\n"
-			<< "Supported image usages:\n\t"
-			<< VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT << ", "
-			<< VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT << ", "
-			<< VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT << ", "
-			<< VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
-
-		throw std::invalid_argument(ss.str());
-	}
-
-	// compare if the image views aspect mask matches the image create infos image usage
-	// only for color, depth, stencil, depth/stencil for other attachments there is no check yet
-	// if image usage matches the aspect mask
-	if (this->_image_create_info.usage == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT && 
-	   (this->_view_create_info.subresourceRange.aspectMask != VK_IMAGE_ASPECT_COLOR_BIT))
-	{
-		throw std::invalid_argument("Image usage given by VkImageCreateInfo of AttachmentImage is a VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT and does not match the "
-									"requiered aspect mask VK_IMAGE_ASPECT_COLOR_BIT of VkImageViewCreateInfo::VkImageSubresourceRange.");
-	}
-	else if (this->_image_create_info.usage == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT && 
-		    !(this->_view_create_info.subresourceRange.aspectMask == VK_IMAGE_ASPECT_DEPTH_BIT || 
-			  this->_view_create_info.subresourceRange.aspectMask == VK_IMAGE_ASPECT_STENCIL_BIT ||
-			  this->_view_create_info.subresourceRange.aspectMask == (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)))
-	{
-		throw std::invalid_argument("Image usage given by VkImageCreateInfo of AttachmentImage is a VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT and does not match the "
-									"requiered aspect mask VK_IMAGE_ASPECT_DEPTH_BIT or VK_IMAGE_ASPECT_STENCIL_BIT or VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT " 
-									"of VkImageViewCreateInfo::VkImageSubresourceRange.");
-	}
-
-	// pre check if format is valid only for color, depth, stencil, depth/stencil
-	// for other attachments there is no check yet if the given format is supported
-	if (this->_image_create_info.usage == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-	{
-		// color case
-		if (!this->is_image_format_supported())
-		{
-			std::vector<VkFormat> color_formats;
-			this->get_color_formats(color_formats);
-			this->throw_unsupported_format(color_formats, 16);
-		}
-	}
-	else if (this->_image_create_info.usage == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-	{
-		if (this->_view_create_info.subresourceRange.aspectMask == VK_IMAGE_ASPECT_DEPTH_BIT)
-		{
-			// depth only case
-			if (!this->is_image_format_supported())
-			{
-				std::vector<VkFormat> depth_formats;
-				this->get_depth_formats(depth_formats);
-				this->throw_unsupported_format(depth_formats, 16);
-			}
-		}
-		else if (this->_view_create_info.subresourceRange.aspectMask == VK_IMAGE_ASPECT_STENCIL_BIT)
-		{
-			// stencil only case
-			if (!this->is_image_format_supported())
-			{
-				std::vector<VkFormat> stencil_formats;
-				this->get_stencil_formats(stencil_formats);
-				this->throw_unsupported_format(stencil_formats, 16);
-			}
-		}
-		else if (this->_view_create_info.subresourceRange.aspectMask == (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT))
-		{
-			// depth and stencil case
-			if (!this->is_image_format_supported())
-			{
-				std::vector<VkFormat> depth_stencil_formats;
-				this->get_depth_stencil_formats(depth_stencil_formats);
-				this->throw_unsupported_format(depth_stencil_formats, 16);
-			}
-		}
+		std::vector<VkFormat> formats;
+		utility::get_supported_formats(this->_physical_device, this->_image_create_info.tiling, utility::image_usage_to_format_feature(this->_image_create_info.usage), formats);
+		this->throw_unsupported_format(formats, 16);
 	}
 
 	// create image out of create info
@@ -270,46 +196,6 @@ bool vka::AttachmentImage::is_image_format_supported(void) const noexcept
 		this->_image_create_info.format,
 		this->_image_create_info.tiling,
 		utility::image_usage_to_format_feature(this->_image_create_info.usage)	// is ok because there should only be one bit
-	);
-}
-
-void vka::AttachmentImage::get_color_formats(std::vector<VkFormat>& formats) const noexcept
-{
-	utility::get_supported_color_formats(
-		this->_physical_device,
-		this->_image_create_info.tiling,
-		utility::image_usage_to_format_feature(this->_image_create_info.usage),
-		formats
-	);
-}
-
-void vka::AttachmentImage::get_depth_formats(std::vector<VkFormat>& formats) const noexcept
-{
-	utility::get_supported_depth_formats(
-		this->_physical_device,
-		this->_image_create_info.tiling,
-		utility::image_usage_to_format_feature(this->_image_create_info.usage),
-		formats
-	);
-}
-
-void vka::AttachmentImage::get_stencil_formats(std::vector<VkFormat>& formats) const noexcept
-{
-	utility::get_supported_stencil_formats(
-		this->_physical_device,
-		this->_image_create_info.tiling,
-		utility::image_usage_to_format_feature(this->_image_create_info.usage),
-		formats
-	);
-}
-
-void vka::AttachmentImage::get_depth_stencil_formats(std::vector<VkFormat>& formats) const noexcept
-{
-	utility::get_supported_depth_stencil_formats(
-		this->_physical_device,
-		this->_image_create_info.tiling,
-		utility::image_usage_to_format_feature(this->_image_create_info.usage),
-		formats
 	);
 }
 

@@ -67,56 +67,33 @@ void vka::utility::get_depth_stencil_formats(std::vector<VkFormat>& formats)
 	};
 }
 
-
-void vka::utility::get_supported_color_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats)
+void vka::utility::get_supported_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats)
 {
-	std::vector<VkFormat> color_formats;
-	get_color_formats(color_formats);
-
 	formats.clear();
-	for (VkFormat format : color_formats)
+	for (int i = 0; i <= 184; i++)
 	{
-		if (image_format_supported(physical_device, format, tiling, format_feature))
-			formats.push_back(format);
+		if (image_format_supported(physical_device, static_cast<VkFormat>(i), tiling, format_feature))
+			formats.push_back(static_cast<VkFormat>(i));
 	}
-}
-
-void vka::utility::get_supported_depth_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats)
-{
-	std::vector<VkFormat> depth_formats;
-	get_depth_formats(depth_formats);
-
-	formats.clear();
-	for (VkFormat format : depth_formats)
+	for (int i = 1000156000; i <= 1000156033; i++)
 	{
-		if (image_format_supported(physical_device, format, tiling, format_feature))
-			formats.push_back(format);
+		if (image_format_supported(physical_device, static_cast<VkFormat>(i), tiling, format_feature))
+			formats.push_back(static_cast<VkFormat>(i));
 	}
-}
-
-void vka::utility::get_supported_stencil_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats)
-{
-	std::vector<VkFormat> stencil_formats;
-	get_stencil_formats(stencil_formats);
-
-	formats.clear();
-	for (VkFormat format : stencil_formats)
+	for (int i = 1000054000; i <= 1000054007; i++)
 	{
-		if (image_format_supported(physical_device, format, tiling, format_feature))
-			formats.push_back(format);
+		if (image_format_supported(physical_device, static_cast<VkFormat>(i), tiling, format_feature))
+			formats.push_back(static_cast<VkFormat>(i));
 	}
-}
-
-void vka::utility::get_supported_depth_stencil_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats)
-{
-	std::vector<VkFormat> depth_stencil_formats;
-	get_depth_stencil_formats(depth_stencil_formats);
-
-	formats.clear();
-	for (VkFormat format : depth_stencil_formats)
+	for (int i = 1000066000; i <= 1000066013; i++)
 	{
-		if (image_format_supported(physical_device, format, tiling, format_feature))
-			formats.push_back(format);
+		if (image_format_supported(physical_device, static_cast<VkFormat>(i), tiling, format_feature))
+			formats.push_back(static_cast<VkFormat>(i));
+	}
+	for (int i = 1000340000; i <= 1000340001; i++)
+	{
+		if (image_format_supported(physical_device, static_cast<VkFormat>(i), tiling, format_feature))
+			formats.push_back(static_cast<VkFormat>(i));
 	}
 }
 

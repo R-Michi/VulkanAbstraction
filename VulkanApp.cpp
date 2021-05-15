@@ -27,9 +27,6 @@ VulkanApp::VulkanApp(void)
 
 VulkanApp::~VulkanApp(void)
 {
-	this->vulkan_destroy();
-	this->glfw_destroy();
-
 	double res = 0.0f;
 	for (double d : this->frame_times)
 		res += d;
@@ -776,13 +773,6 @@ void VulkanApp::create_textures(void)
 	component_mapping.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 	component_mapping.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-	VkImageSubresourceRange subresource_range = {};
-	subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresource_range.baseMipLevel = 0;
-	subresource_range.levelCount = 1;
-	subresource_range.baseArrayLayer = 0;
-	subresource_range.layerCount = 1;
-
 	this->texture.set_pyhsical_device(this->physical_device);
 	this->texture.set_device(this->device);
 	this->texture.set_command_pool(this->command_pool);
@@ -801,6 +791,13 @@ void VulkanApp::create_textures(void)
 	this->texture.set_view_type(VK_IMAGE_VIEW_TYPE_2D);
 	this->texture.set_view_format(VK_FORMAT_R8G8B8A8_UNORM);
 	this->texture.set_view_components(component_mapping);
+
+	VkImageSubresourceRange subresource_range = {};
+	subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	subresource_range.baseMipLevel = 0;
+	subresource_range.levelCount = this->texture.mip_levels();
+	subresource_range.baseArrayLayer = 0;
+	subresource_range.layerCount = 1;
 	this->texture.set_view_subresource_range(subresource_range);
 	
 	this->texture.set_sampler_min_filter(VK_FILTER_LINEAR);
@@ -1077,4 +1074,10 @@ void VulkanApp::run(void)
 		this->frame_times.push_back(t_render);
 	}
 	std::cout << std::endl;
+}
+
+void VulkanApp::shutdown(void)
+{
+	this->vulkan_destroy();
+	this->glfw_destroy();
 }

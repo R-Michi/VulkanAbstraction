@@ -1,8 +1,8 @@
 /*********************************************************************************************************************
 * 
-* Title:    vulkan abstraction
-* Author:   R-Michi (github name)
-* Date:     05.05.2021
+* @title:    vulkan abstraction
+* @author:   R-Michi (github name)
+* @date:     15.05.2021
 * 
 * Libraries:
 *   - C++ std library
@@ -15,7 +15,7 @@
 * Description:
 *   Abstraction library for vulkan.
 *
-* @version 1.0.0
+* @version 1.1.0
 * @copyright (C) Michael Reim, this software is free to use.
 *
 * If there are any bugs, or suggestions for improvement write to:
@@ -64,18 +64,18 @@
 namespace vka	
 {
 	/**
-	*	@brief Used to filter out physical devices.
-	*	@param sequence Only searches devices which have the given sequence in the name.
-	*	@param reqMemoryPropertyFlags Only searches devices with those memory property flags.
-	*	@param reqDeviceTypeHirachy Searches devices with the given device type hirachy. The first element has the highest priority.
-	*	@param pSurface The surface is requiered to filter our the physical devices.
-	*	@param reqMinImageCount Only searches devices which have a swapchain image count equal or smaller than the given value.
-	*	@param reqMaxImageCount Only searches devices which have a swapchain image count equal or bigger than the given value.
-	*	@param reqSurfaceImageUsageFlags Only searches devices which support those image usage flags on the surface.
-	*	@param reqSurfaceColorFormats Only searches devices which support those color formats on the surface.
-	*	@param reqSurfaceColorSpaces Only searches devices which support those color spaces on the surface.
-	*	@param reqPresentModes Only searches devices which support those presentation modes.
-	*	@param reqQueueFamilyFlags Only searches devices which support at least the requiered queue flags.
+	*   @brief Used to filter out physical devices.
+	*   @param sequence Only searches devices which have the given sequence in the name.
+	*   @param reqMemoryPropertyFlags Only searches devices with those memory property flags.
+	*   @param reqDeviceTypeHirachy Searches devices with the given device type hirachy. The first element has the highest priority.
+	*   @param pSurface The surface is requiered to filter our the physical devices.
+	*   @param reqMinImageCount Only searches devices which have a swapchain image count equal or smaller than the given value.
+	*   @param reqMaxImageCount Only searches devices which have a swapchain image count equal or bigger than the given value.
+	*   @param reqSurfaceImageUsageFlags Only searches devices which support those image usage flags on the surface.
+	*   @param reqSurfaceColorFormats Only searches devices which support those color formats on the surface.
+	*   @param reqSurfaceColorSpaces Only searches devices which support those color spaces on the surface.
+	*   @param reqPresentModes Only searches devices which support those presentation modes.
+	*   @param reqQueueFamilyFlags Only searches devices which support at least the requiered queue flags.
 	*/
 	struct PhysicalDeviceFilter
 	{
@@ -283,6 +283,8 @@ namespace vka
 		VkMemoryPropertyFlags _properties;
 		VkDeviceMemory _memory;
 
+		size_t _mem_size;
+
 	public:
 		Buffer(void) noexcept;
 
@@ -346,6 +348,9 @@ namespace vka
 
 		/** @return The size in bytes of the buffer. */
 		size_t size(void) const noexcept;
+
+		/** @return The actual allocated memory of the buffer. */
+		size_t mem_size(void) const noexcept;
 
 		/** @return The VkBuffer handle. */
 		VkBuffer handle(void) const noexcept;
@@ -543,10 +548,6 @@ namespace vka
 		void _default_view_create_info(void) noexcept;
 
 		bool is_image_format_supported(void) const noexcept;
-		void get_color_formats(std::vector<VkFormat>& formats) const noexcept;
-		void get_depth_formats(std::vector<VkFormat>& formats) const noexcept;
-		void get_stencil_formats(std::vector<VkFormat>& formats) const noexcept;
-		void get_depth_stencil_formats(std::vector<VkFormat>& formats) const noexcept;
 		void throw_unsupported_format(const std::vector<VkFormat>& formats, size_t block_size);
 
 	public:
@@ -1099,16 +1100,13 @@ namespace vka
 		void get_depth_stencil_formats(std::vector<VkFormat>& formats);
 
 		/**
-		*	@brief Returns all supported formats for a given tiling and format feature (color, depth, stencil or depth/stencil combined).
+		*	@brief Returns all supported formats for a given tiling and format feature.
 		*	@param physical_device The physical device to read the format properties from.
 		*	@param tiling The tiling where the formats should be read.
 		*	@param format_feature The format feature where the formats should be read.
 		*	@param formats A std::vector where the formats should be stored.
 		*/
-		void get_supported_color_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
-		void get_supported_depth_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
-		void get_supported_stencil_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
-		void get_supported_depth_stencil_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
+		void get_supported_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
 
 		/**
 		*	Converts a format feature flag bit to a image usage flag bit.

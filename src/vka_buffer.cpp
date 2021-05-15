@@ -14,6 +14,8 @@ vka::Buffer::Buffer(void) noexcept
 	this->_physical_device		= VK_NULL_HANDLE;
 	this->_cmd_pool				= VK_NULL_HANDLE;
 	this->_cmd_queue			= VK_NULL_HANDLE;
+
+	this->_mem_size = 0;
 }
 
 vka::Buffer::Buffer(VkPhysicalDevice physical_device, VkDevice device, VkCommandPool cmd_pool, VkQueue queue) noexcept : Buffer()
@@ -144,6 +146,7 @@ VkResult vka::Buffer::create(void)
 	result = vkBindBufferMemory(this->_device, this->_buffer, this->_memory, 0);
 	if (result != VK_SUCCESS) return result;
 
+	this->_mem_size = mem_req.size;
 	return VK_SUCCESS;
 }
 
@@ -175,6 +178,11 @@ void vka::Buffer::unmap(void)
 size_t vka::Buffer::size(void) const noexcept
 {
 	return this->_create_info.size;
+}
+
+size_t vka::Buffer::mem_size(void) const noexcept
+{
+	return this->_mem_size;
 }
 
 VkBuffer vka::Buffer::handle(void) const noexcept
@@ -290,12 +298,6 @@ vka::Buffer& vka::Buffer::move(Buffer&& src)
 {
 	this->copy(src);	// copy soruce into destination
 	src.clear();		// and clear source
-	src._create_info		= {};
-	src._properties			= 0;
-	src._cmd_pool			= VK_NULL_HANDLE;
-	src._cmd_queue			= VK_NULL_HANDLE;
-	src._device				= VK_NULL_HANDLE;
-	src._physical_device	= VK_NULL_HANDLE;
 	return *this;
 }
 

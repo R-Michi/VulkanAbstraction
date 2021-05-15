@@ -115,4 +115,5 @@ public:
 
 	void init(void);
 	void run(void);
+	void shutdown(void);
 };
