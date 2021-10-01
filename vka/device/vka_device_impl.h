@@ -155,6 +155,7 @@ vka::PhysicalDeviceError vka::device::find(const std::vector<VkPhysicalDevice>& 
     
     for (size_t i = begin; i < devices.size(); i++)
     {
+        // check for squence
         if (!device_has_sequence(device_properties.at(i), filter.sequence))
         {
             if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SEQUENCE_FAILED))
@@ -165,7 +166,8 @@ vka::PhysicalDeviceError vka::device::find(const std::vector<VkPhysicalDevice>& 
         {
             error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SEQUENCE_FAILED;
         }
-        
+
+        // check for memory properties
         VkPhysicalDeviceMemoryProperties mem_prop = {};
         vkGetPhysicalDeviceMemoryProperties(devices.at(i), &mem_prop);
         if (!device_has_memory_properties(mem_prop, filter.reqMemoryPropertyFlags))
@@ -178,88 +180,89 @@ vka::PhysicalDeviceError vka::device::find(const std::vector<VkPhysicalDevice>& 
         {
             error_mask |= VKA_PYHSICAL_DEVICE_ERROR_MEMORY_PROPERTIES_FAILED;
         }
-        
-        if (filter.pSurface == nullptr)
+
+        // check for surface capabilities
+        // ignore these checks if no surface is used
+        if (filter.pSurface != nullptr)
         {
-            return VKA_PYHSICAL_DEVICE_ERROR_SURFACE_FAILED;
+            VkSurfaceCapabilitiesKHR surface_capabilities = {};
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices.at(i), *filter.pSurface, &surface_capabilities);
+            if (!device_has_min_image_count(surface_capabilities, filter.reqMinImageCount))
+            {
+                if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED))
+                    error = VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED;
+                continue;
+            }
+            else
+            {
+                error_mask |= VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED;
+            }
+
+            if (!device_has_max_image_count(surface_capabilities, filter.reqMaxImageCount))
+            {
+                if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED))
+                    error = VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED;
+                continue;
+            }
+            else
+            {
+                error_mask |= VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED;
+            }
+
+            if (!device_has_image_usage_flags(surface_capabilities, filter.reqSurfaceImageUsageFlags))
+            {
+                if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_USAGE_FAILED))
+                    error = VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_USAGE_FAILED;
+                continue;
+            }
+            else
+            {
+                error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_USAGE_FAILED;
+            }
+
+            uint32_t n_formats;
+            vkGetPhysicalDeviceSurfaceFormatsKHR(devices.at(i), *filter.pSurface, &n_formats, nullptr);
+            VkSurfaceFormatKHR formats[n_formats];
+            vkGetPhysicalDeviceSurfaceFormatsKHR(devices.at(i), *filter.pSurface, &n_formats, formats);
+            if (!device_has_color_formats(formats, n_formats, filter.reqSurfaceColorFormats))
+            {
+                if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_FORMATS_FAILED))
+                    error = VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_FORMATS_FAILED;
+                continue;
+            }
+            else
+            {
+                error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_FORMATS_FAILED;
+            }
+
+            if (!device_has_color_spaces(formats, n_formats, filter.reqSurfaceColorSpaces))
+            {
+                if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_SPACE_FAILED))
+                    error = VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_SPACE_FAILED;
+                continue;
+            }
+            else
+            {
+                error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_SPACE_FAILED;
+            }
+
+            uint32_t n_present_modes;
+            vkGetPhysicalDeviceSurfacePresentModesKHR(devices.at(i), *filter.pSurface, &n_present_modes, nullptr);
+            VkPresentModeKHR present_modes[n_present_modes];
+            vkGetPhysicalDeviceSurfacePresentModesKHR(devices.at(i), *filter.pSurface, &n_present_modes, present_modes);
+            if (!device_has_present_modes(present_modes, n_present_modes, filter.reqPresentModes))
+            {
+                if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_PRESENT_MODE_FAILD))
+                    error = VKA_PYHSICAL_DEVICE_ERROR_PRESENT_MODE_FAILD;
+                continue;
+            }
+            else
+            {
+                error_mask |= VKA_PYHSICAL_DEVICE_ERROR_PRESENT_MODE_FAILD;
+            }
         }
-        
-        VkSurfaceCapabilitiesKHR surface_capabilities = {};
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices.at(i), *filter.pSurface, &surface_capabilities);
-        if (!device_has_min_image_count(surface_capabilities, filter.reqMinImageCount))
-        {
-            if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED))
-                error = VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED;
-            continue;
-        }
-        else
-        {
-            error_mask |= VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED;
-        }
-        
-        if (!device_has_max_image_count(surface_capabilities, filter.reqMaxImageCount))
-        {
-            if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED))
-                error = VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED;
-            continue;
-        }
-        else
-        {
-            error_mask |= VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED;
-        }
-        
-        if (!device_has_image_usage_flags(surface_capabilities, filter.reqSurfaceImageUsageFlags))
-        {
-            if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_USAGE_FAILED))
-                error = VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_USAGE_FAILED;
-            continue;
-        }
-        else
-        {
-            error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_USAGE_FAILED;
-        }
-        
-        uint32_t n_formats;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(devices.at(i), *filter.pSurface, &n_formats, nullptr);
-        VkSurfaceFormatKHR formats[n_formats];
-        vkGetPhysicalDeviceSurfaceFormatsKHR(devices.at(i), *filter.pSurface, &n_formats, formats);
-        if (!device_has_color_formats(formats, n_formats, filter.reqSurfaceColorFormats))
-        {
-            if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_FORMATS_FAILED))
-                error = VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_FORMATS_FAILED;
-            continue;
-        }
-        else
-        {
-            error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_FORMATS_FAILED;
-        }
-        
-        if (!device_has_color_spaces(formats, n_formats, filter.reqSurfaceColorSpaces))
-        {
-            if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_SPACE_FAILED))
-                error = VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_SPACE_FAILED;
-            continue;
-        }
-        else
-        {
-            error_mask |= VKA_PYHSICAL_DEVICE_ERROR_SURFACE_IMAGE_COLOR_SPACE_FAILED;
-        }
-        
-        uint32_t n_present_modes;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(devices.at(i), *filter.pSurface, &n_present_modes, nullptr);
-        VkPresentModeKHR present_modes[n_present_modes];
-        vkGetPhysicalDeviceSurfacePresentModesKHR(devices.at(i), *filter.pSurface, &n_present_modes, present_modes);
-        if (!device_has_present_modes(present_modes, n_present_modes, filter.reqPresentModes))
-        {
-            if (!(error_mask & VKA_PYHSICAL_DEVICE_ERROR_PRESENT_MODE_FAILD))
-                error = VKA_PYHSICAL_DEVICE_ERROR_PRESENT_MODE_FAILD;
-            continue;
-        }
-        else
-        {
-            error_mask |= VKA_PYHSICAL_DEVICE_ERROR_PRESENT_MODE_FAILD;
-        }
-        
+
+        // check for queue family flags
         uint32_t n_queue_families;
         vkGetPhysicalDeviceQueueFamilyProperties(devices.at(i), &n_queue_families, nullptr);
         VkQueueFamilyProperties queue_family_properties[n_queue_families];
@@ -281,7 +284,8 @@ vka::PhysicalDeviceError vka::device::find(const std::vector<VkPhysicalDevice>& 
     
     if (error != VKA_PYHSICAL_DEVICE_ERROR_NONE)
         return error;
-    
+
+    // get best matching device candidate
     bool found = false;
     for (size_t i = 0; i < filter.reqDeviceTypeHirachy.size() && !found; i++)
     {
@@ -312,8 +316,6 @@ const char* vka::device::strerror(vka::PhysicalDeviceError error)
         return "No physical device found with requiered sequence!";
     case VKA_PYHSICAL_DEVICE_ERROR_MEMORY_PROPERTIES_FAILED:
         return "No physical device found with required memory properties!";
-    case VKA_PYHSICAL_DEVICE_ERROR_SURFACE_FAILED:
-        return "Required surface is a nullptr!";
     case VKA_PYHSICAL_DEVICE_ERROR_MIN_IMAGE_COUNT_FAILED:
         return "No physical device found with required minimal image count!";
     case VKA_PYHSICAL_DEVICE_ERROR_MAX_IMAGE_COUNT_FAILED:

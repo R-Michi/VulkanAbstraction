@@ -51,3 +51,6 @@ Now you have to set up following directory structure:
 # version 1.1.0 update noes
     - general: Library is now implemenated as header-only.
     - added: descriptor manager
+
+# version 1.1.1 update notes
+    - patch: devices can now be found without having a surface
