@@ -1,4 +1,19 @@
+/**
+* @file     VulkanApp.cpp
+* @brief    Implemenation of the testing vulkan application.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define TINYOBJLOADER_IMPLEMENTATION
+#define VKA_IMPLEMENTATION
+#define VKA_TEMPLATE_IMPLEMENTATION
+
 #include "VulkanApp.h"
 #include <iostream>
 #include <string>
@@ -35,6 +50,7 @@ VulkanApp::~VulkanApp(void)
 	std::cout << "AVG FPS: " << 1.0 / res << std::endl;
 }
 
+
 void VulkanApp::glfw_init(void)
 {
 	glfwInit();
@@ -70,9 +86,6 @@ void VulkanApp::vulkan_init(void)
 	this->create_render_pass();
 	this->create_depth_attachment();
 	this->create_shaders();
-	this->create_descriptor_set_layouts();
-	this->create_pipeline();
-
 	this->create_framebuffers();
 	this->create_command_pool();
 	this->create_global_command_buffers();
@@ -80,11 +93,9 @@ void VulkanApp::vulkan_init(void)
 	this->create_index_buffers();
 	this->create_uniform_buffers();
 	this->create_textures();
+	this->create_descriptors();
 
-	this->create_descriptor_pool();
-	this->create_descriptor_sets();
-	this->update_descriptor_sets();
-
+	this->create_pipeline();
 	this->create_semaphores();
 	
 	this->record_command_buffers();
@@ -115,6 +126,7 @@ void VulkanApp::vulkan_destroy(void)
 	vkDestroyPipeline(this->device, this->pipeline, nullptr);
 
 	this->main_shader.clear();
+	this->descriptor_manager.clear();
 
 	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
 
@@ -134,7 +146,7 @@ void VulkanApp::load_models(void)
 {
 	vka::Model323 dragon;
 	dragon.load("../../../assets/models/fountain.obj");
-	dragon.combine(this->vertices, this->indices);
+	dragon.merge(this->vertices, this->indices);
 
 	std::cout << "Number of vertices: " << this->vertices.size() << std::endl;
 	std::cout << "Number of indices: " << this->indices.size() << std::endl;
@@ -156,18 +168,18 @@ void VulkanApp::make_application_info(void)
 void VulkanApp::create_instance(void)
 {
 	std::vector<const char*> layers;
-#ifdef VULKAN_ABSTRACTION_DEBUG
+#ifdef VKA_DEBUG
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
 	layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif 
 
 	std::vector<const char*> extensions;
-	vka::get_requiered_glfw_extensions(extensions);
+	vka::instance::get_glfw_extensions(extensions);
 #ifdef VULKAN_ABSTRACTION_DEBUG
 	extensions.push_back("VK_EXT_debug_utils");
 #endif
 
-	if (!vka::are_instance_layers_supported(layers))
+	if (!vka::instance::are_layers_supported(layers))
 	{
 		std::string str = "Some requiered instance layers are not supported!\nRequiered instance layers:\n";
 		for (const char* l : layers)
@@ -175,7 +187,7 @@ void VulkanApp::create_instance(void)
 		throw std::runtime_error(str);
 	}
 
-	if (!vka::are_instance_extensions_supported(extensions))
+	if (!vka::instance::are_extensions_supported(extensions))
 	{
 		std::string str = "Some requiered instance extensions are not supported!\nRequiered instance extensions:\n";
 		for (const char* e : extensions)
@@ -206,9 +218,9 @@ void VulkanApp::create_surface(void)
 void VulkanApp::create_physical_device(void)
 {
 	std::vector<VkPhysicalDevice> physical_devices;
-	vka::get_physical_devices(this->instance, physical_devices);
+	vka::device::get(this->instance, physical_devices);
 	std::vector<VkPhysicalDeviceProperties> device_properties;
-	vka::get_physical_device_properties(physical_devices, device_properties);
+	vka::device::properties(physical_devices, device_properties);
 
 	vka::PhysicalDeviceFilter filter = {};
 	filter.sequence = nullptr;			// for local VRAM memory				// for staging memory / buffers
@@ -226,10 +238,10 @@ void VulkanApp::create_physical_device(void)
 	filter.reqQueueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
 
 	size_t idx;
-	vka::PhysicalDeviceError error = vka::find_matching_physical_device(physical_devices, 0, filter, idx);
+	vka::PhysicalDeviceError error = vka::device::find(physical_devices, 0, filter, idx);
 	if (error != vka::VKA_PYHSICAL_DEVICE_ERROR_NONE)
 	{
-		throw std::runtime_error(vka::physical_device_strerror(error));
+		throw std::runtime_error(vka::device::strerror(error));
 	}
 
 	this->physical_device = physical_devices.at(idx);
@@ -239,24 +251,24 @@ void VulkanApp::create_physical_device(void)
 void VulkanApp::create_queues(void)
 {
 	std::vector<VkQueueFamilyProperties> queue_fam_properties;
-	vka::get_queue_family_properties(this->physical_device, queue_fam_properties);
+	vka::queue::properties(this->physical_device, queue_fam_properties);
 
 	vka::QueueFamilyFilter queue_fam_filter = {};
 	queue_fam_filter.reqQueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
 	queue_fam_filter.reqQueueCount = 4;
 
 	size_t idx;
-	vka::QueueFamilyError error = vka::find_matching_queue_family(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL, idx);
+	vka::QueueFamilyError error = vka::queue::find(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL, idx);
 	if (error != vka::VKA_QUEUE_FAMILY_ERROR_NONE)
 	{
-		throw std::runtime_error(vka::queue_family_strerror(error));
+		throw std::runtime_error(vka::queue::strerror(error));
 	}
 
 	this->graphics_queue_info.queueFamilyIndex = idx;
 	this->graphics_queue_info.usedQueueCount = queue_fam_filter.reqQueueCount;
 	this->graphics_queue_info.queueBaseIndex = 0;
 
-	if (!vka::validate_queue_families(queue_fam_properties, { this->graphics_queue_info }))
+	if (!vka::queue::validate(queue_fam_properties, { this->graphics_queue_info }))
 	{
 		throw std::runtime_error("Validation of queue families failed!");
 	}
@@ -279,7 +291,7 @@ void VulkanApp::create_logical_device(void)
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 	
-	if (!vka::are_device_extensions_supported(this->physical_device, device_extensions))
+	if (!vka::device::are_extensions_supported(this->physical_device, device_extensions))
 	{
 		std::string str = "Some requiered device extensions are not supported!\nRequiered device extensions:\n";
 		for (const char* e : device_extensions)
@@ -343,7 +355,7 @@ void VulkanApp::create_swapchain(void)
 	swapchain_create_info.clipped = VK_TRUE;
 	swapchain_create_info.oldSwapchain = old_swapchain;
 
-	VkResult result = vka::setup_swapchain(this->device, swapchain_create_info, this->swapchain, this->swapchain_image_views);
+	VkResult result = vka::swapchain::setup(this->device, swapchain_create_info, this->swapchain, this->swapchain_image_views);
 	VULKAN_ASSERT(result);
 
 	vkDestroySwapchainKHR(this->device, old_swapchain, nullptr);
@@ -595,8 +607,8 @@ void VulkanApp::create_pipeline(void)
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layout_create_info.pNext = nullptr;
 	layout_create_info.flags = 0;
-	layout_create_info.setLayoutCount = this->descriptor_set_layouts.size();
-	layout_create_info.pSetLayouts = this->descriptor_set_layouts.data();
+	layout_create_info.setLayoutCount = this->descriptor_manager.descriptor_set_count();
+	layout_create_info.pSetLayouts = this->descriptor_manager.layouts().data();
 	layout_create_info.pushConstantRangeCount = 0;
 	layout_create_info.pPushConstantRanges = nullptr;
 
@@ -920,6 +932,33 @@ void VulkanApp::update_descriptor_sets(void)
 	vkUpdateDescriptorSets(this->device, write_descr_sets.size(), write_descr_sets.data(), 0, nullptr);
 }
 
+void VulkanApp::create_descriptors(void)
+{
+	VkDescriptorImageInfo descr_image_info = {};
+	descr_image_info.sampler = this->texture.sampler();
+	descr_image_info.imageView = this->texture.view();
+	descr_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkDescriptorBufferInfo descr_uniform_buffer_info = {};
+	descr_uniform_buffer_info.buffer = this->uniform_buffer.handle();
+	descr_uniform_buffer_info.offset = 0;
+	descr_uniform_buffer_info.range = this->uniform_buffer.size();
+
+	// set properties
+	this->descriptor_manager.set_device(this->device);
+	this->descriptor_manager.set_descriptor_set_count(1);
+	
+	// add bindings and init
+	this->descriptor_manager.add_binding(0, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+	this->descriptor_manager.add_binding(0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+	this->descriptor_manager.init();
+
+	// set and update descriptors
+	this->descriptor_manager.write_image_info(0, 0, 0, 1, &descr_image_info);
+	this->descriptor_manager.write_buffer_info(0, 1, 0, 1, &descr_uniform_buffer_info);
+	this->descriptor_manager.update();
+}
+
 void VulkanApp::create_semaphores(void)
 {
 	VkSemaphoreCreateInfo semaphore_create_info;
@@ -989,7 +1028,7 @@ void VulkanApp::record_command_buffers(void)
 		vkCmdBindIndexBuffer(this->swapchain_command_buffers.at(i), index_buffer_handle, offset, VK_INDEX_TYPE_UINT32);
 
 		// bind descriptor sets
-		vkCmdBindDescriptorSets(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, this->descriptor_sets.size(), this->descriptor_sets.data(), 0, nullptr);
+		vkCmdBindDescriptorSets(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, this->descriptor_manager.descriptor_set_count(), this->descriptor_manager.descriptor_sets().data(), 0, nullptr);
 		
 		vkCmdDrawIndexed(this->swapchain_command_buffers.at(i), this->n_indices, 1, 0, 0, 0);
 

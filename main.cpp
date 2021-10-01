@@ -1,6 +1,19 @@
+/**
+* @file     main.cpp
+* @brief    Main file.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
 #define STB_IMAGE_IMPLEMENTATION
-#define TINYOBJLOADER_IMPLEMENTATION
+
 #include "VulkanApp.h"
+
+#include <string.h>
 #include <iostream>
 
 int main()

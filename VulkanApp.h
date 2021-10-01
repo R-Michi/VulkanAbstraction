@@ -1,13 +1,33 @@
+/**
+* @file     VulkanApp.h
+* @brief    Header file for testing vulkan application.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
 #pragma once
+
+#ifdef __clang__
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wempty-body"
+		#include <stb/stb_image.h>
+	#pragma clang diagnostic pop
+#else
+	#include <stb/stb_image.h>
+#endif
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <vector>
 
-#define VULKAN_ABSTRACTION_DEBUG
-#define VULKAN_ABSTRACTION_EXPERIMENTAL
-#include "include/vulkan_absraction.h"
+#define VKA_DEBUG
+#define VKA_EXPERIMENTAL
+#include "vka/vka.h"
 
 class VulkanApp
 {
@@ -51,6 +71,8 @@ private:
 	VkDescriptorPool descriptor_pool;
 	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
 	std::vector<VkDescriptorSet> descriptor_sets;
+
+	vka::DescriptorManager descriptor_manager;
 
 	VkSemaphore sem_img_aviable;
 	VkSemaphore sem_rendering_done;
@@ -102,6 +124,7 @@ private:
 	void create_descriptor_set_layouts(void);
 	void create_descriptor_sets(void);
 	void update_descriptor_sets(void);
+	void create_descriptors(void);
 
 	void create_semaphores(void);
 	
