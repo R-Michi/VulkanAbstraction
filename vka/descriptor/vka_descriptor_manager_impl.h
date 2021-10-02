@@ -13,7 +13,7 @@
 
 #include "vka_descriptor.h"
 
-vka::DescriptorManager::DescriptorManager(void)
+vka::DescriptorManager::DescriptorManager(void) noexcept
 {
     this->_pool = VK_NULL_HANDLE;
     this->device = VK_NULL_HANDLE;
@@ -53,7 +53,7 @@ void vka::DescriptorManager::add_to_pool_sizes(VkDescriptorType type, uint32_t c
 }
 
 
-void vka::DescriptorManager::set_device(VkDevice device)
+void vka::DescriptorManager::set_device(VkDevice device) noexcept
 {
     this->device = device;
 }
@@ -66,7 +66,7 @@ void vka::DescriptorManager::set_descriptor_set_count(uint32_t n_sets)
     this->set_layout_bindings.resize(n_sets);
 }
 
-uint32_t vka::DescriptorManager::descriptor_set_count(void)
+uint32_t vka::DescriptorManager::descriptor_set_count(void) const noexcept
 {
     return this->set_layout_bindings.size();
 }

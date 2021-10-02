@@ -392,6 +392,11 @@ VkSampler vka::Texture::sampler(void) const noexcept
     return this->_sampler;
 }
 
+VkDeviceMemory vka::Texture::memory_handle(void) const noexcept
+{
+    return this->_memory;
+}
+
 size_t vka::Texture::size(void) const noexcept
 {
     return this->_size;

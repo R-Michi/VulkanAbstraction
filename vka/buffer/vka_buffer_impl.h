@@ -203,6 +203,11 @@ VkBuffer vka::Buffer::handle(void) const noexcept
     return this->_buffer;
 }
 
+VkDeviceMemory vka::Buffer::memory_handle(void) const noexcept
+{
+    return this->_memory;
+}
+
 vka::Buffer& vka::Buffer::copy(const Buffer& src)
 {
     // physical device and logical device is used from source buffer

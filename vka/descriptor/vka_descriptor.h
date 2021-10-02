@@ -42,20 +42,20 @@ namespace vka
         /**
         * @brief device is a VK_NULL_HANDLE per default.
         */
-        DescriptorManager(void);
+        DescriptorManager(void) noexcept;
 
         /**
         * @param[in] device: logical device
         * @param[in] count: number of descriptor sets to allocate
         */
-        DescriptorManager(VkDevice device, uint32_t count);
+        explicit DescriptorManager(VkDevice device, uint32_t count);
         virtual ~DescriptorManager(void);
 
         /**
         * @brief Set the logical device that is used by the descriptor manager.
         * @param[in] device: logical device
         */
-        void set_device(VkDevice device);
+        void set_device(VkDevice device) noexcept;
 
         /**
         * @brief Set the number of descriptor sets to allocate.
@@ -65,7 +65,7 @@ namespace vka
         void set_descriptor_set_count(uint32_t count);
 
         /** @return number of allocated descriptor sets */
-        uint32_t descriptor_set_count(void);
+        uint32_t descriptor_set_count(void) const noexcept;
 
         /**
         * @brief Adds a binding to a descriptor set.

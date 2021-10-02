@@ -54,3 +54,7 @@ Now you have to set up following directory structure:
 
 # version 1.1.1 update notes
     - patch: devices can now be found without having a surface
+
+#version 1.1.2 update notes
+    - added: memory handle getter for buffer and texture
+    - patch: some general minor changes

@@ -99,6 +99,9 @@ namespace vka
         
         /** @return VkBuffer handle */
         VkBuffer handle(void) const noexcept;
+
+        /** @return VkDeviceMemory handle */
+        VkDeviceMemory memory_handle(void) const noexcept;
         
         /**
         * @brief Copies a buffer. Buffer copy operation requieres command pool and command queue to be set.

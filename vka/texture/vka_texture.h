@@ -144,8 +144,11 @@ namespace vka
         /** @return image view handle */
         VkImageView view(void) const noexcept;
         
-        /** @return sample handle */
+        /** @return sampler handle */
         VkSampler sampler(void) const noexcept;
+
+        /** @return VkDeviceMemory hanlde */
+        VkDeviceMemory memory_handle(void) const noexcept;
         
         /** @return size of the texture in bytes */
         size_t size(void) const noexcept;
