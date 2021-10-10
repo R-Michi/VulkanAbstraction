@@ -133,6 +133,12 @@ namespace vka
         */
         void write_texel_buffer_view(uint32_t set, uint32_t binding, uint32_t begin_element, uint32_t element_count, const VkBufferView* buffer_views);
 
+        void write_acceleration_structure_NV(uint32_t set, uint32_t binding, uint32_t begin_element, uint32_t element_count, const VkAccelerationStructureNV* as_nv);
+
+        void write_acceleration_structure_KHR(uint32_t set, uint32_t binding, uint32_t begin_element, uint32_t element_count, const VkAccelerationStructureKHR* as_khr);
+
+        void write_inline_uniform_block_EXT(uint32_t set, uint32_t binding, uint32_t offset, uint32_t size, const void* data);
+
         /**
         * @brief Initializes the descriptor manager.
         *   After initialization, bindings can no longer be added and the amount of sets

@@ -58,3 +58,6 @@ Now you have to set up following directory structure:
 #version 1.1.2 update notes
     - added: memory handle getter for buffer and texture
     - patch: some general minor changes
+
+#version 1.2.0 update notes
+    - added: descriptor manager supports now also all extension types

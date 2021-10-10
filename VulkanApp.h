@@ -67,11 +67,6 @@ private:
 	vka::Buffer uniform_buffer;
 
 	vka::Texture texture;
-
-	VkDescriptorPool descriptor_pool;
-	std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
-	std::vector<VkDescriptorSet> descriptor_sets;
-
 	vka::DescriptorManager descriptor_manager;
 
 	VkSemaphore sem_img_aviable;
@@ -119,13 +114,7 @@ private:
 	void create_index_buffers(void);
 	void create_uniform_buffers(void);
 	void create_textures(void);
-
-	void create_descriptor_pool(void);
-	void create_descriptor_set_layouts(void);
-	void create_descriptor_sets(void);
-	void update_descriptor_sets(void);
 	void create_descriptors(void);
-
 	void create_semaphores(void);
 	
 	void record_command_buffers(void);

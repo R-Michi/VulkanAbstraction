@@ -146,6 +146,48 @@ void vka::DescriptorManager::write_texel_buffer_view(uint32_t set, uint32_t bind
     this->descriptor_writes.push_back(write);
 }
 
+void vka::DescriptorManager::write_acceleration_structure_NV(uint32_t set, uint32_t binding, uint32_t begin_element, uint32_t n_elements, const VkAccelerationStructureNV* as_nv)
+{
+    VkWriteDescriptorSetAccelerationStructureNV* as_write = new VkWriteDescriptorSetAccelerationStructureNV{};
+    as_write->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV;
+    as_write->pNext = nullptr;
+    as_write->accelerationStructureCount = n_elements;
+    as_write->pAccelerationStructures = as_nv;
+
+    VkWriteDescriptorSet write;
+    this->init_descriptor_write(write, set, binding, begin_element, n_elements);
+    write.pNext = as_write;
+    this->descriptor_writes.push_back(write);
+}
+
+void vka::DescriptorManager::write_acceleration_structure_KHR(uint32_t set, uint32_t binding, uint32_t begin_element, uint32_t n_elements, const VkAccelerationStructureKHR* as_khr)
+{
+    VkWriteDescriptorSetAccelerationStructureKHR* as_write = new VkWriteDescriptorSetAccelerationStructureKHR{};
+    as_write->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+    as_write->pNext = nullptr;
+    as_write->accelerationStructureCount = n_elements;
+    as_write->pAccelerationStructures = as_khr;
+
+    VkWriteDescriptorSet write;
+    this->init_descriptor_write(write, set, binding, begin_element, n_elements);
+    write.pNext = as_write;
+    this->descriptor_writes.push_back(write);
+}
+
+void vka::DescriptorManager::write_inline_uniform_block_EXT(uint32_t set, uint32_t binding, uint32_t offset, uint32_t size, const void* data)
+{
+    VkWriteDescriptorSetInlineUniformBlockEXT* uniform_block = new VkWriteDescriptorSetInlineUniformBlockEXT{};
+    uniform_block->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK_EXT;
+    uniform_block->pNext = nullptr;
+    uniform_block->dataSize = size;
+    uniform_block->pData = data;
+
+    VkWriteDescriptorSet write;
+    this->init_descriptor_write(write, set, binding, offset, size);
+    write.pNext = uniform_block;
+    this->descriptor_writes.push_back(write);
+}
+
 
 VkResult vka::DescriptorManager::init_descriptor_layouts(void)
 {
@@ -227,9 +269,40 @@ void vka::DescriptorManager::clear(void)
         if (this->device == VK_NULL_HANDLE)
             throw std::invalid_argument("Device of DescriptorManager is a VK_NULL_HANDLE, requiered from DescriptorManager::clear.");
 
+        // destroy layouts
         for (VkDescriptorSetLayout layout : this->set_layouts)
             vkDestroyDescriptorSetLayout(this->device, layout, nullptr);
         vkDestroyDescriptorPool(this->device, this->_pool, nullptr);
+
+        // delete pNext pointers of descriptor writes
+        for (VkWriteDescriptorSet& write : this->descriptor_writes)
+        {
+            if (write.pNext != nullptr)
+            {
+                // get structure-type
+                VkStructureType structure_type;
+                memcpy(&structure_type, write.pNext, sizeof(structure_type));   // the structure-type stands at the begin of every vulkan structure
+
+                // delete according to the structure-type
+                switch (structure_type)
+                {
+                case VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV:
+                    delete(reinterpret_cast<const VkWriteDescriptorSetAccelerationStructureNV*>(write.pNext));
+                    write.pNext = nullptr;
+                    break;
+                case VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR:
+                    delete(reinterpret_cast<const VkWriteDescriptorSetAccelerationStructureKHR*>(write.pNext));
+                    write.pNext = nullptr;
+                    break;
+                case VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK_EXT:
+                    delete(reinterpret_cast<const VkWriteDescriptorSetInlineUniformBlockEXT*>(write.pNext));
+                    write.pNext = nullptr;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
 
         this->set_layouts.clear();
         this->sets.clear();
