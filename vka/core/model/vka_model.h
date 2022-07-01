@@ -1,4 +1,4 @@
-/**
+﻿/**
 * @file     vka_model.h
 * @brief    Declatation of the Model and Mesh classes.
 * @author   Github: R-Michi
