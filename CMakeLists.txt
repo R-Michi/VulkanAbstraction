@@ -6,6 +6,7 @@ project("VulkanAbstraction")
 
 # use C++ 17
 set(CMAKE_CXX_STANDARD 17)
+add_compile_options(-mfma -mavx2 -mf16c)
 
 # used include directories for libraries
 include_directories(

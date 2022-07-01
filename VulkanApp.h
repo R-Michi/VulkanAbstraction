@@ -59,9 +59,9 @@ private:
 	VkCommandPool command_pool;
 	std::vector<VkCommandBuffer> swapchain_command_buffers;
 
-	std::vector<vka::vertex323_t> vertices;
+	uint32_t index_count;
+	std::vector<vka::real_t> vertices;
 	std::vector<uint32_t> indices;
-	size_t n_indices;
 	vka::Buffer vertex_buffer;
 	vka::Buffer index_buffer;
 	vka::Buffer uniform_buffer;
@@ -83,7 +83,7 @@ private:
 	constexpr static VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 	constexpr static VkColorSpaceKHR SURFACE_COLOR_SPACE = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 	constexpr static VkImageUsageFlags SURFACE_IMAGE_USAGE = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	constexpr static VkPresentModeKHR PRESENTATION_MODE = VK_PRESENT_MODE_IMMEDIATE_KHR;
+	constexpr static VkPresentModeKHR PRESENTATION_MODE = VK_PRESENT_MODE_FIFO_KHR;
 
 	void glfw_init(void);
 	void glfw_destroy(void);

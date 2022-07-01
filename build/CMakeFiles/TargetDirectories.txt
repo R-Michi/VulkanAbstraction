@@ -1,0 +1,3 @@
+D:/Michi/Programmieren/Vulkan/VulkanAbstraction/build/CMakeFiles/rebuild_cache.dir
+D:/Michi/Programmieren/Vulkan/VulkanAbstraction/build/CMakeFiles/vka.dir
+D:/Michi/Programmieren/Vulkan/VulkanAbstraction/build/CMakeFiles/edit_cache.dir

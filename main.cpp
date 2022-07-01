@@ -10,6 +10,8 @@
 */
 
 #define STB_IMAGE_IMPLEMENTATION
+#define VKA_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
 
 #include "VulkanApp.h"
 
@@ -25,13 +27,9 @@ int main()
         app.run();
         app.shutdown();
     }
-    catch (std::runtime_error& e)
+    catch (std::exception& e)
     {
         std::cerr << "Runtime error ocurred!\nWhat: " << e.what() << std::endl;
-    }
-    catch (std::invalid_argument& e)
-    {
-        std::cerr << "Invalid argument error occured!\nWhat: " << e.what() << std::endl;
     }
     return 0;
 }

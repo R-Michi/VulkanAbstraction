@@ -10,8 +10,6 @@
 */
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define TINYOBJLOADER_IMPLEMENTATION
-#define VKA_IMPLEMENTATION
 #define VKA_TEMPLATE_IMPLEMENTATION
 
 #include "VulkanApp.h"
@@ -26,18 +24,7 @@
 
 VulkanApp::VulkanApp(void)
 {
-	this->vertices = {
-		{{-1.0f, 0.75f, +1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
-		{{-1.0f, 0.75f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-		{{+1.0f, 0.75f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-		{{+1.0f, 0.75f, +1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
 
-		{{-1.0f, 0.0f, +1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
-		{{-1.0f, 0.0f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-		{{+1.0f, 0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-		{{+1.0f, 0.0f, +1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
-	};
-	this->indices = { 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7 };
 }
 
 VulkanApp::~VulkanApp(void)
@@ -140,12 +127,34 @@ void VulkanApp::vulkan_destroy(void)
 
 void VulkanApp::load_models(void)
 {
-	vka::Model323 dragon;
-	dragon.load("../../../assets/models/fountain.obj");
-	dragon.merge(this->vertices, this->indices);
+	uint32_t vertex_count = 0, index_count = 0;
 
-	std::cout << "Number of vertices: " << this->vertices.size() << std::endl;
-	std::cout << "Number of indices: " << this->indices.size() << std::endl;
+	vka::Model model;
+	model.load("../assets/models/test.obj", vka::VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL);
+
+	const std::vector<vka::VertexAttributeType> merge_types = {
+		vka::VKA_VERTEX_ATTRIBUTE_TYPE_POSITION,
+		vka::VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE,
+		vka::VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL
+	};
+	
+	uint32_t base_index = 0;
+	for(const vka::Mesh& mesh : model.meshes())
+	{
+		mesh.merge(this->vertices, merge_types);
+		for(uint32_t i : mesh.indices())
+			this->indices.push_back(base_index + i);
+		base_index += mesh.vertex_count();
+		std::cout << "Mesh material ID count: " << mesh.materials().size() << std::endl;
+		std::cout << "Mesh triangle count:    " << mesh.primitive_count() << std::endl;
+	}
+	vertex_count = base_index;
+	index_count = this->indices.size();
+
+	std::cout << "Number if meshes: " << model.meshes().size() << std::endl;
+	std::cout << "Number of materials: " << model.materials().size() << std::endl;
+	std::cout << "Number of vertices: " << vertex_count << std::endl;
+	std::cout << "Number of indices: " << index_count << std::endl;
 }
 
 
@@ -168,6 +177,7 @@ void VulkanApp::create_instance(void)
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
 	layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif 
+	layers.push_back("VK_LAYER_LUNARG_monitor");
 
 	std::vector<const char*> extensions;
 	vka::instance::get_glfw_extensions(extensions);
@@ -175,19 +185,20 @@ void VulkanApp::create_instance(void)
 	extensions.push_back("VK_EXT_debug_utils");
 #endif
 
-	if (!vka::instance::are_layers_supported(layers))
+	size_t idx;
+	if (!vka::instance::are_layers_supported(layers, idx))
 	{
-		std::string str = "Some requiered instance layers are not supported!\nRequiered instance layers:\n";
-		for (const char* l : layers)
-			str += '\t' + std::string(l) + '\n';
+		std::string str = "Instance layer \"";
+		str += std::string(layers.at(idx));
+		str += "\" is not supported.";
 		throw std::runtime_error(str);
 	}
 
-	if (!vka::instance::are_extensions_supported(extensions))
+	if (!vka::instance::are_extensions_supported(extensions, idx))
 	{
-		std::string str = "Some requiered instance extensions are not supported!\nRequiered instance extensions:\n";
-		for (const char* e : extensions)
-			str += '\t' + std::string(e) + '\n';
+		std::string str = "Instance extension \"";
+		str += std::string(extensions.at(idx));
+		str += "\" is not supported.";
 		throw std::runtime_error(str);
 	}
 
@@ -220,25 +231,22 @@ void VulkanApp::create_physical_device(void)
 
 	vka::PhysicalDeviceFilter filter = {};
 	filter.sequence = nullptr;			// for local VRAM memory				// for staging memory / buffers
-	filter.reqMemoryPropertyFlags = { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+	filter.memoryPropertyFlags = { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
 									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT};
-	filter.reqDeviceTypeHirachy = { VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU };
+	filter.deviceTypeHirachy = { VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU };
 	filter.pSurface = &this->window_surface;
-	filter.reqMinImageCount = SWAPCHAIN_IMAGE_COUNT;
-	filter.reqMaxImageCount = SWAPCHAIN_IMAGE_COUNT;
-	filter.reqSurfaceImageUsageFlags = SURFACE_IMAGE_USAGE;
-	filter.reqSurfaceColorFormats = { SURFACE_COLOR_FORMAT };
-	filter.reqSurfaceColorSpaces = { SURFACE_COLOR_SPACE };
-	filter.reqPresentModes = { VK_PRESENT_MODE_FIFO_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_FIFO_RELAXED_KHR};
-	filter.reqQueueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
+	filter.swapchainMinImageCount = SWAPCHAIN_IMAGE_COUNT;
+	filter.swapchainMaxImageCount = SWAPCHAIN_IMAGE_COUNT;
+	filter.surfaceImageUsageFlags = SURFACE_IMAGE_USAGE;
+	filter.surfaceColorFormats = { SURFACE_COLOR_FORMAT };
+	filter.surfaceColorSpaces = { SURFACE_COLOR_SPACE };
+	filter.surfacePresentModes = { VK_PRESENT_MODE_FIFO_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_FIFO_RELAXED_KHR};
+	filter.queueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
 
-	size_t idx;
-	vka::PhysicalDeviceError error = vka::device::find(physical_devices, 0, filter, idx);
-	if (error != vka::VKA_PYHSICAL_DEVICE_ERROR_NONE)
-	{
-		throw std::runtime_error(vka::device::strerror(error));
-	}
+	size_t idx = vka::device::find(physical_devices, 0, filter);
+	if (idx == VKA_NPOS)
+		throw std::runtime_error("Failed to find physical device");
 
 	this->physical_device = physical_devices.at(idx);
 	std::cout << "Successfully found physical device: " << device_properties.at(idx).deviceName << std::endl;
@@ -250,24 +258,21 @@ void VulkanApp::create_queues(void)
 	vka::queue::properties(this->physical_device, queue_fam_properties);
 
 	vka::QueueFamilyFilter queue_fam_filter = {};
-	queue_fam_filter.reqQueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
-	queue_fam_filter.reqQueueCount = 4;
+	queue_fam_filter.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
+	queue_fam_filter.queueCount = 4;
 
-	size_t idx;
-	vka::QueueFamilyError error = vka::queue::find(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL, idx);
-	if (error != vka::VKA_QUEUE_FAMILY_ERROR_NONE)
+	size_t idx = vka::queue::find(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL);
+	if(idx == VKA_NPOS)
 	{
-		throw std::runtime_error(vka::queue::strerror(error));
+		throw std::runtime_error("Failed to find queue family.");
 	}
 
 	this->graphics_queue_info.queueFamilyIndex = idx;
-	this->graphics_queue_info.usedQueueCount = queue_fam_filter.reqQueueCount;
+	this->graphics_queue_info.usedQueueCount = queue_fam_filter.queueCount;
 	this->graphics_queue_info.queueBaseIndex = 0;
 
 	if (!vka::queue::validate(queue_fam_properties, { this->graphics_queue_info }))
-	{
 		throw std::runtime_error("Validation of queue families failed!");
-	}
 
 	std::cout << "Successfully found queue family, index: " << idx << std::endl;
 }
@@ -287,11 +292,12 @@ void VulkanApp::create_logical_device(void)
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 	
-	if (!vka::device::are_extensions_supported(this->physical_device, device_extensions))
+	size_t idx;
+	if (!vka::device::are_extensions_supported(this->physical_device, device_extensions, idx))
 	{
-		std::string str = "Some requiered device extensions are not supported!\nRequiered device extensions:\n";
-		for (const char* e : device_extensions)
-			str += '\t' + std::string(e) + '\n';
+		std::string str = "Device extension \"";
+		str += std::string(device_extensions.at(idx));
+		str += "\" is not supported.";
 		throw std::runtime_error(str);
 	}
 
@@ -453,8 +459,8 @@ void VulkanApp::create_render_pass(void)
 void VulkanApp::create_shaders(void)
 {
 	vka::Shader main_vert(this->device), main_frag(this->device);
-	main_vert.load("../../../assets/shaders/bin/main.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-	main_frag.load("../../../assets/shaders/bin/main.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+	main_vert.load("../assets/shaders/bin/main.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+	main_frag.load("../assets/shaders/bin/main.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	this->main_shader.attach(main_vert);
 	this->main_shader.attach(main_frag);
@@ -465,7 +471,7 @@ void VulkanApp::create_pipeline(void)
 	std::vector<VkVertexInputBindingDescription> bindings(1);
 	bindings[0] = {};
 	bindings[0].binding = 0;
-	bindings[0].stride = sizeof(vka::vertex323_t);
+	bindings[0].stride = 8 * sizeof(vka::real_t);
 	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 	std::vector<VkVertexInputAttributeDescription> attributes(3);
@@ -479,13 +485,13 @@ void VulkanApp::create_pipeline(void)
 	attributes[1].location = 1;
 	attributes[1].binding = 0;
 	attributes[1].format = VK_FORMAT_R32G32_SFLOAT;
-	attributes[1].offset = sizeof(glm::vec3);
+	attributes[1].offset = 3 * sizeof(vka::real_t);
 
 	attributes[2] = {};
 	attributes[2].location = 2;
 	attributes[2].binding = 0;
 	attributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributes[2].offset = sizeof(glm::vec3) + sizeof(glm::vec2);
+	attributes[2].offset = 5 * sizeof(vka::real_t);
 
 	VkPipelineVertexInputStateCreateInfo vertex_input_create_info = {};
 	vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -694,7 +700,7 @@ void VulkanApp::create_global_command_buffers(void)
 
 void VulkanApp::create_vertex_buffers(void)
 {
-	VkDeviceSize size = sizeof(vka::vertex323_t) * this->vertices.size();
+	VkDeviceSize size = sizeof(vka::real_t) * this->vertices.size();
 
 	vka::Buffer staging_buffer;
 	staging_buffer.set_create_flags(0);
@@ -717,9 +723,11 @@ void VulkanApp::create_vertex_buffers(void)
 
 	this->vertex_buffer.set_create_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	this->vertex_buffer.set_memory_properties(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	this->vertex_buffer.set_command_pool(this->command_pool);
-	this->vertex_buffer.set_queue(this->graphics_queues[0]);
-	this->vertex_buffer = std::move(staging_buffer);
+
+	VkCommandBuffer cbo = vka::Buffer::enqueue_copy(this->device, this->command_pool, 1, &staging_buffer, &this->vertex_buffer);
+	result = vka::utility::execute_scb(this->device, this->command_pool, this->graphics_queues[0], 1, &cbo);
+	VULKAN_ASSERT(result);
+	staging_buffer.clear();
 }
 
 void VulkanApp::create_index_buffers(void)
@@ -742,15 +750,15 @@ void VulkanApp::create_index_buffers(void)
 	void* _map = staging_buffer.map(size, 0);
 	memcpy(_map, this->indices.data(), size);
 	staging_buffer.unmap();
-	this->n_indices = this->indices.size();
+	this->index_count = this->indices.size();
 	this->indices.clear();
 	this->indices.shrink_to_fit();
 
 	this->index_buffer.set_create_usage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 	this->index_buffer.set_memory_properties(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	this->index_buffer.set_command_pool(this->command_pool);
-	this->index_buffer.set_queue(this->graphics_queues[0]);
-	this->index_buffer = std::move(staging_buffer);
+
+	VkCommandBuffer cbo = vka::Buffer::enqueue_copy(this->device, this->command_pool, 1, &staging_buffer, &this->index_buffer);
+	result = vka::utility::execute_scb(this->device, this->command_pool, this->graphics_queues[0], 1, &cbo);
 	staging_buffer.clear();
 }
 
@@ -773,63 +781,66 @@ void VulkanApp::create_uniform_buffers(void)
 void VulkanApp::create_textures(void)
 {
 	int w, h, c;
-	uint8_t* data = stbi_load("../../../assets/textures/fountain_tex2.jpg", &w, &h, &c, STBI_rgb_alpha);
+	uint8_t* data = stbi_load("../assets/textures/fountain_tex.jpg", &w, &h, &c, STBI_rgb_alpha);
+	uint8_t* data2 = stbi_load("../assets/textures/fountain_tex2.jpg", &w, &h, &c, STBI_rgb_alpha);
 
+	VkExtent3D extent = { (uint32_t)w, (uint32_t)h, 1 };
 	VkComponentMapping component_mapping = {};
 	component_mapping.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 	component_mapping.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 	component_mapping.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 	component_mapping.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-	this->texture.set_pyhsical_device(this->physical_device);
-	this->texture.set_device(this->device);
-	this->texture.set_command_pool(this->command_pool);
-	this->texture.set_queue(this->graphics_queues[0]);
+	vka::Texture tex(this->physical_device, this->device, this->command_pool, this->graphics_queues[0]);
+	tex.set_image_flags(0);
+	tex.set_image_type(VK_IMAGE_TYPE_2D);
+	tex.set_image_format(VK_FORMAT_R8G8B8A8_UNORM);
+	tex.set_image_extent(extent);
+	tex.set_image_array_layers(2);
+	tex.set_image_queue_families(this->graphics_queue_info.queueFamilyIndex);
+	tex.set_sampler_mag_filter(VK_FILTER_LINEAR);
+	tex.set_sampler_min_filter(VK_FILTER_LINEAR);
+	tex.set_sampler_mipmap_mode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
+	tex.set_sampler_address_mode(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+	tex.set_sampler_mip_lod_bias(0.0f);
+	tex.set_sampler_anisotropy_enable(false);
+	tex.set_sampler_max_anisotropy(0.0f);
+	tex.set_sampler_compare_enable(false);
+	tex.set_sampler_compare_op(VK_COMPARE_OP_ALWAYS);
+	tex.set_sampler_lod(0.0f, (float)vka::Texture::to_mip_levels(extent));
+	tex.set_sampler_border_color(VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
+	tex.set_sampler_unnormalized_coordinates(false);
 
-	this->texture.set_image_flags(0);
-	this->texture.set_image_type(VK_IMAGE_TYPE_2D);
-	this->texture.set_image_format(VK_FORMAT_R8G8B8A8_UNORM);
-	this->texture.set_image_extent({ static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1 });
-	this->texture.set_image_array_layers(1);
-	this->texture.set_image_queue_families(this->graphics_queue_info.queueFamilyIndex);
+	VkImageViewCreateInfo vci = {};
+	vci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	vci.pNext = nullptr;
+	vci.flags = 0;
+	vci.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	vci.format = VK_FORMAT_R8G8B8A8_UNORM;
+	vci.components = component_mapping;
+	vci.subresourceRange.baseArrayLayer = 0;
+	vci.subresourceRange.layerCount = 1;
+	tex.add_view(vci);
 
-	this->texture.mipmap_generate(true);
-	this->texture.mipmap_filter(VK_FILTER_LINEAR);
+	vci.subresourceRange.baseArrayLayer = 1;
+	tex.add_view(vci);
 
-	this->texture.set_view_type(VK_IMAGE_VIEW_TYPE_2D);
-	this->texture.set_view_format(VK_FORMAT_R8G8B8A8_UNORM);
-	this->texture.set_view_components(component_mapping);
+	tex.load(0, data);
+	tex.load(1, data2);
+	if(tex.create(true, VK_FILTER_NEAREST) != VK_SUCCESS)
+		throw std::runtime_error("Failed to create texture");
 
-	VkImageSubresourceRange subresource_range = {};
-	subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresource_range.baseMipLevel = 0;
-	subresource_range.levelCount = this->texture.mip_levels();
-	subresource_range.baseArrayLayer = 0;
-	subresource_range.layerCount = 1;
-	this->texture.set_view_subresource_range(subresource_range);
-	
-	this->texture.set_sampler_min_filter(VK_FILTER_LINEAR);
-	this->texture.set_sampler_mag_filter(VK_FILTER_LINEAR);
-	this->texture.set_sampler_mipmap_mode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
-	this->texture.set_sampler_address_mode(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-	this->texture.set_sampler_lod(0.0f, static_cast<float>(this->texture.mip_levels()));
-	this->texture.set_sampler_mip_lod_bias(0.0f);
-	this->texture.set_sampler_anisotropy_enable(false);
-	this->texture.set_sampler_max_anisotropy(0.0f);
-	this->texture.set_sampler_compare_enable(false);
-	this->texture.set_sampler_compare_op(VK_COMPARE_OP_ALWAYS);
-	this->texture.set_sampler_border_color(VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
-	this->texture.set_sampler_unnormalized_coordinates(false);
+	this->texture = std::move(tex);
 
-	this->texture.create(data, sizeof(uint8_t) * STBI_rgb_alpha);
 	stbi_image_free(data);
+	stbi_image_free(data2);
 }
 
 void VulkanApp::create_descriptors(void)
 {
 	VkDescriptorImageInfo descr_image_info = {};
 	descr_image_info.sampler = this->texture.sampler();
-	descr_image_info.imageView = this->texture.view();
+	descr_image_info.imageView = this->texture.views().at(1);
 	descr_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 	VkDescriptorBufferInfo descr_uniform_buffer_info = {};
@@ -922,8 +933,8 @@ void VulkanApp::record_command_buffers(void)
 
 		// bind descriptor sets
 		vkCmdBindDescriptorSets(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, this->descriptor_manager.descriptor_set_count(), this->descriptor_manager.descriptor_sets().data(), 0, nullptr);
-		
-		vkCmdDrawIndexed(this->swapchain_command_buffers.at(i), this->n_indices, 1, 0, 0, 0);
+
+		vkCmdDrawIndexed(this->swapchain_command_buffers.at(i), this->index_count, 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(this->swapchain_command_buffers.at(i));
 

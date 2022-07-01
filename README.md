@@ -55,9 +55,37 @@ Now you have to set up following directory structure:
 # version 1.1.1 update notes
     - patch: devices can now be found without having a surface
 
-#version 1.1.2 update notes
+# version 1.1.2 update notes
     - added: memory handle getter for buffer and texture
     - patch: some general minor changes
 
-#version 1.2.0 update notes
+# version 1.2.0 update notes
     - added: descriptor manager supports now also all extension types
+
+# version 1.3.0 update notes
+    - revised: Model and Mesh class; Meshes are now loaded into an array of either float or doubles
+               instead of an array of vertex_t. Models can now be loaded with having only one materail
+               per mesh, instead of having one material per face. Vertex positions, normal vectors and
+               texture coordinates are now stored in separate arrays. They can still be merged.
+               Multiple models can no longer be merged into a huge array of vertices and indices.
+               If you want to do that, you have to do it by yourself!
+    - removed: vertex_t structure
+    - revised: Buffer class; Removed memory handle getter.
+    - revised: Attachment image; Removed memory handle getter. Added image handle getter.
+               Added getter for the internal used create infos.
+    - revised: Texture class, Removed memory handle getter. Added image handle getter.
+               Added getter for the internal used create infos.
+               Textures have now the ablility to contain multiple image views.
+               Where each image view can reference its own subressource.
+               Moreover, data is not loaded via create() into the texture anymore, instead the load()
+               function is used. The load() function also possesses the functionality of loading 
+               image data to different array layers separatly.
+    - revised: The find device and find queue family index funtions do not return an error code anymore.
+               Instead, they return the index of the found device or queue family or VKA_NPOS,
+               if no device or queue family was found.
+    - added: format_sizeof(); This function converts a vulkan format to a size in bytes.
+    - added: VertexAttributeType; Used to merge vertex attributes of a mesh together.
+    - added: ModelLoadOptionFlagBits; It affects how the model is loaded.
+    - removed: strerror functions
+    - removed: Error enums that were used by the device and queue family find functions.
+    - some other changes: comments, varaible and function namings, exception messages
