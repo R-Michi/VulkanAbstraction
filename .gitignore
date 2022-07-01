@@ -31,6 +31,6 @@
 *.out
 *.app
 
-.vs
-lib
+.vscode
 build
+lib
