@@ -1,1 +1,0 @@
-  -LC:/VulkanSDK/1.2.170.0/Lib  -LD:/Michi/Programmieren/Vulkan/VulkanAbstraction/lib/glfw-3.3.3/lib  -LD:/Michi/Programmieren/Vulkan/VulkanAbstraction/lib/glm/glm/lib  -lglm_static -lglfw3 -lvulkan-1 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 -loldnames 
