@@ -11,7 +11,7 @@
 
 #pragma once
 
-vka::Mesh::Mesh(const Mesh& src)
+vka::Mesh::Mesh(const Mesh& src) : Mesh()
 {
     *this = src;
 }
@@ -25,7 +25,7 @@ vka::Mesh& vka::Mesh::operator= (const Mesh& src)
     return *this;
 }
 
-vka::Mesh::Mesh(Mesh&& src)
+vka::Mesh::Mesh(Mesh&& src) : Mesh()
 {
     *this = std::move(src);
 }

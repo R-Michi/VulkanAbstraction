@@ -36,7 +36,7 @@ vka::AttachmentImage::~AttachmentImage(void)
     this->clear();
 }
 
-vka::AttachmentImage::AttachmentImage(AttachmentImage&& src)
+vka::AttachmentImage::AttachmentImage(AttachmentImage&& src) : AttachmentImage()
 {
     *this = std::move(src);
 }

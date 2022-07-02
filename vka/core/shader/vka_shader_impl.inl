@@ -29,7 +29,7 @@ vka::Shader::~Shader(void)
     delete[] this->_entry_point;
 }
 
-vka::Shader::Shader(Shader&& shader)
+vka::Shader::Shader(Shader&& shader) : Shader()
 {
     *this = std::move(shader);
 }

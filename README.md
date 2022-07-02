@@ -89,3 +89,6 @@ Now you have to set up following directory structure:
     - removed: strerror functions
     - removed: Error enums that were used by the device and queue family find functions.
     - some other changes: comments, varaible and function namings, exception messages
+
+# version 1.3.1 update notes
+    - patch: fixed move constructor bug

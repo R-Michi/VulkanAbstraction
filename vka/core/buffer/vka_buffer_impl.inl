@@ -29,7 +29,7 @@ vka::Buffer::Buffer(VkPhysicalDevice physical_device, VkDevice device) noexcept
     this->_mem_size = 0;
 }
 
-vka::Buffer::Buffer(Buffer&& src)
+vka::Buffer::Buffer(Buffer&& src) : Buffer()
 {
     *this = std::move(src);
 }

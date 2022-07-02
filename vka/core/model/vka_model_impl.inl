@@ -11,7 +11,7 @@
 
 #pragma once
 
-vka::Model::Model(const Model& src)
+vka::Model::Model(const Model& src) : Model()
 {
     *this = src;
 }
@@ -22,7 +22,7 @@ vka::Model& vka::Model::operator= (const Model& src)
     return *this;
 }
 
-vka::Model::Model(Model&& src)
+vka::Model::Model(Model&& src) : Model()
 {
     *this = std::move(src);
 }

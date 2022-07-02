@@ -33,7 +33,7 @@ vka::Texture::Texture(VkPhysicalDevice physical_device, VkDevice device, VkComma
     this->_mem_size = 0;
 }
 
-vka::Texture::Texture(Texture&& src)
+vka::Texture::Texture(Texture&& src) : Texture()
 {
     *this = std::move(src);
 }
