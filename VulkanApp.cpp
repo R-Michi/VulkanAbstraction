@@ -132,16 +132,16 @@ void VulkanApp::load_models(void)
 	vka::Model model;
 	model.load("../assets/models/test.obj", vka::VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL);
 
-	const std::vector<vka::VertexAttributeType> merge_types = {
-		vka::VKA_VERTEX_ATTRIBUTE_TYPE_POSITION,
-		vka::VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE,
-		vka::VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL
+	const std::vector<vka::VertexAttribute> merge_attribs = {
+		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_POSITION, 0 },
+		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE, 0 },
+		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL, 0 }	
 	};
 	
 	uint32_t base_index = 0;
 	for(const vka::Mesh& mesh : model.meshes())
 	{
-		mesh.merge(this->vertices, merge_types);
+		mesh.merge(this->vertices, merge_attribs);
 		for(uint32_t i : mesh.indices())
 			this->indices.push_back(base_index + i);
 		base_index += mesh.vertex_count();
