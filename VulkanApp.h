@@ -1,8 +1,8 @@
 /**
 * @file     VulkanApp.h
 * @brief    Header file for testing vulkan application.
-* @author   Michael Reim / Github: R-Michi
-* Copyright (c) 2021 by Michael Reim
+* @author   Github: R-Michi
+* Copyright (c) 2021 by R-Michi
 *
 * This code is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
