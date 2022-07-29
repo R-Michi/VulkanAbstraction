@@ -94,4 +94,7 @@ Now you have to set up following directory structure:
     - patch: fixed move constructor bug
 
 # version 1.3.2 update notes
-    - fixed bug: vka::Model::pvertices, returned the normal vectors
+    - added: Within vka::Mesh::merge, you can nor add spacing between different vertex attributes.
+
+# version 1.3.3 update notes
+    - patch: vka::Model::pvertices returned the normal vectors, is now fixed

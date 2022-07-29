@@ -60,8 +60,10 @@ namespace vka
          * @note                    The vertex attributes can be in any order and be multiple times
          *                          contained in the vertex attribute vector. The total amount of
          *                          components is the sum of all single attribute's components.
+         *                          The 'spacing' component of a VertexAttribute structure is
+         *                          counted in real_t elements and is used to fit some alignments.
          */
-        void merge(std::vector<real_t>& data, const std::vector<VertexAttributeType>& attributes) const;
+        void merge(std::vector<real_t>& data, const std::vector<VertexAttribute>& attributes) const;
 
         /**
          * @brief cleares the whole mesh

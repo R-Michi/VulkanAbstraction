@@ -77,21 +77,22 @@ void vka::Mesh::create(const tinyobj::attrib_t& attribute, const tinyobj::shape_
     this->_materials = mtlIDs;
 }
 
-void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttributeType>& attributes) const
+void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttribute>& attributes) const
 {
     const uint32_t vc = this->vertex_count();
 
     for(uint32_t i = 0; i < vc; i++)
     {
-        for(VertexAttributeType a : attributes)
+        for(const VertexAttribute a : attributes)
         {
-            switch(a)
+            switch(a.type)
             {
             case VKA_VERTEX_ATTRIBUTE_TYPE_POSITION:
             {
                 const size_t begin  = i * VERTEX_COMPONENT_COUNT;
                 const size_t end    = begin + VERTEX_COMPONENT_COUNT;
                 data.insert(data.end(), this->_vertices.begin() + begin, this->_vertices.begin() + end);
+                data.insert(data.end(), a.spacing, 0);
                 break;
             }
             case VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL:
@@ -99,6 +100,7 @@ void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttribu
                 const size_t begin  = i * NORMAL_COMPONENT_COUNT;
                 const size_t end    = begin + NORMAL_COMPONENT_COUNT;
                 data.insert(data.end(), this->_normals.begin() + begin, this->_normals.begin() + end);
+                data.insert(data.end(), a.spacing, 0);
                 break;
             }
             case VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE:
@@ -106,6 +108,7 @@ void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttribu
                 const size_t begin  = i * TEXCOORD_COMPONENT_COUNT;
                 const size_t end    = begin + TEXCOORD_COMPONENT_COUNT;
                 data.insert(data.end(), this->_texcoords.begin() + begin, this->_texcoords.begin() + end);
+                data.insert(data.end(), a.spacing, 0);
                 break;
             }
             default:

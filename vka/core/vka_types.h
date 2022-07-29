@@ -21,6 +21,34 @@ namespace vka
 
     using real_t = tinyobj::real_t;
 
+    enum QueueFamilyPriority : uint32_t
+    {
+        VKA_QUEUE_FAMILY_PRIORITY_FIRST = 0x00000001,
+        VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL = 0x00000002,
+        VKA_QUEUE_FAMILY_PRIORITY_MAX_ENUM = 0x7FFFFFFF
+    };
+
+    enum VertexAttributeType : uint32_t
+    {
+        VKA_VERTEX_ATTRIBUTE_TYPE_NONE = 0,
+        VKA_VERTEX_ATTRIBUTE_TYPE_POSITION = 1,
+        VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL = 3,
+        VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE = 4,
+        VKA_VERTEX_ATTRIBUTE_TYPE_POSITION_W_EXT = 100,
+        VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE_W_EXT = 101,
+        VKA_VERTEX_ATTRIBUTE_TYPE_COLOR_EXT = 102,
+        VKA_VERTEX_ATTRIBUTE_TYPE_MAX_ENUM = 0x7FFFFFFF
+    };
+
+    enum ModelLoadOptionFlagBits : uint32_t
+    {
+        VKA_MODEL_LOAD_OPTION_DEFAULT = 0x00000000,
+        VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL = 0x00000001,
+        VKA_MODEL_LOAD_OPTION_FORCE_PER_MESH_MATERIAL = 0x00000002,
+        VKA_MODEL_LOAD_OPTION_MAX_ENUM = 0x7FFFFFFF
+    };
+    using ModelLoadOptionFlags = uint32_t;
+
     struct PhysicalDeviceFilter
     {
         const char*                         sequence;
@@ -49,31 +77,9 @@ namespace vka
         uint32_t queueBaseIndex;
     };
 
-    enum QueueFamilyPriority : uint32_t
+    struct VertexAttribute
     {
-        VKA_QUEUE_FAMILY_PRIORITY_FIRST = 0x00000001,
-        VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL = 0x00000002,
-        VKA_QUEUE_FAMILY_PRIORITY_MAX_ENUM = 0x7FFFFFFF
+        VertexAttributeType type;
+        size_t              spacing;
     };
-
-    enum VertexAttributeType : uint32_t
-    {
-        VKA_VERTEX_ATTRIBUTE_TYPE_NONE = 0,
-        VKA_VERTEX_ATTRIBUTE_TYPE_POSITION = 1,
-        VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL = 3,
-        VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE = 4,
-        VKA_VERTEX_ATTRIBUTE_TYPE_POSITION_W_EXT = 100,
-        VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE_W_EXT = 101,
-        VKA_VERTEX_ATTRIBUTE_TYPE_COLOR_EXT = 102,
-        VKA_VERTEX_ATTRIBUTE_TYPE_MAX_ENUM = 0x7FFFFFFF
-    };
-
-    enum ModelLoadOptionFlagBits : uint32_t
-    {
-        VKA_MODEL_LOAD_OPTION_DEFAULT = 0x00000000,
-        VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL = 0x00000001,
-        VKA_MODEL_LOAD_OPTION_FORCE_PER_MESH_MATERIAL = 0x00000002,
-        VKA_MODEL_LOAD_OPTION_MAX_ENUM = 0x7FFFFFFF
-    };
-    using ModelLoadOptionFlags = uint32_t;
 }
