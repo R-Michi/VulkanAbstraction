@@ -122,7 +122,7 @@ namespace vka
          *          vz = base_address + (index * c + 2) * sizeof(real_t)
          */
         const void* pvertices(void) const noexcept
-        { return this->_normals.data(); }
+        { return this->_vertices.data(); }
 
         /** 
          * @return  vertex's normal vectors

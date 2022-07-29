@@ -92,3 +92,6 @@ Now you have to set up following directory structure:
 
 # version 1.3.1 update notes
     - patch: fixed move constructor bug
+
+# version 1.3.2 update notes
+    - fixed bug: vka::Model::pvertices, returned the normal vectors
