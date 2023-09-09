@@ -11,7 +11,7 @@
 
 #pragma once
 
-VkImageUsageFlagBits vka::detail::utility::format_feature_to_image_usage_bit(VkFormatFeatureFlagBits format_feature)
+VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFlagBits format_feature)
 {
     switch (format_feature)
     {
@@ -39,7 +39,7 @@ VkImageUsageFlagBits vka::detail::utility::format_feature_to_image_usage_bit(VkF
     return static_cast<VkImageUsageFlagBits>(0);
 }
 
-VkFormatFeatureFlagBits vka::detail::utility::image_usage_to_format_feature_bit(VkImageUsageFlagBits image_usage)
+VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFlagBits image_usage)
 {
     switch (image_usage)
     {
@@ -68,10 +68,8 @@ VkFormatFeatureFlagBits vka::detail::utility::image_usage_to_format_feature_bit(
     return static_cast<VkFormatFeatureFlagBits>(0);
 }
 
-std::map<VkFormat, size_t> vka::detail::utility::init_format_sizeof(void) noexcept
+void vka::detail::utility::init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s) noexcept
 {
-    std::map<VkFormat, size_t> f2s;
-
     f2s[VK_FORMAT_UNDEFINED] = 0;
     f2s[VK_FORMAT_R4G4_UNORM_PACK8] = 1;
     for(uint32_t i = static_cast<uint32_t>(VK_FORMAT_R4G4B4A4_UNORM_PACK16); i <= static_cast<uint32_t>(VK_FORMAT_A1R5G5B5_UNORM_PACK16); i++)
@@ -116,7 +114,7 @@ std::map<VkFormat, size_t> vka::detail::utility::init_format_sizeof(void) noexce
     f2s[VK_FORMAT_S8_UINT] = 1;
     f2s[VK_FORMAT_D16_UNORM_S8_UINT] = 3;
     f2s[VK_FORMAT_D24_UNORM_S8_UINT] = 4;
-    f2s[VK_FORMAT_D32_SFLOAT_S8_UINT] = 4;
+    f2s[VK_FORMAT_D32_SFLOAT_S8_UINT] = 8;
     f2s[VK_FORMAT_BC1_RGB_UNORM_BLOCK] = 8;
     f2s[VK_FORMAT_BC1_RGB_SRGB_BLOCK] = 8;
     f2s[VK_FORMAT_BC1_RGBA_UNORM_BLOCK] = 8;
@@ -174,13 +172,17 @@ std::map<VkFormat, size_t> vka::detail::utility::init_format_sizeof(void) noexce
     f2s[VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM] = 6;
     f2s[VK_FORMAT_G16_B16R16_2PLANE_422_UNORM] = 6;
     f2s[VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM] = 6;
+    f2s[VK_FORMAT_G8_B8R8_2PLANE_444_UNORM] = 3;
+    f2s[VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16] = 6;
+    f2s[VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16] = 6;
+    f2s[VK_FORMAT_G16_B16R16_2PLANE_444_UNORM] = 6;
+    f2s[VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT] = 2;
+    f2s[VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT] = 2;
     for(uint32_t i = static_cast<uint32_t>(VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG); i <= static_cast<uint32_t>(VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG); i++)
         f2s[static_cast<VkFormat>(i)] = 8;
     for(uint32_t i = static_cast<uint32_t>(VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK_EXT); i <= static_cast<uint32_t>(VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK_EXT); i++)
         f2s[static_cast<VkFormat>(i)] = 16;
-    f2s[VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT] = 2;
-    f2s[VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT] = 2;
-    return f2s;
+    f2s[VK_FORMAT_R16G16_S10_5_NV] = 4;
 }
 
 

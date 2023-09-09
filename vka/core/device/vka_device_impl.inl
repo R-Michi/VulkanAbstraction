@@ -24,207 +24,149 @@ void vka::device::get(VkInstance instance, std::vector<VkPhysicalDevice>& physic
         physical_devices.push_back(devices[i]);
 }
 
-void vka::device::properties(const std::vector<VkPhysicalDevice>& devices, std::vector<VkPhysicalDeviceProperties>& properties)
+size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter)
 {
-    properties.clear();
-    for (const VkPhysicalDevice& device : devices)
-    {
-        VkPhysicalDeviceProperties prop;
-        vkGetPhysicalDeviceProperties(device, &prop);
-        properties.push_back(prop);
-    }
-}
+    VkPhysicalDeviceProperties properties[devices.size()];
+    for (size_t i = 0; i < devices.size(); i++)
+        vkGetPhysicalDeviceProperties(devices[i], properties + i);
 
-size_t vka::device::find(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter)
-{
-    if(begin >= devices.size()) return VKA_NPOS;
-    
     std::vector<size_t> candidates;
-    std::vector<VkPhysicalDeviceProperties> device_properties;
-    properties(devices, device_properties);
-    
-    for(size_t i = begin; i < devices.size(); i++)
+    for(size_t i = 0; i < devices.size(); i++)
     {
         VkPhysicalDeviceMemoryProperties mem_prop = {};
-        vkGetPhysicalDeviceMemoryProperties(devices.at(i), &mem_prop);
+        vkGetPhysicalDeviceMemoryProperties(devices[i], &mem_prop);
 
         uint32_t n_queue_families;
-        vkGetPhysicalDeviceQueueFamilyProperties(devices.at(i), &n_queue_families, nullptr);
+        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &n_queue_families, nullptr);
         VkQueueFamilyProperties queue_family_properties[n_queue_families];
-        vkGetPhysicalDeviceQueueFamilyProperties(devices.at(i), &n_queue_families, queue_family_properties);
+        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &n_queue_families, queue_family_properties);
 
         uint16_t failed = 0x0000;
 
-        failed |= detail::device::has_sequence(device_properties.at(i), filter.sequence);
+        failed |= detail::device::has_sequence(properties[i], filter.sequence);
         failed |= detail::device::has_memory_properties(mem_prop, filter.memoryPropertyFlags);
         failed |= detail::device::has_queue_flags(queue_family_properties, n_queue_families, filter.queueFamilyFlags);
+#ifdef VKA_GLFW_ENABLE
+        if (filter.surfaceSupport)
+            failed |= detail::device::has_surface_support(instance, devices[i], n_queue_families);
+#endif
 
-        // ignore these checks if no surface is used
-        if(filter.pSurface != nullptr)
-        {
-            VkSurfaceCapabilitiesKHR surface_capabilities = {};
-            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices.at(i), *filter.pSurface, &surface_capabilities);
-
-            uint32_t n_formats;
-            vkGetPhysicalDeviceSurfaceFormatsKHR(devices.at(i), *filter.pSurface, &n_formats, nullptr);
-            VkSurfaceFormatKHR formats[n_formats];
-            vkGetPhysicalDeviceSurfaceFormatsKHR(devices.at(i), *filter.pSurface, &n_formats, formats);
-
-            uint32_t n_present_modes;
-            vkGetPhysicalDeviceSurfacePresentModesKHR(devices.at(i), *filter.pSurface, &n_present_modes, nullptr);
-            VkPresentModeKHR present_modes[n_present_modes];
-            vkGetPhysicalDeviceSurfacePresentModesKHR(devices.at(i), *filter.pSurface, &n_present_modes, present_modes);
-
-            failed |= detail::device::has_min_image_count(surface_capabilities, filter.swapchainMinImageCount);
-            failed |= detail::device::has_max_image_count(surface_capabilities, filter.swapchainMaxImageCount);
-            failed |= detail::device::has_image_usage_flags(surface_capabilities, filter.surfaceImageUsageFlags);
-            failed |= detail::device::has_color_formats(formats, n_formats, filter.surfaceColorFormats);
-            failed |= detail::device::has_color_spaces(formats, n_formats, filter.surfaceColorSpaces);
-            failed |= detail::device::has_present_modes(present_modes, n_present_modes, filter.surfacePresentModes);
-        }
         if(failed == 0x0000) candidates.push_back(i);
     }
 
     // find best matching from the selected candidates
-    size_t idx = VKA_NPOS;
-    for(size_t i = 0; i < filter.deviceTypeHirachy.size() && idx == VKA_NPOS; i++)
+    size_t idx = vka::NPOS;
+    for(size_t i = 0; i < filter.deviceTypeHirachy.size() && idx == vka::NPOS; i++)
     {
         for(size_t cur_idx : candidates)
         {
-            if(device_properties.at(cur_idx).deviceType == filter.deviceTypeHirachy.at(i) && idx == VKA_NPOS)
+            if(properties[cur_idx].deviceType == filter.deviceTypeHirachy[i] && idx == vka::NPOS)
                 idx = cur_idx;
         }
     }
     return idx;
 }
 
-bool vka::device::is_layer_supported(VkPhysicalDevice device, const char* layer_name, VkLayerProperties* _property)
+bool vka::device::supports_layer(VkPhysicalDevice device, const std::string& layer_name, VkLayerProperties* properties)
 {
-    uint32_t n_layers;
-    VkResult res = vkEnumerateDeviceLayerProperties(device, &n_layers, nullptr);    // get number of layers
+    uint32_t layer_count;
+    VkResult res = vkEnumerateDeviceLayerProperties(device, &layer_count, nullptr);
     if (res != VK_SUCCESS) return false;
 
-    VkLayerProperties properties[n_layers];
-    res = vkEnumerateDeviceLayerProperties(device, &n_layers, properties);  // get layer properties
+    VkLayerProperties layer_properties[layer_count];
+    res = vkEnumerateDeviceLayerProperties(device, &layer_count, layer_properties);
     if (res != VK_SUCCESS) return false;
 
-    for (uint32_t i = 0; i < n_layers; i++)
+    for (uint32_t i = 0; i < layer_count; i++)
     {
-        if (strcmp(layer_name, properties[i].layerName) == 0)
+        if (layer_name == layer_properties[i].layerName)
         {
-            if (_property != nullptr)
-                *_property = properties[i];
+            if (properties != nullptr)
+                *properties = layer_properties[i];
             return true;
         }
     }
-
     return false;
 }
 
-bool vka::device::are_layers_supported(VkPhysicalDevice device, const std::vector<const char*>& layer_names, size_t& idx, std::vector<VkLayerProperties>* _properties)
+size_t vka::device::supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, std::vector<VkLayerProperties>* properties)
 {
-    uint32_t n_layers;
-    VkResult res = vkEnumerateDeviceLayerProperties(device, &n_layers, nullptr);    // get number of layers
+    uint32_t layer_count;
+    VkResult res = vkEnumerateDeviceLayerProperties(device, &layer_count, nullptr);
     if (res != VK_SUCCESS) return false;
 
-    VkLayerProperties properties[n_layers];
-    res = vkEnumerateDeviceLayerProperties(device, &n_layers, properties);  // get layer properties
+    VkLayerProperties layer_properties[layer_count];
+    res = vkEnumerateDeviceLayerProperties(device, &layer_count, layer_properties);
     if (res != VK_SUCCESS) return false;
 
-    // For all given layers...
+    if (properties != nullptr)
+        properties->clear();
+
     for (size_t i = 0; i < layer_names.size(); i++)
     {
-        // ...check if the current one is contained within all instance layers.
-        bool contains = false;
-        for (uint32_t j = 0; j < n_layers; j++)
+        bool found = false;
+        for (uint32_t j = 0; j < layer_count && !found; j++)
         {
-            // If layer is supported, the loop ends and its properties are stored.
-            if (strcmp(layer_names[i], properties[j].layerName) == 0)
+            if (layer_names[i] == layer_properties[j].layerName)
             {
-                contains = true;
-                if (_properties != nullptr)
-                    _properties->push_back(properties[j]);  // add, if layer is contained
+                found = true;
+                if (properties != nullptr)
+                    properties->push_back(layer_properties[j]);
             }
         }
-
-        // If the current layer is not contained, clear all properties and return the not
-        // supported index within the layer names vector.
-        if (!contains)
-        {
-            if (_properties != nullptr)
-                _properties->clear();
-
-            idx = i;
-            return false;
-        }
+        if (!found) return i;
     }
-
-    // max size_t value for invalid index
-    idx = VKA_INVALID_SIZE;
-    return true;
+    return vka::NPOS;
 }
 
-bool vka::device::is_extension_supported(VkPhysicalDevice device, const char* extension_name, VkExtensionProperties* _property)
+bool vka::device::supports_extension(VkPhysicalDevice device, const std::string& extension_name, VkExtensionProperties* properties)
 {
-    uint32_t n_extensions;
-    VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &n_extensions, nullptr);   // get number of extensions
+    uint32_t extension_count;
+    VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
     if (res != VK_SUCCESS) return false;
 
-    VkExtensionProperties properties[n_extensions];
-    res = vkEnumerateDeviceExtensionProperties(device, nullptr, &n_extensions, properties); // get extension properties
+    VkExtensionProperties extension_properties[extension_count];
+    res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extension_properties);
     if (res != VK_SUCCESS) return false;
 
-    for (uint32_t i = 0; i < n_extensions; i++)
+    for (uint32_t i = 0; i < extension_count; i++)
     {
-        if (strcmp(extension_name, properties[i].extensionName) == 0)
+        if (extension_name == extension_properties[i].extensionName)
         {
-            if (_property != nullptr)
-                *_property = properties[i];
+            if (properties != nullptr)
+                *properties = extension_properties[i];
             return true;
         }
     }
-
     return false;
 }
 
-bool vka::device::are_extensions_supported(VkPhysicalDevice device, const std::vector<const char*>& extension_names, size_t& idx, std::vector<VkExtensionProperties>* _properties)
+size_t vka::device::supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, std::vector<VkExtensionProperties>* properties)
 {
-    uint32_t n_extensions;
-    VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &n_extensions, nullptr); // get number of extensions
+    uint32_t extension_count;
+    VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
     if (res != VK_SUCCESS) return false;
 
-    VkExtensionProperties properties[n_extensions];
-    res = vkEnumerateDeviceExtensionProperties(device, nullptr, &n_extensions, properties); // get extension properties
+    VkExtensionProperties extension_properties[extension_count];
+    res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extension_properties);
     if (res != VK_SUCCESS) return false;
 
-    // For all given extensions...
+    if (properties != nullptr)
+        properties->clear();
+
     for (size_t i = 0; i < extension_names.size(); i++)
     {
-        // ...check if the current one is contained within all instance extensions.
-        bool contains = false;
-        for (uint32_t j = 0; j < n_extensions; j++)
+        bool found = false;
+        for (uint32_t j = 0; j < extension_count && !found; j++)
         {
-            // If extension is supported, the loop ends and its properties are stored.
-            if (strcmp(extension_names[i], properties[j].extensionName) == 0)
+            if (extension_names[i] == extension_properties[j].extensionName)
             {
-                contains = true;
-                if (_properties != nullptr)
-                    _properties->push_back(properties[j]);  // add, if extension is contained
+                found = true;
+                if (properties != nullptr)
+                    properties->push_back(extension_properties[j]);
             }
         }
-
-        // If the current extension is not contained, clear all properties and return the not
-        // supported index within the extension names vector.
-        if (!contains)
-        {
-            if (_properties != nullptr)
-                _properties->clear();
-
-            idx = i;
-            return false;
-        }
+        if (!found) return i;
     }
-
-    idx = VKA_INVALID_SIZE;
-    return true;
+    return vka::NPOS;
 }

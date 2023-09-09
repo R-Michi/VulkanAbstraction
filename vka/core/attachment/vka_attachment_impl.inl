@@ -162,7 +162,7 @@ VkResult vka::AttachmentImage::create(void)
         throw std::invalid_argument("[vka::AttachmentImage::create]: Physical device of image is a VK_NULL_HANDLE!");
     if(this->_device == VK_NULL_HANDLE)
         throw std::invalid_argument("[vka::AttachmentImage::create]: Device of image is a VK_NULL_HANDLE!");
-    if(!vka::utility::is_format_feature_supported(this->_physical_device, this->_ici.format, this->_ici.tiling, vka::utility::image_usage_to_format_feature(this->_ici.usage)))
+    if(!vka::utility::supports_format_feature(this->_physical_device, this->_ici.format, this->_ici.tiling, vka::utility::cvt_iu2ff(this->_ici.usage)))
         throw std::invalid_argument("[vka::AttachmentImage::create]: Failed to create attachment image, format is not supported.");
 
     this->_backup_ici = this->_ici;

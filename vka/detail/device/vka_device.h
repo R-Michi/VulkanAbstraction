@@ -17,15 +17,50 @@ namespace vka
     {
         namespace device
         {
+            /*
+            * Checks, if one combination of memory property flags, specified by 'req_flags', is supported.
+            * Returns true, if those flags are supported and false, if not.
+            */
+            bool has_memory_property(const VkPhysicalDeviceMemoryProperties& properties, VkMemoryPropertyFlags req_flags);
+
+            /*
+            * Checks, if one combination of queue flags, specified by 'req_flags', is supported.
+            * Returns true, if those flags are supported and false, if not.
+            */
+            bool has_queue_flag(const VkQueueFamilyProperties* properties, size_t n, VkQueueFlags req_flags);
+
+            /*
+            * Checks, if the device name contains a specific sequence.
+            * The sequence to search for is specified by 'sequence' and the device name
+            * is contained within the VkPhysicalDeviceProperties structure which is
+            * specified by 'properties'.
+            * Returns 0x0000, if the sequence was found and 0x0001, if not.
+            */
             uint16_t has_sequence(const VkPhysicalDeviceProperties& properties, const char* sequence);
-            uint16_t has_memory_properties(const VkPhysicalDeviceMemoryProperties& mem_prop, const std::vector<VkMemoryPropertyFlags>& req_flags);
-            uint16_t has_min_image_count(const VkSurfaceCapabilitiesKHR& surface_capabilities, uint32_t req_min_image_count);
-            uint16_t has_max_image_count(const VkSurfaceCapabilitiesKHR& surface_capabilities, uint32_t req_max_image_count);
-            uint16_t has_image_usage_flags(const VkSurfaceCapabilitiesKHR& surface_capabilities, VkImageUsageFlags flags);
-            uint16_t has_color_formats(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkFormat>& formats);
-            uint16_t has_color_spaces(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkColorSpaceKHR> color_spaces);
-            uint16_t has_present_modes(const VkPresentModeKHR* present_modes, size_t n, const std::vector<VkPresentModeKHR>& req_present_modes);
-            uint16_t has_queue_flags(const VkQueueFamilyProperties* queue_family_properties, size_t n, const std::vector<VkQueueFlags>& req_queue_familiy_flags);
+            
+            /*
+            * Checks, if all combinations of memory propertiy flags, specified by 'req_flags', are supported.
+            * Returns 0x0000, if all flag combinations are supported and 0x0002, if not.
+            */
+            uint16_t has_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const std::vector<VkMemoryPropertyFlags>& req_flags);
+
+            /*
+            * Checks, if all combinations of queue flags, specified by 'req_flags', are supported.
+            * Returns 0x0000, if all flag combinations are supported and 0x0004, if not.
+            */
+            uint16_t has_queue_flags(const VkQueueFamilyProperties* properties, size_t n, const std::vector<VkQueueFlags>& req_flags);
+
+#ifdef VKA_GLFW_ENABLE // requieres glfw
+            /*
+            * Checks, if any queue family of a given physical device has surface support.
+            * The physical device is specified by 'device', the number of queue families
+            * is specified by 'qfamily_count'. Furthermore the vulkan instance is requiered
+            * and is specified by 'instance'.
+            * If any queue family has surface support, 0x0000 is returned and 0x0008 otherwise.
+            */
+            uint16_t has_surface_support(const VkInstance instance, const VkPhysicalDevice device, uint32_t qfamily_count);
+#endif
+
         } // namespace device 
     } // namespace detail
 } // namespace vka

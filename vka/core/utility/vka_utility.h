@@ -17,75 +17,113 @@ namespace vka
 {
     namespace utility
     {
-        /**
-        * @brief                        Finds the memory type index of a given memoryTypeBits bit mask. Used for VkMemoryRequierements struct.
-        * @param[in] physical_device    physical device of the operation
-        * @param[in] bits               memoryTypeBits bit mask from VkMemoryRequierements struct
-        * @param[in] req_flags          memory property flags to search the index for
-        * @return                       The memory type index.
-        *                               Maximum value of uint32_t (4294967296) if no index could be found.
+        /*
+        * Searches in the physical device's memory properties for the corresponding memory type index.
+        * If a memory type index was found, the corresponding index is returned.
+        * If no memory type index was found, vka::NPOS is returned.
+        * The physical device is given by 'device', the bit mask is specified by 'bits'
+        * the requiered memory property flags are specified by 'req_flags'.
+        * The bit mask 'bits' is usually given by memory requierements that have a member called 'memoryTypeBits'.
         */
-        uint32_t find_memory_type_index(VkPhysicalDevice physical_device, uint32_t bits, VkMemoryPropertyFlags req_flags);
-        
-        /**
-        * @brief                        Checks if a format feature is supported for a given image tiling and format feature.
-        * @param[in] physical_device    physical device of the operation
-        * @param[in] format             image
-        * @param[in] tiling             image tiling
-        * @param[in] format_featute     format feature to check
-        * @return                       Boolean wether a format feature is supported.
+        uint32_t find_memory_type_index(VkPhysicalDevice device, uint32_t bits, VkMemoryPropertyFlags req_flags);
+
+        /*
+        * Checks if a format feature is supported for a given image tiling and format feature.
+        * A physical device is requiered and is given by 'device'.
+        * The image tiling is specified by 'tiling' and the format feature is
+        * specified by 'format_feature'.
+        * If the format feature is supported, true is returned and false otherwise.
         */
-        bool is_format_feature_supported(VkPhysicalDevice physical_device, VkFormat format, VkImageTiling tiling, VkFormatFeatureFlags format_feature);
+        bool supports_format_feature(VkPhysicalDevice device, VkFormat format, VkImageTiling tiling, VkFormatFeatureFlags format_feature);
         
-        /**
-        * @param[out] formats Stores all supported formats for either color, depth, stencil or depth/stencil combined.
+        /*
+        * Returns all standard color formats, that are not extension
+        * formats nor compressed formats.
+        * More formally returns all formats from:
+        * static_cast<VkFormat>(1) to static_cast<VkFormat>(123).
+        * The color formats are stored in the 'formats' vector.
         */
-        void get_color_formats(std::vector<VkFormat>& formats);
-        void get_depth_formats(std::vector<VkFormat>& formats);
-        void get_stencil_formats(std::vector<VkFormat>& formats);
-        void get_depth_stencil_formats(std::vector<VkFormat>& formats);
-        
-        /**
-        * @brief                        Returns all supported formats for a given image tiling and format feature.
-        * @param[in]  physical_device   physical device of the operation
-        * @param[in]  tiling            image tiling
-        * @param[in]  format_feature    format feature
-        * @param[out] formats           vector where the formats are stored
+        constexpr void get_color_formats(std::vector<VkFormat>& formats);
+
+        /*
+        * Returns all standard depth formats, that are not extension
+        * formats nor compressed formats.
+        * More formally returns all formats from:
+        * static_cast<VkFormat>(124) to static_cast<VkFormat>(130)
+        * excluding static_cast<VkFormat>(127).
+        * The depth formats are stored in the 'formats' vector.
+        */
+        constexpr void get_depth_formats(std::vector<VkFormat>& formats);
+
+        /*
+        * Returns all standard stencil formats, that are not extension
+        * formats nor compressed formats.
+        * More formally returns all formats from:
+        * static_cast<VkFormat>(127) to static_cast<VkFormat>(130).
+        * The stencil formats are stored in the 'formats' vector.
+        */
+        constexpr void get_stencil_formats(std::vector<VkFormat>& formats);
+
+        /*
+        * Returns all standard depth-stencil formats, that are not extension
+        * formats nor compressed formats.
+        * More formally returns all formats from:
+        * static_cast<VkFormat>(128) to static_cast<VkFormat>(130).
+        * The depth-stencil formats are stored in the 'formats' vector.
+        */
+        constexpr void get_depth_stencil_formats(std::vector<VkFormat>& formats);
+
+        /*
+        * Returns all supported formats for a given image tiling and format feature.
+        * A physical device is requiered and is given by 'device'.
+        * The image tiling is specified by 'tiling' and the format feature is
+        * specified by 'format_feature'.
+        * The returned formats are stored in the 'formats' vector.
         */
         void get_supported_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
-        
-        /**
-        * @brief                    Converts format feature flags to image use flags.
-        * @param[in] format_feature format feature flags
-        * @return                   image usage flags
-        */
-        VkImageUsageFlags format_feature_to_image_usage(VkFormatFeatureFlags format_feature);
-        
-        /**
-        * @brief                    Converts image usage flags ti format feature flags.
-        * @param[in] image_usage    image usage flags
-        * @return                   format feature flags
-        */
-        VkFormatFeatureFlags image_usage_to_format_feature(VkImageUsageFlags image_usage);
 
-        /**
-         * @brief               Executes multiple secondary command buffers. This function is especially used to
-         *                      execute buffer copy, image copy and image layout transision commans, enqueued by 
-         *                      vka::Buffer::enqueue_copy, vka::Image::enqueue_copy, vka::Image::enqueue_change_layout.
-         * @param[in] device    logical device
-         * @param[in] pool      command pool
-         * @param[in] queue     command queue to submit the commands to
-         * @param[in] count     number of secondary command buffers to execute
-         * @param[in] scbs      secondary command buffers
-         * @return              Vulkan result wether the execution was successful.
-         */
+        /*
+        * Converts format feature flags to image usage flags.
+        * The format feature flags to convert are specified by 'format_feature'.
+        * The corresponding image usage flags are returned.
+        * The function name stands for "convert format feature to image usage".
+        */
+        constexpr VkImageUsageFlags cvt_ff2iu(VkFormatFeatureFlags format_feature);
+
+        /*
+        * Converts image usage flags to format feature flags.
+        * The image usage flags to convert are specified by 'image_usage'.
+        * The corresponding format feature flags are returned.
+        * The function name stands for "convert image usage to format feature".
+        */
+        constexpr VkFormatFeatureFlags cvt_iu2ff(VkImageUsageFlags image_usage);
+
+        /*
+        * Converts a vector of std::string strings to a vector of const char*.
+        * The vector of std strings is given by 'std_in' and the resulting
+        * output vector is stored in 'ccp_out'.
+        * This function is mainly used to convert extension and layer names from std::string to const char*
+        * in order to pass them to the corresponding create infos.
+        * The function name stands for "convert std::string to const char pointer vector"
+        */
+        void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, std::vector<const char*>& ccp_out);
+
+        /*
+        * Executes multiple secondary command buffers. This function is especially used to
+        * execute buffer copy, image copy and image layout transision commands, enqueued by
+        * vka::Buffer::enqueue_copy, vka::Image::enqueue_copy, vka::Image::enqueue_change_layout.
+        * A logical device is requiered and is given by 'device'. The requiered command pool is
+        * given by 'pool' the the requiered queue is given by 'queue'.
+        * The number of secondary command buffers to execute is specified by 'count' and
+        * the secondary command buffers are specified by 'scbs'.
+        */
         VkResult execute_scb(VkDevice device, VkCommandPool pool, VkQueue queue, uint32_t count, const VkCommandBuffer* scbs);
 
-        /**
-         * @brief           Converts a vulkan format to a size in bytes.
-         * @param format    Vulkan format.
-         * @return          Size of the format in bytes.
-         */
+        /*
+        * Converts a vulkan format to a size in bytes.
+        * The format to convert is specified by 'format'.
+        * The size in bytes is returned.
+        */
         size_t format_sizeof(VkFormat format) noexcept;
     }
 }

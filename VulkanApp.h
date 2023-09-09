@@ -26,7 +26,8 @@
 #include <vector>
 
 #define VKA_DEBUG
-#define VKA_EXPERIMENTAL
+#define VKA_GLFW_ENABLE
+#define VKA_MODEL_LOADING_ENABLE
 #include "vka/vka.h"
 
 class VulkanApp

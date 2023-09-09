@@ -11,6 +11,27 @@
 
 #pragma once
 
+uint32_t vka::swapchain::image_count(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t req_count)
+{
+    if (req_count == 0)
+        return capabilities.minImageCount;
+    if (req_count == 0xFFFFFFFF)
+        return capabilities.maxImageCount;
+    return std::min(std::max(req_count, capabilities.minImageCount), capabilities.maxImageCount);
+}
+
+VkExtent2D vka::swapchain::image_extent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D req_extent)
+{
+    if (req_extent.width == 0 || req_extent.height == 0)
+        return capabilities.minImageExtent;
+    if (req_extent.width == 0xFFFFFFFF || req_extent.height == 0xFFFFFFFF)
+        return capabilities.maxImageExtent;
+    return {
+        std::min(std::max(req_extent.width, capabilities.minImageExtent.width), capabilities.maxImageExtent.width),
+        std::min(std::max(req_extent.height, capabilities.minImageExtent.height), capabilities.maxImageExtent.height)
+    };
+}
+
 VkResult vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, std::vector<VkImageView>& image_views)
 {
     VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain);

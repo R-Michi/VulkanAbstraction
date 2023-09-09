@@ -11,6 +11,27 @@
 
 #pragma once
 
+bool vka::detail::device::has_memory_property(const VkPhysicalDeviceMemoryProperties& properties, VkMemoryPropertyFlags req_flags)
+{
+    for (uint32_t i = 0; i < properties.memoryTypeCount; i++)
+    {
+        if ((properties.memoryTypes[i].propertyFlags & req_flags) == req_flags)
+            return true;
+    }
+    return false;
+}
+
+bool vka::detail::device::has_queue_flag(const VkQueueFamilyProperties* properties, size_t n, VkQueueFlags req_flags)
+{
+    for (uint32_t i = 0; i < n; i++)
+    {
+        if ((properties[i].queueFlags & req_flags) == req_flags)
+            return true;
+    }
+    return false;
+}
+
+
 uint16_t vka::detail::device::has_sequence(const VkPhysicalDeviceProperties& properties, const char* sequence)
 {
     if (sequence == nullptr) return 0x0000;
@@ -18,90 +39,36 @@ uint16_t vka::detail::device::has_sequence(const VkPhysicalDeviceProperties& pro
     std::string device_name = properties.deviceName;
     return ((device_name.find(sequence) == std::string::npos) ? 0x0001 : 0x0000);
 }
-uint16_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemoryProperties& mem_prop, const std::vector<VkMemoryPropertyFlags>& req_flags)
+
+uint16_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const std::vector<VkMemoryPropertyFlags>& req_flags)
 {
-    for (VkMemoryPropertyFlags req_flag : req_flags)
+    for (VkMemoryPropertyFlags flags : req_flags)
     {
-        bool flag_found = false;
-        for (uint32_t i = 0; i < mem_prop.memoryTypeCount; i++)
-        {
-            if (mem_prop.memoryTypes[i].propertyFlags != 0 && (mem_prop.memoryTypes[i].propertyFlags & req_flag) == req_flag)
-                flag_found = true;
-        }
-        if (!flag_found)
+        if (!has_memory_property(properties, flags))
             return 0x0002;
     }
     return 0x0000;
 }
-uint16_t vka::detail::device::has_min_image_count(const VkSurfaceCapabilitiesKHR& surface_capabilities, uint32_t req_min_image_count)
+
+uint16_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* properties, size_t n, const std::vector<VkQueueFlags>& req_flags)
 {
-    return ((surface_capabilities.minImageCount > req_min_image_count) ? 0x0004 : 0x0000);
-}
-uint16_t vka::detail::device::has_max_image_count(const VkSurfaceCapabilitiesKHR& surface_capabilities, uint32_t req_max_image_count)
-{
-    return ((surface_capabilities.maxImageCount < req_max_image_count) ? 0x0008 : 0x0000);
-}
-uint16_t vka::detail::device::has_image_usage_flags(const VkSurfaceCapabilitiesKHR& surface_capabilities, VkImageUsageFlags flags)
-{
-    return (((surface_capabilities.supportedUsageFlags & flags) != flags) ? 0x0010 : 0x0000);
-}
-uint16_t vka::detail::device::has_color_formats(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkFormat>& formats)
-{
-    for (VkFormat format : formats)
+    for (VkQueueFlags flags : req_flags)
     {
-        bool found = false;
-        for (size_t i = 0; i < n; i++)
-        {
-            if (surface_format[i].format == format)
-                found = true;
-        }
-        if (!found)
-            return 0x0020;
+        if (!has_queue_flag(properties, n, flags))
+            return 0x0004;
     }
     return 0x0000;
 }
-uint16_t vka::detail::device::has_color_spaces(const VkSurfaceFormatKHR* surface_format, size_t n, const std::vector<VkColorSpaceKHR> color_spaces)
+
+#ifdef VKA_GLFW_ENABLE
+uint16_t vka::detail::device::has_surface_support(const VkInstance instance, const VkPhysicalDevice device, uint32_t qprop_count)
 {
-    for (VkColorSpaceKHR space : color_spaces)
+    // check if at least one queue family has surface support
+    for (uint32_t i = 0; i < qprop_count; i++)
     {
-        bool found = false;
-        for (size_t i = 0; i < n; i++)
-        {
-            if (surface_format[i].colorSpace == space)
-                found = true;
-        }
-        if (!found)
-            return 0x0040;
+        if (glfwGetPhysicalDevicePresentationSupport(instance, device, i))
+            return 0x0000;
     }
-    return 0x0000;
+    return 0x0200;
 }
-uint16_t vka::detail::device::has_present_modes(const VkPresentModeKHR* present_modes, size_t n, const std::vector<VkPresentModeKHR>& req_present_modes)
-{
-    for (const VkPresentModeKHR& mode : req_present_modes)
-    {
-        bool found = false;
-        for (size_t i = 0; i < n; i++)
-        {
-            if (present_modes[i] == mode)
-                found = true;
-        }
-        if (!found)
-            return 0x0080;
-    }
-    return 0x0000;
-}
-uint16_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* queue_family_properties, size_t n, const std::vector<VkQueueFlags>& req_queue_familiy_flags)
-{
-    for (VkQueueFlags flags : req_queue_familiy_flags)
-    {
-        bool found = false;
-        for (size_t i = 0; i < n; i++)
-        {
-            if ((queue_family_properties[i].queueFlags & flags) == flags)
-                found = true;
-        }
-        if (!found)
-            return 0x0100;
-    }
-    return 0x0000;
-}
+#endif

@@ -15,11 +15,9 @@
 
 namespace vka
 {
-    #ifdef VKA_MODEL_USE_DOUBLE
-        #define TINYOBJLOADER_USE_DOUBLE
-    #endif
-
+#ifdef VKA_MODEL_LOADING_ENABLE
     using real_t = tinyobj::real_t;
+#endif
 
     enum QueueFamilyPriority : uint32_t
     {
@@ -54,14 +52,8 @@ namespace vka
         const char*                         sequence;
         std::vector<VkMemoryPropertyFlags>  memoryPropertyFlags;
         std::vector<VkPhysicalDeviceType>   deviceTypeHirachy;
-        const VkSurfaceKHR*                 pSurface;
-        uint32_t                            swapchainMinImageCount;
-        uint32_t                            swapchainMaxImageCount;
-        VkImageUsageFlags                   surfaceImageUsageFlags;
-        std::vector<VkFormat>               surfaceColorFormats;
-        std::vector<VkColorSpaceKHR>        surfaceColorSpaces;
-        std::vector<VkPresentModeKHR>       surfacePresentModes;
         std::vector<VkQueueFlags>           queueFamilyFlags;
+        bool                                surfaceSupport;
     };
 
     struct QueueFamilyFilter

@@ -26,7 +26,7 @@ void vka::queue::properties(const VkPhysicalDevice& device, std::vector<VkQueueF
 
 size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority)
 {
-    if (begin >= queue_families.size()) return VKA_NPOS;
+    if (begin >= queue_families.size()) return vka::NPOS;
     
     std::vector<size_t> candidates;
     for(size_t i = 0; i < queue_families.size(); i++)
@@ -37,9 +37,9 @@ size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_famili
         if(failed == 0x0000) candidates.push_back(i);
     }
 
-    if(candidates.size() == 0) return VKA_NPOS;
+    if(candidates.size() == 0) return vka::NPOS;
 
-    size_t idx = VKA_NPOS;
+    size_t idx = vka::NPOS;
     if(priority == VKA_QUEUE_FAMILY_PRIORITY_FIRST)
     {
         idx = candidates.at(0);

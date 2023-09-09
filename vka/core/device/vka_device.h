@@ -17,64 +17,59 @@ namespace vka
 {
     namespace device
     {
-        /**
-        * @brief                Get all physical devices of a instance.
-        * @param[in] instance   vulkan instance
-        * @param[out] devices   all physical devices
+        /*
+        * Returns all aviable physical devices of a given instance.
+        * The instance is specified by 'instance' and the returned
+        * physical devices are stored within 'devices'.
         */
         void get(VkInstance instance, std::vector<VkPhysicalDevice>& devices);
 
-        /**
-        * @brief                    Get properties of (multiple) devices.
-        * @param[in] device         physical devices
-        * @param[out] properties    the device's properties
+        /*
+        * Finds a physical device which matches the specifications specified by a filter and
+        * returns the corresponding index within the 'devices'-vector.
+        * The filter is a PhysicalDeviceFilter structure and is given by 'filter'.
         */
-        void properties(const std::vector<VkPhysicalDevice>& devices, std::vector<VkPhysicalDeviceProperties>& properties);
+        size_t find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter);
 
-        /**
-        * @brief                Finds the best matching physical device.
-        * @param[in] devices    physical device candidates
-        * @param[in] begin      begin index for searching
-        * @param[in] filter     physical device filter
-        * @return               index of the best matching device
+        /*
+        * Checks, if a layer at device level is supported by a given physical device.
+        * The physical device which should support the layer is specified by 'device' and the
+        * name of the layer is specified by 'layer_name'.
+        * Returns true, if the physical device supports the layer and false otherwise.
+        * Optionally, the layer's properties are returned and stored within the 'properties' argument.
         */
-        size_t find(const std::vector<VkPhysicalDevice>& devices, size_t begin, const PhysicalDeviceFilter& filter);
+        bool supports_layer(VkPhysicalDevice device, const std::string& layer_name, VkLayerProperties* properties = nullptr);
 
-        /**
-        * @brief                    Checks if one layer at device level is supported.
-        * @param[in]  layer_name    name of the layer
-        * @param[out] _property     returned layer properties (optional)
-        * @return                   Boolean wether a layer is supported or not.
+        /*
+        * Checks, if multiple layers at device level are supported by a given physical device.
+        * The physical device which should support those layers is spcified by 'device' and the
+        * names of those layers are specified by 'layer_names'.
+        * If any layer is not supported, the index of the first not supported layer within the
+        * 'layer_names'-vector is returned.
+        * If all layers are supported, then vka::NPOS is returned.
+        * Optionally, the properties of the layers are returned and stored within the 'properties' vector.
         */
-        bool is_layer_supported(VkPhysicalDevice device, const char* layer_name, VkLayerProperties* _property = nullptr);
+        size_t supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, std::vector<VkLayerProperties>* properties = nullptr);
 
-        /**
-        * @brief                    Checks if multiple layers at device level are supported.
-        * @param[in]  layer_names   Vector of layer names to be checked id they are supported.
-        * @param[out] idx           Index within the layer_names vector of the not supported layer.
-        *                           If layer is supported, the index is set to VKA_INVALID_SIZE.
-        * @param[out] _properties   returned layer properties (optional)
-        * @return                   Boolean wether all layers are supported or not.
+        /*
+        * Checks, if an extension at device level is supported by a given physical device.
+        * The physical device which should support the extension is specified by 'device' and the
+        * name of the extension is specified by 'extension_name'.
+        * Returns true, if the physical device supports the extension and false otherwise.
+        * Optionally, the extension's properties are returned and stored within the 'properties' argument.
         */
-        bool are_layers_supported(VkPhysicalDevice device, const std::vector<const char*>& layer_names, size_t& idx, std::vector<VkLayerProperties>* _properties = nullptr);
+        bool supports_extension(VkPhysicalDevice device, const std::string& extension_name, VkExtensionProperties* properties = nullptr);
 
-        /**
-        * @brief                        Checks if one extension at device level is supported.
-        * @param[in]  extension_name    name of the extension
-        * @param[out] _property         returned extension properties (optional)
-        * @return                       Boolean wether a extension is supported or not.
+        /*
+        * Checks, if multiple extensions at device level are supported by a given physical device.
+        * The physical device which should support those extensions is spcified by 'device' and the
+        * names of those extensions are specified by 'extension_names'.
+        * If any extension is not supported, the index of the first not supported extension within the
+        * 'extension_names'-vector is returned.
+        * If all extensions are supported, then vka::NPOS is returned.
+        * Optionally, the properties of the extensions are returned and stored within the 'properties' vector.
         */
-        bool is_extension_supported(VkPhysicalDevice device, const char* extension_name, VkExtensionProperties* _property = nullptr);
-
-        /**
-        * @brief                        Checks if multiple extensions at device level are supported.
-        * @param[in]  extension_names   Vector of extension names to be checked id they are supported.
-        * @param[out] idx               Index within the extension_names vector of the not supported layer.
-        *                               If extension is supported, the index is set to VKA_INVALID_SIZE.
-        * @param[out] _properties       returned extension properties (optional)
-        * @return                       Boolean wether all extensions are supported or not.
-        */
-        bool are_extensions_supported(VkPhysicalDevice device, const std::vector<const char*>& extension_names, size_t& idx, std::vector<VkExtensionProperties>* _properties = nullptr);
+        size_t supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, std::vector<VkExtensionProperties>* properties = nullptr);
     }
 }
 

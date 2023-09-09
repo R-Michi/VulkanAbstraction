@@ -77,7 +77,7 @@ void vka::Model::load(const std::string& path, ModelLoadOptionFlags flags)
                 // structures are unique and only ID's referencing those material structures
                 // are stored multiple times.
                 const uint32_t mesh_mtlID = shape.mesh.material_ids.front();
-                if(mesh_mtlID == VKA_MTL_ID_INVALID)
+                if(mesh_mtlID == vka::INVALID_MTL_ID)
                     throw std::runtime_error("[vka::Model::load]: If VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL is not set, all meshes must at least have one valid material.");
 
                 if(mtlID_lookup.count(mesh_mtlID) == 0)
@@ -102,7 +102,7 @@ void vka::Model::load(const std::string& path, ModelLoadOptionFlags flags)
                 for(int i : shape.mesh.material_ids)
                 {
                     const uint32_t ui = static_cast<uint32_t>(i);
-                    if(ui == VKA_MTL_ID_INVALID)
+                    if(ui == vka::INVALID_MTL_ID)
                         throw std::runtime_error("[vka::Model::load]: If VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL is not set, all meshes must at least have one valid material.");
                     mtlIDs.push_back(ui);
                 }

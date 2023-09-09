@@ -15,47 +15,51 @@ namespace vka
 {
     namespace instance
     {
-        /**
-        * @brief                    Checks if one layer at instance level is supported.
-        * @param[in]  layer_name    name of the layer
-        * @param[out] _property     returned layer properties (optional)
-        * @return                   Boolean wether a layer is supported or not.
+        /*
+        * Checks, if a layer at instance level is supported.
+        * The name of the layer is specified by 'layer_name'.
+        * Returns true, if the layer is supported and false otherwise.
+        * Optionally, the layer's properties are returned and stored within the 'properties' argument.
         */
-        bool is_layer_supported(const char* layer_name, VkLayerProperties* _property = nullptr);
+        bool supports_layer(const std::string& layer_name, VkLayerProperties* properties = nullptr);
 
-        /**
-        * @brief                    Checks if multiple layers at instance level are supported.
-        * @param[in]  layer_names   Vector of layer names to be checked id they are supported.
-        * @param[out] idx           Index within the layer_names vector of the not supported layer.
-        *                           If layer is supported, the index is set to VKA_INVALID_SIZE.
-        * @param[out] _properties   returned layer properties (optional)
-        * @return                   Boolean wether all layers are supported or not.
+        /*
+        * Checks, if multiple layers at instance level are supported.
+        * The names of those layers are specified by 'layer_names'.
+        * If any layer is not supported, the index of the first not supported layer within the
+        * 'layer_names'-vector is returned.
+        * If all layers are supported, then vka::NPOS is returned.
+        * Optionally, the properties of the layers are returned and stored within the 'properties' vector.
         */
-        bool are_layers_supported(const std::vector<const char*>& layer_names, size_t& idx, std::vector<VkLayerProperties>* _properties = nullptr);
+        size_t supports_layers(const std::vector<std::string>& layer_names, std::vector<VkLayerProperties>* properties = nullptr);
 
-        /**
-        * @brief                        Checks if one extension at instance level is supported.
-        * @param[in]  extension_name    name of the extension
-        * @param[out] _property         returned extension properties (optional)
-        * @return                       Boolean wether a extension is supported or not.
+        /*
+        * Checks, if an extension at instance level is supported.
+        * The name of the extension is specified by 'extension_name'.
+        * Returns true, if the extension is supported and false otherwise.
+        * Optionally, the extension's properties are returned and stored within the 'properties' argument.
         */
-        bool is_extension_supported(const char* extension_name, VkExtensionProperties* _property = nullptr);
+        bool supports_extension(const std::string& extension_name, VkExtensionProperties* properties = nullptr);
 
-        /**
-        * @brief                        Checks if multiple extensions at instance level are supported.
-        * @param[in]  extension_names   Vector of extension names to be checked id they are supported.
-        * @param[out] idx               Index within the extension_names vector of the not supported layer.
-        *                               If extension is supported, the index is set to VKA_INVALID_SIZE.
-        * @param[out] _properties       returned extension properties (optional)
-        * @return                       Boolean wether all extensions are supported or not.
+        /*
+        * Checks, if multiple extensions at instance level are supported.
+        * The names of those extensions are specified by 'extension_names'.
+        * If any extension is not supported, the index of the first not supported extension within the
+        * 'extension_names'-vector is returned.
+        * If all extensions are supported, then vka::NPOS is returned.
+        * Optionally, the properties of the extensions are returned and stored within the 'properties' vector.
         */
-        bool are_extensions_supported(const std::vector<const char*>& extension_names, size_t& idx, std::vector<VkExtensionProperties>* _properties = nullptr);
+        size_t supports_extensions(const std::vector<std::string>& extension_names, std::vector<VkExtensionProperties>* properties = nullptr);
 
-#ifndef VKA_GLFW_DISABLE
-        /**
-        * @param[out] glfw_extensions returns all extensions requiered for GLFW
+#ifdef VKA_GLFW_ENABLE
+
+        /*
+        * Returns all requiered extensions by GLFW.
+        * The extensions are stored withon the 'extensions' vector.
+        * The returned extensions dont overwrite the 'extensions' vector,
+        * instead those extensions will be appended at the end of the vector.
         */
-        void get_glfw_extensions(std::vector<const char*>& glfw_extensions);
+        void get_glfw_extensions(std::vector<std::string>& extensions);
 #endif
     }
 

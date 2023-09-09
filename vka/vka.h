@@ -29,19 +29,26 @@
     #error [VKA]: vulkan.h must be included before including vka.h.
 #endif
 
-#ifndef VKA_GLFW_DISABLE
+#ifdef VKA_GLFW_ENABLE
     #include <GLFW/glfw3.h>
 #endif
 
-#include <tiny_obj_loader.h>
+#ifdef VKA_MODEL_LOADING_ENABLE
+    #ifdef VKA_MODEL_USE_DOUBLE
+        #define TINYOBJLOADER_USE_DOUBLE
+    #endif
+    #include <tiny_obj_loader.h>
+#endif
  
 #include <vector>
 #include <string>
+#include <map>
+#include <unordered_map>
+#include <fstream>
 #include <stdexcept>
 #include <cinttypes>
 #include <initializer_list>
 #include <algorithm>
-#include <unordered_map>
 
 #include "core/vka_global.h"
 #include "core/vka_types.h"
@@ -49,6 +56,7 @@
 #include "core/instance/vka_instance.h"
 #include "core/device/vka_device.h"
 #include "core/queue/vka_queue.h"
+#include "core/surface/vka_surface.h"
 #include "core/swapchain/vka_swapchain.h"
 #include "core/utility/vka_utility.h"
 #include "core/shader/vka_shader.h"
@@ -56,4 +64,7 @@
 #include "core/buffer/vka_buffer.h"
 #include "core/attachment/vka_attachment.h"
 #include "core/texture/vka_texture.h"
-#include "core/model/vka_model.h"
+
+#ifdef VKA_MODEL_LOADING_ENABLE
+    #include "core/model/vka_model.h"
+#endif

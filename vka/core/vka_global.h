@@ -11,6 +11,9 @@
 
 #pragma once
 
-#define VKA_INVALID_SIZE    (~static_cast<size_t>(0))
-#define VKA_NPOS            (~static_cast<size_t>(0))
-#define VKA_MTL_ID_INVALID  (~static_cast<uint32_t>(0))
+namespace vka
+{
+    constexpr size_t NPOS = ~static_cast<size_t>(0);
+    constexpr size_t INVALID_MTL_ID = ~static_cast<uint32_t>(0);
+}
+

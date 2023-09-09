@@ -11,138 +11,112 @@
 
 #pragma once
 
-bool vka::instance::is_layer_supported(const char* layer_name, VkLayerProperties* _property)
+bool vka::instance::supports_layer(const std::string& layer_name, VkLayerProperties* properties)
 {
-    uint32_t n_layers;
-    VkResult res = vkEnumerateInstanceLayerProperties(&n_layers, nullptr);  // get number of layers
+    uint32_t layer_count;
+    VkResult res = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
     if (res != VK_SUCCESS) return false;
-    
-    VkLayerProperties properties[n_layers];
-    res = vkEnumerateInstanceLayerProperties(&n_layers, properties);        // get layer properties
+
+    VkLayerProperties layer_properties[layer_count];
+    res = vkEnumerateInstanceLayerProperties(&layer_count, layer_properties);
     if (res != VK_SUCCESS) return false;
-    
-    for (uint32_t i = 0; i < n_layers; i++)
+
+    for (uint32_t i = 0; i < layer_count; i++)
     {
-        if (strcmp(layer_name, properties[i].layerName) == 0)
+        if (layer_name == layer_properties[i].layerName)
         {
-            if (_property != nullptr)
-                *_property = properties[i];
+            if (properties != nullptr)
+                *properties = layer_properties[i];
             return true;
         }
     }
-    
     return false;
 }
 
-bool vka::instance::are_layers_supported(const std::vector<const char*>& layer_names, size_t& idx, std::vector<VkLayerProperties>* _properties)
+size_t vka::instance::supports_layers(const std::vector<std::string>& layer_names, std::vector<VkLayerProperties>* properties)
 {
-    uint32_t n_layers;
-    VkResult res = vkEnumerateInstanceLayerProperties(&n_layers, nullptr);  // get number of layers
+    uint32_t layer_count;
+    VkResult res = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
     if (res != VK_SUCCESS) return false;
-    
-    VkLayerProperties properties[n_layers];
-    res = vkEnumerateInstanceLayerProperties(&n_layers, properties);        // get layer properties
+
+    VkLayerProperties layer_properties[layer_count];
+    res = vkEnumerateInstanceLayerProperties(&layer_count, layer_properties);
     if (res != VK_SUCCESS) return false;
-    
-    // For all given layers...
+
+    if (properties != nullptr)
+        properties->clear();
+
     for (size_t i = 0; i < layer_names.size(); i++)
     {
-        // ...check if the current one is contained within all instance layers.
-        bool contains = false;
-        for (uint32_t j = 0; j < n_layers && !contains; j++)
+        bool found = false;
+        for (uint32_t j = 0; j < layer_count && !found; j++)
         {
-            // If layer is supported, the loop ends and its properties are stored.
-            if (strcmp(layer_names[i], properties[j].layerName) == 0)   
+            if (layer_names[i] == layer_properties[j].layerName)
             {
-                contains = true;
-                if (_properties != nullptr)
-                    _properties->push_back(properties[j]);
+                found = true;
+                if (properties != nullptr)
+                    properties->push_back(layer_properties[j]);
             }
         }
-
-        // If the current layer is not contained, clear all properties and return the not
-        // supported index within the layer names vector.
-        if (!contains)
-        {
-            if (_properties != nullptr)
-                _properties->clear();
-            idx = i;
-            return false;
-        }
+        if (!found) return i;
     }
-    
-    // max size_t value for invalid index
-    idx = VKA_INVALID_SIZE;
-    return true;
+    return vka::NPOS;
 }
 
-bool vka::instance::is_extension_supported(const char* extension_name, VkExtensionProperties* _property)
+bool vka::instance::supports_extension(const std::string& extension_name, VkExtensionProperties* properties)
 {
-    uint32_t n_extensions;
-    VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &n_extensions, nullptr); // get number of extensions
+    uint32_t extension_count;
+    VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
     if (res != VK_SUCCESS) return false;
-    
-    VkExtensionProperties properties[n_extensions];
-    res = vkEnumerateInstanceExtensionProperties(nullptr, &n_extensions, properties);   // get extension properties
+
+    VkExtensionProperties extension_properties[extension_count];
+    res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extension_properties);
     if (res != VK_SUCCESS) return false;
-    
-    for (uint32_t i = 0; i < n_extensions; i++)
+
+    for (uint32_t i = 0; i < extension_count; i++)
     {
-        if (strcmp(extension_name, properties[i].extensionName) == 0)
+        if (extension_name == extension_properties[i].extensionName)
         {
-            if (_property != nullptr)
-                *_property = properties[i];
+            if (properties != nullptr)
+                *properties = extension_properties[i];
             return true;
         }
     }
-    
     return false;
 }
 
-bool vka::instance::are_extensions_supported(const std::vector<const char*>& extension_names, size_t& idx, std::vector<VkExtensionProperties>* _properties)
+size_t vka::instance::supports_extensions(const std::vector<std::string>& extension_names, std::vector<VkExtensionProperties>* properties)
 {
-    uint32_t n_extensions;
-    VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &n_extensions, nullptr); // get number of extensions
+    uint32_t extension_count;
+    VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
     if (res != VK_SUCCESS) return false;
-    
-    VkExtensionProperties properties[n_extensions];
-    res = vkEnumerateInstanceExtensionProperties(nullptr, &n_extensions, properties);   // get extension properties
+
+    VkExtensionProperties extension_properties[extension_count];
+    res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extension_properties);;
     if (res != VK_SUCCESS) return false;
-    
-    // For all given extensions...
+
+    if (properties != nullptr)
+        properties->clear();
+
     for (size_t i = 0; i < extension_names.size(); i++)
     {
-        // ...check if the current one is contained within all instance extensions.
-        bool contains = false;
-        for (uint32_t j = 0; j < n_extensions; j++)
+        bool found = false;
+        for (uint32_t j = 0; j < extension_count && !found; j++)
         {
-            // If extension is supported, the loop ends and its properties are stored.
-            if (strcmp(extension_names[i], properties[j].extensionName) == 0)
+            if (extension_names[i] == extension_properties[j].extensionName)
             {
-                contains = true;
-                if (_properties != nullptr)
-                    _properties->push_back(properties[j]);  // add, if layer is contained
+                found = true;
+                if (properties != nullptr)
+                    properties->push_back(extension_properties[j]);
             }
         }
-        
-        // If the current extension is not contained, clear all properties and return the not
-        // supported index within the extension names vector.
-        if (!contains)
-        {
-            if (_properties != nullptr)
-                _properties->clear();
-
-            idx = i;
-            return false;
-        }
+        if (!found) return i;
     }
-    
-    idx = VKA_INVALID_SIZE;
-    return true;
+    return vka::NPOS;
 }
 
-#ifndef VKA_GLFW_DISABLE
-void vka::instance::get_glfw_extensions(std::vector<const char*>& glfw_extensions)
+#ifdef VKA_GLFW_ENABLE
+void vka::instance::get_glfw_extensions(std::vector<std::string>& glfw_extensions)
 {
     if (!glfwVulkanSupported())
         throw std::runtime_error("[vka::instance::get_glfw_extensions]: Vulkan is not supported.");

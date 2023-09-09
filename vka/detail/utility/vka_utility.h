@@ -17,9 +17,9 @@ namespace vka
     {
         namespace utility
         {
-            VkImageUsageFlagBits format_feature_to_image_usage_bit(VkFormatFeatureFlagBits format_feature);
-            VkFormatFeatureFlagBits image_usage_to_format_feature_bit(VkImageUsageFlagBits image_usage);
-            std::map<VkFormat, size_t> init_format_sizeof(void) noexcept;
+            VkImageUsageFlagBits ff2iu_bit(VkFormatFeatureFlagBits format_feature);
+            VkFormatFeatureFlagBits iu2ff_bit(VkImageUsageFlagBits image_usage);
+            void init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s) noexcept;
 
             class CommandBufferWrapper
             {

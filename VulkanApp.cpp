@@ -130,7 +130,7 @@ void VulkanApp::load_models(void)
 	uint32_t vertex_count = 0, index_count = 0;
 
 	vka::Model model;
-	model.load("../assets/models/test.obj", vka::VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL);
+	model.load("../../../assets/models/test.obj", vka::VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL);
 
 	const std::vector<vka::VertexAttribute> merge_attribs = {
 		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_POSITION, 0 },
@@ -160,7 +160,6 @@ void VulkanApp::load_models(void)
 
 void VulkanApp::make_application_info(void)
 {
-	this->app_info = {};
 	this->app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	this->app_info.pNext = nullptr;
 	this->app_info.pApplicationName = "Vulkan Abstraction";
@@ -172,21 +171,20 @@ void VulkanApp::make_application_info(void)
 
 void VulkanApp::create_instance(void)
 {
-	std::vector<const char*> layers;
+	std::vector<std::string> layers;
 #ifdef VKA_DEBUG
-	layers.push_back("VK_LAYER_LUNARG_standard_validation");
 	layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif 
 	layers.push_back("VK_LAYER_LUNARG_monitor");
 
-	std::vector<const char*> extensions;
+	std::vector<std::string> extensions;
 	vka::instance::get_glfw_extensions(extensions);
-#ifdef VULKAN_ABSTRACTION_DEBUG
+#ifdef VKA_DEBUG
 	extensions.push_back("VK_EXT_debug_utils");
 #endif
 
 	size_t idx;
-	if (!vka::instance::are_layers_supported(layers, idx))
+	if ((idx = vka::instance::supports_layers(layers)) != vka::NPOS)
 	{
 		std::string str = "Instance layer \"";
 		str += std::string(layers.at(idx));
@@ -194,7 +192,7 @@ void VulkanApp::create_instance(void)
 		throw std::runtime_error(str);
 	}
 
-	if (!vka::instance::are_extensions_supported(extensions, idx))
+	if ((idx = vka::instance::supports_extensions(extensions)) != vka::NPOS)
 	{
 		std::string str = "Instance extension \"";
 		str += std::string(extensions.at(idx));
@@ -202,15 +200,19 @@ void VulkanApp::create_instance(void)
 		throw std::runtime_error(str);
 	}
 
-	VkInstanceCreateInfo instance_create_info = {};
+	std::vector<const char*> _layers, _extensions;
+	vka::utility::cvt_stdstr2ccpv(layers, _layers);
+	vka::utility::cvt_stdstr2ccpv(extensions, _extensions);
+
+	VkInstanceCreateInfo instance_create_info;
 	instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	instance_create_info.pNext = nullptr;
 	instance_create_info.flags = 0;
 	instance_create_info.pApplicationInfo = &this->app_info;
-	instance_create_info.enabledLayerCount = layers.size();
-	instance_create_info.ppEnabledLayerNames = layers.data();
-	instance_create_info.enabledExtensionCount = extensions.size();
-	instance_create_info.ppEnabledExtensionNames = extensions.data();
+	instance_create_info.enabledLayerCount = _layers.size();
+	instance_create_info.ppEnabledLayerNames = _layers.data();
+	instance_create_info.enabledExtensionCount = _extensions.size();
+	instance_create_info.ppEnabledExtensionNames = _extensions.data();
 
 	VkResult result = vkCreateInstance(&instance_create_info, nullptr, &this->instance);
 	VULKAN_ASSERT(result);
@@ -226,30 +228,25 @@ void VulkanApp::create_physical_device(void)
 {
 	std::vector<VkPhysicalDevice> physical_devices;
 	vka::device::get(this->instance, physical_devices);
-	std::vector<VkPhysicalDeviceProperties> device_properties;
-	vka::device::properties(physical_devices, device_properties);
 
-	vka::PhysicalDeviceFilter filter = {};
+	vka::PhysicalDeviceFilter filter;
 	filter.sequence = nullptr;			// for local VRAM memory				// for staging memory / buffers
 	filter.memoryPropertyFlags = { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
 									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT};
 	filter.deviceTypeHirachy = { VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU };
-	filter.pSurface = &this->window_surface;
-	filter.swapchainMinImageCount = SWAPCHAIN_IMAGE_COUNT;
-	filter.swapchainMaxImageCount = SWAPCHAIN_IMAGE_COUNT;
-	filter.surfaceImageUsageFlags = SURFACE_IMAGE_USAGE;
-	filter.surfaceColorFormats = { SURFACE_COLOR_FORMAT };
-	filter.surfaceColorSpaces = { SURFACE_COLOR_SPACE };
-	filter.surfacePresentModes = { VK_PRESENT_MODE_FIFO_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_FIFO_RELAXED_KHR};
 	filter.queueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
+	filter.surfaceSupport = true;
 
-	size_t idx = vka::device::find(physical_devices, 0, filter);
-	if (idx == VKA_NPOS)
+	size_t idx = vka::device::find(this->instance, physical_devices, filter);
+	if (idx == vka::NPOS)
 		throw std::runtime_error("Failed to find physical device");
 
 	this->physical_device = physical_devices.at(idx);
-	std::cout << "Successfully found physical device: " << device_properties.at(idx).deviceName << std::endl;
+
+	VkPhysicalDeviceProperties properties;
+	vkGetPhysicalDeviceProperties(this->physical_device, &properties);
+	std::cout << "Successfully found physical device: " << properties.deviceName << std::endl;
 }
 
 void VulkanApp::create_queues(void)
@@ -257,12 +254,12 @@ void VulkanApp::create_queues(void)
 	std::vector<VkQueueFamilyProperties> queue_fam_properties;
 	vka::queue::properties(this->physical_device, queue_fam_properties);
 
-	vka::QueueFamilyFilter queue_fam_filter = {};
+	vka::QueueFamilyFilter queue_fam_filter;
 	queue_fam_filter.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
 	queue_fam_filter.queueCount = 4;
 
 	size_t idx = vka::queue::find(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL);
-	if(idx == VKA_NPOS)
+	if(idx == vka::NPOS)
 	{
 		throw std::runtime_error("Failed to find queue family.");
 	}
@@ -280,7 +277,7 @@ void VulkanApp::create_queues(void)
 void VulkanApp::create_logical_device(void)
 {
 	std::vector<float> graphics_queue_priorities(this->graphics_queue_info.usedQueueCount, 1.0f);
-	VkDeviceQueueCreateInfo queue_create_info = {};
+	VkDeviceQueueCreateInfo queue_create_info;
 	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queue_create_info.pNext = nullptr;
 	queue_create_info.flags = 0;
@@ -288,12 +285,12 @@ void VulkanApp::create_logical_device(void)
 	queue_create_info.queueCount = this->graphics_queue_info.usedQueueCount;
 	queue_create_info.pQueuePriorities = graphics_queue_priorities.data();
 
-	std::vector<const char*> device_extensions = {
+	std::vector<std::string> device_extensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 	
 	size_t idx;
-	if (!vka::device::are_extensions_supported(this->physical_device, device_extensions, idx))
+	if ((idx = vka::device::supports_extensions(this->physical_device, device_extensions)) != vka::NPOS)
 	{
 		std::string str = "Device extension \"";
 		str += std::string(device_extensions.at(idx));
@@ -301,7 +298,10 @@ void VulkanApp::create_logical_device(void)
 		throw std::runtime_error(str);
 	}
 
-	VkDeviceCreateInfo device_create_info = {};
+	std::vector<const char*> _extensions;
+	vka::utility::cvt_stdstr2ccpv(device_extensions, _extensions);
+
+	VkDeviceCreateInfo device_create_info;
 	device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	device_create_info.pNext = nullptr;
 	device_create_info.flags = 0;
@@ -309,8 +309,8 @@ void VulkanApp::create_logical_device(void)
 	device_create_info.pQueueCreateInfos = &queue_create_info;
 	device_create_info.enabledLayerCount = 0;
 	device_create_info.ppEnabledLayerNames = nullptr;
-	device_create_info.enabledExtensionCount = device_extensions.size();
-	device_create_info.ppEnabledExtensionNames = device_extensions.data();
+	device_create_info.enabledExtensionCount = _extensions.size();
+	device_create_info.ppEnabledExtensionNames = _extensions.data();
 	device_create_info.pEnabledFeatures = nullptr;
 
 	VkResult result = vkCreateDevice(this->physical_device, &device_create_info, nullptr, &this->device);
@@ -337,7 +337,7 @@ void VulkanApp::create_swapchain(void)
 {
 	VkSwapchainKHR old_swapchain = this->swapchain;
 
-	VkSwapchainCreateInfoKHR swapchain_create_info = {};
+	VkSwapchainCreateInfoKHR swapchain_create_info;
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.pNext = nullptr;
 	swapchain_create_info.flags = 0;
@@ -420,7 +420,7 @@ void VulkanApp::create_render_pass(void)
 	attachment_references[1].attachment = 1;
 	attachment_references[1].layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-	VkSubpassDescription main_pass = {};
+	VkSubpassDescription main_pass;
 	main_pass.flags = 0;
 	main_pass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	main_pass.inputAttachmentCount = 0;
@@ -432,7 +432,7 @@ void VulkanApp::create_render_pass(void)
 	main_pass.preserveAttachmentCount = 0;
 	main_pass.pPreserveAttachments = nullptr;
 
-	VkSubpassDependency main_pass_dependency = {};
+	VkSubpassDependency main_pass_dependency;
 	main_pass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	main_pass_dependency.dstSubpass = 0;
 	main_pass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
@@ -441,7 +441,7 @@ void VulkanApp::create_render_pass(void)
 	main_pass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	main_pass_dependency.dependencyFlags = 0;
 
-	VkRenderPassCreateInfo render_pass_create_info = {};
+	VkRenderPassCreateInfo render_pass_create_info;
 	render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	render_pass_create_info.pNext = nullptr;
 	render_pass_create_info.flags = 0;
@@ -459,8 +459,8 @@ void VulkanApp::create_render_pass(void)
 void VulkanApp::create_shaders(void)
 {
 	vka::Shader main_vert(this->device), main_frag(this->device);
-	main_vert.load("../assets/shaders/bin/main.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-	main_frag.load("../assets/shaders/bin/main.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+	main_vert.load("../../../assets/shaders/bin/main.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+	main_frag.load("../../../assets/shaders/bin/main.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	this->main_shader.attach(main_vert);
 	this->main_shader.attach(main_frag);
@@ -469,31 +469,27 @@ void VulkanApp::create_shaders(void)
 void VulkanApp::create_pipeline(void)
 {
 	std::vector<VkVertexInputBindingDescription> bindings(1);
-	bindings[0] = {};
 	bindings[0].binding = 0;
 	bindings[0].stride = 8 * sizeof(vka::real_t);
 	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 	std::vector<VkVertexInputAttributeDescription> attributes(3);
-	attributes[0] = {};
 	attributes[0].location = 0;
 	attributes[0].binding = 0;
 	attributes[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 	attributes[0].offset = 0;
 
-	attributes[1] = {};
 	attributes[1].location = 1;
 	attributes[1].binding = 0;
 	attributes[1].format = VK_FORMAT_R32G32_SFLOAT;
 	attributes[1].offset = 3 * sizeof(vka::real_t);
 
-	attributes[2] = {};
 	attributes[2].location = 2;
 	attributes[2].binding = 0;
 	attributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
 	attributes[2].offset = 5 * sizeof(vka::real_t);
 
-	VkPipelineVertexInputStateCreateInfo vertex_input_create_info = {};
+	VkPipelineVertexInputStateCreateInfo vertex_input_create_info;
 	vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertex_input_create_info.pNext = nullptr;
 	vertex_input_create_info.flags = 0;
@@ -502,7 +498,7 @@ void VulkanApp::create_pipeline(void)
 	vertex_input_create_info.vertexAttributeDescriptionCount = attributes.size();
 	vertex_input_create_info.pVertexAttributeDescriptions = attributes.data();
 	
-	VkViewport view_port = {};
+	VkViewport view_port;
 	view_port.x = 0.0f;
 	view_port.y = 0.0f;
 	view_port.width = static_cast<float>(this->width);
@@ -514,7 +510,7 @@ void VulkanApp::create_pipeline(void)
 	scissor.offset = { 0, 0 };
 	scissor.extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
 
-	VkPipelineViewportStateCreateInfo view_port_create_info = {};
+	VkPipelineViewportStateCreateInfo view_port_create_info;
 	view_port_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	view_port_create_info.pNext = nullptr;
 	view_port_create_info.flags = 0;
@@ -523,14 +519,14 @@ void VulkanApp::create_pipeline(void)
 	view_port_create_info.scissorCount = 1;
 	view_port_create_info.pScissors = &scissor;
 
-	VkPipelineInputAssemblyStateCreateInfo input_assambly_create_info = {};
+	VkPipelineInputAssemblyStateCreateInfo input_assambly_create_info;
 	input_assambly_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	input_assambly_create_info.pNext = nullptr;
 	input_assambly_create_info.flags = 0;
 	input_assambly_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	input_assambly_create_info.primitiveRestartEnable = VK_FALSE;
 
-	VkPipelineRasterizationStateCreateInfo rasterization_create_info = {};
+	VkPipelineRasterizationStateCreateInfo rasterization_create_info;
 	rasterization_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterization_create_info.pNext = nullptr;
 	rasterization_create_info.flags = 0;
@@ -545,7 +541,7 @@ void VulkanApp::create_pipeline(void)
 	rasterization_create_info.depthBiasSlopeFactor = 0.0f;
 	rasterization_create_info.lineWidth = 1.0f;
 
-	VkPipelineMultisampleStateCreateInfo multisample_create_info = {};
+	VkPipelineMultisampleStateCreateInfo multisample_create_info;
 	multisample_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	multisample_create_info.pNext = nullptr;
 	multisample_create_info.flags = 0;
@@ -556,7 +552,7 @@ void VulkanApp::create_pipeline(void)
 	multisample_create_info.alphaToCoverageEnable = VK_FALSE;
 	multisample_create_info.alphaToOneEnable = VK_FALSE;
 
-	VkPipelineDepthStencilStateCreateInfo depth_test_create_info = {};
+	VkPipelineDepthStencilStateCreateInfo depth_test_create_info;
 	depth_test_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depth_test_create_info.pNext = nullptr;
 	depth_test_create_info.flags = 0;
@@ -570,7 +566,7 @@ void VulkanApp::create_pipeline(void)
 	depth_test_create_info.minDepthBounds = 0.0f;
 	depth_test_create_info.maxDepthBounds = 1.0f;
 
-	VkPipelineColorBlendAttachmentState color_blend_attachment = {};
+	VkPipelineColorBlendAttachmentState color_blend_attachment;
 	color_blend_attachment.blendEnable = VK_TRUE;
 	color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -580,7 +576,7 @@ void VulkanApp::create_pipeline(void)
 	color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
 	color_blend_attachment.colorWriteMask = 0x0000000F;
 
-	VkPipelineColorBlendStateCreateInfo color_blend_create_info = {};
+	VkPipelineColorBlendStateCreateInfo color_blend_create_info;
 	color_blend_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	color_blend_create_info.pNext = nullptr;
 	color_blend_create_info.flags = 0;
@@ -598,14 +594,14 @@ void VulkanApp::create_pipeline(void)
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
-	VkPipelineDynamicStateCreateInfo dynamic_state_create_info = {};
+	VkPipelineDynamicStateCreateInfo dynamic_state_create_info;
 	dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamic_state_create_info.pNext = nullptr;
 	dynamic_state_create_info.flags = 0;
 	dynamic_state_create_info.dynamicStateCount = dynamic_states.size();
 	dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
-	VkPipelineLayoutCreateInfo layout_create_info = {};
+	VkPipelineLayoutCreateInfo layout_create_info;
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layout_create_info.pNext = nullptr;
 	layout_create_info.flags = 0;
@@ -617,7 +613,7 @@ void VulkanApp::create_pipeline(void)
 	VkResult result = vkCreatePipelineLayout(this->device, &layout_create_info, nullptr, &this->pipeline_layout);
 	VULKAN_ASSERT(result);
 
-	VkGraphicsPipelineCreateInfo pipeline_create_info = {};
+	VkGraphicsPipelineCreateInfo pipeline_create_info;
 	pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipeline_create_info.pNext = 0;
 	pipeline_create_info.flags = 0;
@@ -652,7 +648,7 @@ void VulkanApp::create_framebuffers(void)
 			this->depth_attachment.view()
 		};
 
-		VkFramebufferCreateInfo fbo_creare_info = {};
+		VkFramebufferCreateInfo fbo_creare_info;
 		fbo_creare_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		fbo_creare_info.pNext = nullptr;
 		fbo_creare_info.flags = 0;
@@ -673,7 +669,7 @@ void VulkanApp::create_framebuffers(void)
 
 void VulkanApp::create_command_pool(void)
 {
-	VkCommandPoolCreateInfo command_pool_create_info = {};
+	VkCommandPoolCreateInfo command_pool_create_info;
 	command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	command_pool_create_info.pNext = nullptr;
 	command_pool_create_info.flags = 0;
@@ -687,7 +683,7 @@ void VulkanApp::create_global_command_buffers(void)
 {
 	this->swapchain_command_buffers.resize(this->swapchain_framebuffers.size());
 
-	VkCommandBufferAllocateInfo cbo_alloc_info = {};
+	VkCommandBufferAllocateInfo cbo_alloc_info;
 	cbo_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	cbo_alloc_info.pNext = nullptr;
 	cbo_alloc_info.commandPool = this->command_pool;
@@ -781,11 +777,11 @@ void VulkanApp::create_uniform_buffers(void)
 void VulkanApp::create_textures(void)
 {
 	int w, h, c;
-	uint8_t* data = stbi_load("../assets/textures/fountain_tex.jpg", &w, &h, &c, STBI_rgb_alpha);
-	uint8_t* data2 = stbi_load("../assets/textures/fountain_tex2.jpg", &w, &h, &c, STBI_rgb_alpha);
+	uint8_t* data = stbi_load("../../../assets/textures/texture.png", &w, &h, &c, STBI_rgb_alpha);
+	uint8_t* data2 = stbi_load("../../../assets/textures/texture2.jpeg", &w, &h, &c, STBI_rgb_alpha);
 
 	VkExtent3D extent = { (uint32_t)w, (uint32_t)h, 1 };
-	VkComponentMapping component_mapping = {};
+	VkComponentMapping component_mapping;
 	component_mapping.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 	component_mapping.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 	component_mapping.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -811,7 +807,7 @@ void VulkanApp::create_textures(void)
 	tex.set_sampler_border_color(VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
 	tex.set_sampler_unnormalized_coordinates(false);
 
-	VkImageViewCreateInfo vci = {};
+	VkImageViewCreateInfo vci;
 	vci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	vci.pNext = nullptr;
 	vci.flags = 0;
@@ -838,12 +834,12 @@ void VulkanApp::create_textures(void)
 
 void VulkanApp::create_descriptors(void)
 {
-	VkDescriptorImageInfo descr_image_info = {};
+	VkDescriptorImageInfo descr_image_info;
 	descr_image_info.sampler = this->texture.sampler();
 	descr_image_info.imageView = this->texture.views().at(1);
 	descr_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-	VkDescriptorBufferInfo descr_uniform_buffer_info = {};
+	VkDescriptorBufferInfo descr_uniform_buffer_info;
 	descr_uniform_buffer_info.buffer = this->uniform_buffer.handle();
 	descr_uniform_buffer_info.offset = 0;
 	descr_uniform_buffer_info.range = this->uniform_buffer.size();
@@ -879,7 +875,7 @@ void VulkanApp::create_semaphores(void)
 
 void VulkanApp::record_command_buffers(void)
 {
-	VkCommandBufferBeginInfo command_buffer_begin_info = {};
+	VkCommandBufferBeginInfo command_buffer_begin_info;
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	command_buffer_begin_info.pNext = nullptr;
 	command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -890,7 +886,7 @@ void VulkanApp::record_command_buffers(void)
 		VkResult result = vkBeginCommandBuffer(this->swapchain_command_buffers.at(i), &command_buffer_begin_info);
 		VULKAN_ASSERT(result);
 
-		VkRenderPassBeginInfo render_pass_begin_info = {};
+		VkRenderPassBeginInfo render_pass_begin_info;
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		render_pass_begin_info.pNext = nullptr;
 		render_pass_begin_info.renderPass = this->render_pass;
@@ -909,7 +905,7 @@ void VulkanApp::record_command_buffers(void)
 
 		vkCmdBindPipeline(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
 
-		VkViewport view_port = {};
+		VkViewport view_port;
 		view_port.x = 0;
 		view_port.y = 0;
 		view_port.width = static_cast<float>(this->width);
@@ -918,7 +914,7 @@ void VulkanApp::record_command_buffers(void)
 		view_port.maxDepth = 1.0f;
 		vkCmdSetViewport(this->swapchain_command_buffers.at(i), 0, 1, &view_port);
 
-		VkRect2D scissor = {};
+		VkRect2D scissor;
 		scissor.offset = { 0, 0 };
 		scissor.extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
 		vkCmdSetScissor(this->swapchain_command_buffers.at(i), 0, 1, &scissor);

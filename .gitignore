@@ -5,7 +5,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
@@ -32,5 +31,7 @@
 *.app
 
 .vscode
+.vs
 build
 lib
+out

@@ -1,0 +1,79 @@
+########################################################## version 1.0.0 update notes ##########################################################
+    - fixed: class AttachmentImage could not create attachments with VK_IMAGE_USAGE_SAMPLED_BIT
+    - fixed: in class Texture it was not possible to set the image view's subresource range's mipmap level count
+    - fixed: move constructor of class buffer does not clear the create info, physical device, device, command pool and queue anymore
+    - removed: in namespace vka::utility the functions get_supported_color_formats(), get_supported_depth_formats(), 
+               get_supported_stencil_formats() and get_supported_depth_stencil_formats()
+    - removed: several invalid checks of the class Attachment image, instead the validation layers are used
+    - added: in namespace vka::utility the function get_supported_formats()
+    - added: method mem_size() in class Buffer which returns the actual size of the allocated memory
+
+########################################################## version 1.1.0 update notes ##########################################################
+    - general: Library is now implemenated as header-only.
+    - added: descriptor manager
+
+########################################################## version 1.1.1 update notes ##########################################################
+    - patch: devices can now be found without having a surface
+
+########################################################## version 1.1.2 update notes ##########################################################
+    - added: memory handle getter for buffer and texture
+    - patch: some general minor changes
+
+########################################################## version 1.2.0 update notes ##########################################################
+    - added: descriptor manager supports now also all extension types
+
+########################################################## version 1.3.0 update notes ##########################################################
+    - revised: Model and Mesh class; Meshes are now loaded into an array of either float or doubles
+               instead of an array of vertex_t. Models can now be loaded with having only one materail
+               per mesh, instead of having one material per face. Vertex positions, normal vectors and
+               texture coordinates are now stored in separate arrays. They can still be merged.
+               Multiple models can no longer be merged into a huge array of vertices and indices.
+               If you want to do that, you have to do it by yourself!
+    - removed: vertex_t structure
+    - revised: Buffer class; Removed memory handle getter.
+    - revised: Attachment image; Removed memory handle getter. Added image handle getter.
+               Added getter for the internal used create infos.
+    - revised: Texture class, Removed memory handle getter. Added image handle getter.
+               Added getter for the internal used create infos.
+               Textures have now the ablility to contain multiple image views.
+               Where each image view can reference its own subressource.
+               Moreover, data is not loaded via create() into the texture anymore, instead the load()
+               function is used. The load() function also possesses the functionality of loading 
+               image data to different array layers separatly.
+    - revised: The find device and find queue family index funtions do not return an error code anymore.
+               Instead, they return the index of the found device or queue family or vka::NPOS,
+               if no device or queue family was found.
+    - added: format_sizeof(); This function converts a vulkan format to a size in bytes.
+    - added: VertexAttributeType; Used to merge vertex attributes of a mesh together.
+    - added: ModelLoadOptionFlagBits; It affects how the model is loaded.
+    - removed: strerror functions
+    - removed: Error enums that were used by the device and queue family find functions.
+    - some other changes: comments, varaible and function namings, exception messages
+
+########################################################## version 1.3.1 update notes ##########################################################
+    - patch: fixed move constructor bug
+
+########################################################## version 1.3.2 update notes ##########################################################
+    - added: Within vka::Mesh::merge, you can nor add spacing between different vertex attributes.
+
+########################################################## version 1.3.3 update notes ##########################################################
+    - patch: vka::Model::pvertices returned the normal vectors, is now fixed
+
+########################################################## version 1.4.0-dev1 update notes ##########################################################
+    - The filter for searching a physical device does not include surface und swapchain capabilities anymore.
+    - Those checks are now separate and are found within the vka::surface and vka::swapchain namespace.
+    - The names of the functions contained within the namespaces vka::instance, vka::device 
+      and vka::utility changed.
+      Additionally, the return argument of the functions that search for multiple layers or extensions
+      changed to a size_t (was a bool before). Therefore, the index argument was removed, which is now
+      the return argument.
+    - Previously, glfw was enabled by default. Now it is changed to disabled by default and you have to
+      manually enable it by defining VKA_GLFW_ENABLE.
+    - Patched, that you can also use the library without the additional use of tiny object loader.
+      There was a bug, that you had to include the tiny object loader library (header file) only
+      to be able to use the vka library.
+      However, you can enable model loading, then you have to include the tiny object loader library,
+      by defining VKA_MODEL_LOADING_ENABLE.
+    - Patched. There was a bug, that you werent able to use the library without including fstream
+      externally. The compiler was then generating a lot of implicit definition errors.
+    - Updated format_sizeof() to the newest vulkan version.
