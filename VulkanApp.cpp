@@ -200,7 +200,7 @@ void VulkanApp::create_instance(void)
 		throw std::runtime_error(str);
 	}
 
-	std::vector<const char*> _layers, _extensions;
+	const char* _layers[layers.size()], *_extensions[extensions.size()];
 	vka::utility::cvt_stdstr2ccpv(layers, _layers);
 	vka::utility::cvt_stdstr2ccpv(extensions, _extensions);
 
@@ -209,10 +209,10 @@ void VulkanApp::create_instance(void)
 	instance_create_info.pNext = nullptr;
 	instance_create_info.flags = 0;
 	instance_create_info.pApplicationInfo = &this->app_info;
-	instance_create_info.enabledLayerCount = _layers.size();
-	instance_create_info.ppEnabledLayerNames = _layers.data();
-	instance_create_info.enabledExtensionCount = _extensions.size();
-	instance_create_info.ppEnabledExtensionNames = _extensions.data();
+	instance_create_info.enabledLayerCount = layers.size();
+	instance_create_info.ppEnabledLayerNames = _layers;
+	instance_create_info.enabledExtensionCount = extensions.size();
+	instance_create_info.ppEnabledExtensionNames = _extensions;
 
 	VkResult result = vkCreateInstance(&instance_create_info, nullptr, &this->instance);
 	VULKAN_ASSERT(result);
@@ -298,7 +298,7 @@ void VulkanApp::create_logical_device(void)
 		throw std::runtime_error(str);
 	}
 
-	std::vector<const char*> _extensions;
+	const char* _extensions[device_extensions.size()];
 	vka::utility::cvt_stdstr2ccpv(device_extensions, _extensions);
 
 	VkDeviceCreateInfo device_create_info;
@@ -309,8 +309,8 @@ void VulkanApp::create_logical_device(void)
 	device_create_info.pQueueCreateInfos = &queue_create_info;
 	device_create_info.enabledLayerCount = 0;
 	device_create_info.ppEnabledLayerNames = nullptr;
-	device_create_info.enabledExtensionCount = _extensions.size();
-	device_create_info.ppEnabledExtensionNames = _extensions.data();
+	device_create_info.enabledExtensionCount = device_extensions.size();
+	device_create_info.ppEnabledExtensionNames = _extensions;
 	device_create_info.pEnabledFeatures = nullptr;
 
 	VkResult result = vkCreateDevice(this->physical_device, &device_create_info, nullptr, &this->device);

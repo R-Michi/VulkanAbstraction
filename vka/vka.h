@@ -9,6 +9,21 @@
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
+/*
+* Checklist:
+*   - instance
+*   - device
+*   - queue
+*   - surface
+*   - swapchain
+*   - attachment
+*   - buffer
+*   - texture
+*   - shader
+*   - descriptor
+*   - model
+*/
+
 #pragma once
 
 #ifdef VKA_DEBUG

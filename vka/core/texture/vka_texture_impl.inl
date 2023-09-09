@@ -329,10 +329,10 @@ VkResult vka::Texture::create(bool mipgen, VkFilter mip_filter)
     if(!this->validate_views())
         throw std::runtime_error("[vka::Texture::create]: (Base-array-layer) + (layer-count) of an image view is greater than the "
                                  "number of array layers specified in the image create info.");
-    if(mip_filter == VK_FILTER_LINEAR && !vka::utility::supports_format_feature(this->_pyhsical_device, this->_ici.format, this->_ici.tiling, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    if(mip_filter == VK_FILTER_LINEAR && !vka::utility::supports_format_feature2(this->_pyhsical_device, this->_ici.format, this->_ici.tiling, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
         throw std::invalid_argument("[vka::Texture::create]: Linear filtering for mip maps (VK_FILTER_LINEAR) is not supproted. "
                                     "VkFormatProperties does not support the format feature VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT.");
-    if(mip_filter == VK_FILTER_CUBIC_IMG && !vka::utility::supports_format_feature(this->_pyhsical_device, this->_ici.format, this->_ici.tiling, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG))
+    if(mip_filter == VK_FILTER_CUBIC_IMG && !vka::utility::supports_format_feature2(this->_pyhsical_device, this->_ici.format, this->_ici.tiling, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG))
         throw std::invalid_argument("[vka::Texture::create]: Cubic filtering for mip maps (VK_FILTER_CUBINC_IMG or VK_FILTER_CUBIC_EXT) is not supported. "
                                     "VkFormatProperties does not support the format feature VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG or "
                                     "VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT.");
@@ -508,10 +508,9 @@ VkResult vka::Texture::create(bool mipgen, VkFilter mip_filter)
     cbo_ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbo_ai.commandBufferCount = 1;
 
-    detail::utility::CommandBufferWrapper cbow(this->_device, cbo_ai);
-    result = cbow.result();
+    detail::utility::CommandBuffer cbo(this->_device, cbo_ai);
+    result = cbo.result();
     if(result != VK_SUCCESS) { this->clear(); return result; }
-    const VkCommandBuffer cbo = cbow.get().at(0);
 
     // start command buffer recording
     VkCommandBufferBeginInfo bi = {};

@@ -11,7 +11,7 @@
 
 #pragma once
 
-VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFlagBits format_feature)
+constexpr VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept
 {
     switch (format_feature)
     {
@@ -39,7 +39,7 @@ VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFlagBits for
     return static_cast<VkImageUsageFlagBits>(0);
 }
 
-VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFlagBits image_usage)
+constexpr VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept
 {
     switch (image_usage)
     {
@@ -68,7 +68,7 @@ VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFlagBits ima
     return static_cast<VkFormatFeatureFlagBits>(0);
 }
 
-void vka::detail::utility::init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s) noexcept
+void vka::detail::utility::init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s)
 {
     f2s[VK_FORMAT_UNDEFINED] = 0;
     f2s[VK_FORMAT_R4G4_UNORM_PACK8] = 1;
@@ -186,25 +186,75 @@ void vka::detail::utility::init_format_sizeof(std::unordered_map<VkFormat, size_
 }
 
 
-vka::detail::utility::CommandBufferWrapper::CommandBufferWrapper(VkDevice device, const VkCommandBufferAllocateInfo& ai)
+
+template<size_t N>
+inline vka::detail::utility::CommandBufferWrapper<N>::CommandBufferWrapper(VkDevice device, const VkCommandBufferAllocateInfo& ai) noexcept
+    : cbos{ VK_NULL_HANDLE }, last_result(VK_SUCCESS), device(device), pool(ai.commandPool)
 {
-    this->device = device;
-    this->pool = ai.commandPool;
-    this->cbos.resize(ai.commandBufferCount);
-    this->last_error = vkAllocateCommandBuffers(device, &ai, this->cbos.data());
-}
-vka::detail::utility::CommandBufferWrapper::~CommandBufferWrapper(void)
-{
-    if(this->result() == VK_SUCCESS)
-        vkFreeCommandBuffers(this->device, this->pool, this->cbos.size(), this->cbos.data());
+    this->last_result = vkAllocateCommandBuffers(device, &ai, cbos);
 }
 
-const std::vector<VkCommandBuffer>& vka::detail::utility::CommandBufferWrapper::get(void) const noexcept
+template<size_t N>
+inline vka::detail::utility::CommandBufferWrapper<N>::~CommandBufferWrapper(void)
 {
-    return this->cbos;
+    if (this->cbos[0] != VK_NULL_HANDLE)
+        vkFreeCommandBuffers(this->device, this->pool, N, this->cbos);
 }
-VkResult vka::detail::utility::CommandBufferWrapper::result(void) const noexcept
+
+template<size_t N>
+inline VkCommandBuffer vka::detail::utility::CommandBufferWrapper<N>::operator[] (size_t i) const noexcept
 {
-    return last_error;
+    return this->cbos[i];
+}
+
+template<size_t N>
+inline const VkCommandBuffer* vka::detail::utility::CommandBufferWrapper<N>::pat(size_t i) const noexcept
+{
+    return this->cbos + i;
+}
+
+template<size_t N>
+inline VkResult vka::detail::utility::CommandBufferWrapper<N>::result(void) const noexcept
+{
+    return this->last_result;
+}
+
+
+
+inline vka::detail::utility::CommandBufferWrapper<1>::CommandBufferWrapper(VkDevice device, const VkCommandBufferAllocateInfo& ai) noexcept
+    : cbo(VK_NULL_HANDLE), last_result(VK_SUCCESS), device(device), pool(ai.commandPool)
+{
+    this->last_result = vkAllocateCommandBuffers(device, &ai, &cbo);
+}
+
+inline vka::detail::utility::CommandBufferWrapper<1>::~CommandBufferWrapper(void)
+{
+    if (this->cbo != VK_NULL_HANDLE)
+        vkFreeCommandBuffers(this->device, this->pool, 1, &this->cbo);
+}
+
+inline VkCommandBuffer vka::detail::utility::CommandBufferWrapper<1>::get(void) const noexcept
+{
+    return this->cbo;
+}
+
+inline const VkCommandBuffer* vka::detail::utility::CommandBufferWrapper<1>::pget(void) const noexcept
+{
+    return &this->cbo;
+}
+
+inline vka::detail::utility::CommandBufferWrapper<1>::operator VkCommandBuffer(void) const noexcept
+{
+    return this->cbo;
+}
+
+inline const VkCommandBuffer* vka::detail::utility::CommandBufferWrapper<1>::operator& (void) const noexcept
+{
+    return &this->cbo;
+}
+
+inline VkResult vka::detail::utility::CommandBufferWrapper<1>::result(void) const noexcept
+{
+    return this->last_result;
 }
 
