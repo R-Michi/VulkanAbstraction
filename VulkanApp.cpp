@@ -357,7 +357,8 @@ void VulkanApp::create_swapchain(void)
 	swapchain_create_info.clipped = VK_TRUE;
 	swapchain_create_info.oldSwapchain = old_swapchain;
 
-	VkResult result = vka::swapchain::setup(this->device, swapchain_create_info, this->swapchain, this->swapchain_image_views);
+	this->swapchain_image_views.resize(swapchain_create_info.minImageCount);
+	VkResult result = vka::swapchain::setup(this->device, swapchain_create_info, this->swapchain, this->swapchain_image_views.data());
 	VULKAN_ASSERT(result);
 
 	vkDestroySwapchainKHR(this->device, old_swapchain, nullptr);

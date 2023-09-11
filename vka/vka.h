@@ -11,9 +11,7 @@
 
 /*
 * Checklist:
-*   - queue
 *   - surface
-*   - swapchain
 *   - attachment
 *   - buffer
 *   - texture
