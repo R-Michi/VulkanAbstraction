@@ -21,8 +21,8 @@ bool vka::instance::supports_layer(std::string_view layer_name, VkLayerPropertie
     res = vkEnumerateInstanceLayerProperties(&layer_count, layer_properties);
     if (res != VK_SUCCESS && res != VK_INCOMPLETE) return false;
 
-    size_t idx = detail::instance::supports_layer(layer_properties, layer_count, layer_name);
-    bool b = (idx != vka::NPOS);
+    const size_t idx = detail::instance::supports_layer(layer_properties, layer_count, layer_name);
+    const bool b = (idx != vka::NPOS);
     if (b && properties != nullptr)
         *properties = layer_properties[idx];
     return b;
@@ -59,8 +59,8 @@ bool vka::instance::supports_extension(std::string_view extension_name, VkExtens
     res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extension_properties);
     if (res != VK_SUCCESS) return false;
 
-    size_t idx = detail::instance::supports_extension(extension_properties, extension_count, extension_name);
-    bool b = (idx != vka::NPOS);
+    const size_t idx = detail::instance::supports_extension(extension_properties, extension_count, extension_name);
+    const bool b = (idx != vka::NPOS);
     if (b && properties != nullptr)
         *properties = extension_properties[idx];
     return b;

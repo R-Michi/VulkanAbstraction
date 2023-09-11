@@ -11,7 +11,7 @@
 
 #pragma once
 
-bool vka::detail::device::has_memory_property(const VkPhysicalDeviceMemoryProperties& properties, VkMemoryPropertyFlags req_flags)
+inline bool vka::detail::device::has_memory_property(const VkPhysicalDeviceMemoryProperties& properties, VkMemoryPropertyFlags req_flags) noexcept
 {
     for (uint32_t i = 0; i < properties.memoryTypeCount; i++)
     {
@@ -21,7 +21,7 @@ bool vka::detail::device::has_memory_property(const VkPhysicalDeviceMemoryProper
     return false;
 }
 
-bool vka::detail::device::has_queue_flag(const VkQueueFamilyProperties* properties, size_t n, VkQueueFlags req_flags)
+inline bool vka::detail::device::has_queue_flag(const VkQueueFamilyProperties* properties, size_t n, VkQueueFlags req_flags) noexcept
 {
     for (uint32_t i = 0; i < n; i++)
     {
@@ -32,15 +32,15 @@ bool vka::detail::device::has_queue_flag(const VkQueueFamilyProperties* properti
 }
 
 
-uint16_t vka::detail::device::has_sequence(const VkPhysicalDeviceProperties& properties, const char* sequence)
+inline uint32_t vka::detail::device::has_sequence(const VkPhysicalDeviceProperties& properties, const char* sequence) noexcept
 {
     if (sequence == nullptr) return 0x0000;
     
-    std::string device_name = properties.deviceName;
+    std::string_view device_name = properties.deviceName;
     return ((device_name.find(sequence) == std::string::npos) ? 0x0001 : 0x0000);
 }
 
-uint16_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const std::vector<VkMemoryPropertyFlags>& req_flags)
+inline uint32_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const std::vector<VkMemoryPropertyFlags>& req_flags) noexcept
 {
     for (VkMemoryPropertyFlags flags : req_flags)
     {
@@ -50,7 +50,7 @@ uint16_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemory
     return 0x0000;
 }
 
-uint16_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* properties, size_t n, const std::vector<VkQueueFlags>& req_flags)
+inline uint32_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* properties, size_t n, const std::vector<VkQueueFlags>& req_flags) noexcept
 {
     for (VkQueueFlags flags : req_flags)
     {
@@ -61,7 +61,7 @@ uint16_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* pro
 }
 
 #ifdef VKA_GLFW_ENABLE
-uint16_t vka::detail::device::has_surface_support(const VkInstance instance, const VkPhysicalDevice device, uint32_t qprop_count)
+inline uint32_t vka::detail::device::has_surface_support(const VkInstance instance, const VkPhysicalDevice device, uint32_t qprop_count) noexcept
 {
     // check if at least one queue family has surface support
     for (uint32_t i = 0; i < qprop_count; i++)
@@ -72,3 +72,5 @@ uint16_t vka::detail::device::has_surface_support(const VkInstance instance, con
     return 0x0200;
 }
 #endif
+
+
