@@ -11,7 +11,6 @@
 
 /*
 * Checklist:
-*   - instance
 *   - device
 *   - queue
 *   - surface

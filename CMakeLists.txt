@@ -25,7 +25,7 @@ link_directories(
 )
 
 # compile and link executable
-add_executable(vka "main.cpp" "VulkanApp.cpp")
+add_executable(vka "main.cpp" "VulkanApp.cpp" "vka/detail/instance/vka_instance.h")
 target_link_libraries(vka PRIVATE 
     "-lglm_static" 
     "-lglfw3" 
