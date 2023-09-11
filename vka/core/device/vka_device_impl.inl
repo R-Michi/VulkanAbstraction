@@ -15,11 +15,8 @@ void vka::device::get(VkInstance instance, std::vector<VkPhysicalDevice>& physic
 {
     uint32_t count;
     vkEnumeratePhysicalDevices(instance, &count, nullptr);
-    VkPhysicalDevice devices[count];
-    vkEnumeratePhysicalDevices(instance, &count, devices);
-
-    physical_devices.clear();
-    physical_devices.insert(physical_devices.end(), devices, devices + count);
+    physical_devices.resize(count);
+    vkEnumeratePhysicalDevices(instance, &count, physical_devices.data());
 }
 
 size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter, VkPhysicalDeviceProperties* prop, VkPhysicalDeviceMemoryProperties* mem_prop)
@@ -40,7 +37,7 @@ size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice
         vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &n_queue_families, queue_family_properties);
 
         // check support for everything specified in the filter
-        uint32_t failed = 0x0000;
+        uint32_t failed = 0;
         failed |= detail::device::has_sequence(properties[i], filter.sequence);
         failed |= detail::device::has_memory_properties(memory_properties, filter.memoryPropertyFlags);
         failed |= detail::device::has_queue_flags(queue_family_properties, n_queue_families, filter.queueFamilyFlags);
@@ -50,7 +47,7 @@ size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice
 #endif
 
         // If no check has failed, the current device is a candidate to be used for the application.
-        if(failed == 0x0000) candidates.push_back(i);
+        if(failed == 0) candidates.push_back(i);
     }
 
     // find best matching from the selected candidates

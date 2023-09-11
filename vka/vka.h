@@ -11,7 +11,6 @@
 
 /*
 * Checklist:
-*   - device
 *   - queue
 *   - surface
 *   - swapchain
@@ -32,7 +31,7 @@
             __debugbreak();
     #else
         #define VULKAN_ASSERT(result)\
-        if(result != VK_SUCCESS) \
+        if(result != VK_SUCCESS)\
             asm("int $3")   // causes a debug break (sort of)
     #endif
 #else

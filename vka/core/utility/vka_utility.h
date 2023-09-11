@@ -141,3 +141,4 @@ namespace vka
 #ifdef VKA_IMPLEMENTATION
     #include "vka_utility_impl.inl"
 #endif
+#include "vka_utility_inline_impl.inl"

@@ -66,7 +66,7 @@ namespace vka
     {
         uint32_t queueFamilyIndex;
         uint32_t usedQueueCount;
-        uint32_t queueBaseIndex;
+        uint32_t queueOffset;
     };
 
     struct VertexAttribute

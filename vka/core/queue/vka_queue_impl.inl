@@ -13,70 +13,38 @@
 
 void vka::queue::properties(const VkPhysicalDevice& device, std::vector<VkQueueFamilyProperties>& queue_families)
 {
-    queue_families.clear();
-    
-    uint32_t n_queue_families;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &n_queue_families, nullptr);
-    VkQueueFamilyProperties _queue_families[n_queue_families];
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &n_queue_families, _queue_families);
-    
-    for (size_t i = 0; i < n_queue_families; i++)
-        queue_families.push_back(_queue_families[i]);
+    uint32_t count;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
+    queue_families.resize(count);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queue_families.data());
 }
 
-size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_families, size_t begin, const QueueFamilyFilter& filter, QueueFamilyPriority priority)
+size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_families, const QueueFamilyFilter& filter, QueueFamilyPriority priority) noexcept
 {
-    if (begin >= queue_families.size()) return vka::NPOS;
-    
-    std::vector<size_t> candidates;
+    size_t idx = vka::NPOS;
+    VkQueueFlags min_flags = VK_QUEUE_FLAG_BITS_MAX_ENUM;
     for(size_t i = 0; i < queue_families.size(); i++)
     {
-        uint16_t failed = 0x0000;
-        failed |= detail::queue::has_flags(queue_families.at(i), filter.queueFlags);
-        failed |= detail::queue::has_count(queue_families.at(i), filter.queueCount);
-        if(failed == 0x0000) candidates.push_back(i);
-    }
+        // check, if queue family has requiered properties
+        uint32_t failed = 0;
+        failed |= detail::queue::has_flags(queue_families[i], filter.queueFlags);
+        failed |= detail::queue::has_count(queue_families[i], filter.queueCount);
 
-    if(candidates.size() == 0) return vka::NPOS;
-
-    size_t idx = vka::NPOS;
-    if(priority == VKA_QUEUE_FAMILY_PRIORITY_FIRST)
-    {
-        idx = candidates.at(0);
-    }
-    else if(priority == VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL)
-    {
-        VkQueueFlags min_flags = VK_QUEUE_FLAG_BITS_MAX_ENUM;
-        for(size_t i : candidates)
+        // every check was successful
+        if (failed == 0)
         {
-            const VkQueueFlags cur_flags = queue_families.at(i).queueFlags ^ filter.queueFlags;
-            if(cur_flags < min_flags)
+            if (priority == VKA_QUEUE_FAMILY_PRIORITY_FIRST)
+                return i;
+            else if(priority == VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL)
             {
-                min_flags = cur_flags;
-                idx = i;
+                const VkQueueFlags cur_flags = queue_families[i].queueFlags ^ filter.queueFlags;
+                if (cur_flags < min_flags)
+                {
+                    min_flags = cur_flags;
+                    idx = i;
+                }
             }
         }
     }
     return idx;
-}
-
-bool vka::queue::validate(const std::vector<VkQueueFamilyProperties>& queue_families, const std::vector<QueueInfo>& queue_infos)
-{
-    std::vector<QueueInfo> maximum_queue_infos;
-    for (size_t i = 0; i < queue_families.size(); i++)
-        maximum_queue_infos.push_back({ static_cast<uint32_t>(i), 0, 0 });
-    
-    for (size_t i = 0; i < queue_infos.size(); i++)
-    {
-        maximum_queue_infos.at(queue_infos.at(i).queueFamilyIndex).usedQueueCount += queue_infos.at(i).usedQueueCount;
-        if (queue_families.at(queue_infos.at(i).queueFamilyIndex).queueCount < (queue_infos.at(i).queueBaseIndex + queue_infos.at(i).usedQueueCount))
-            return false;
-    }
-    
-    for (size_t i = 0; i < queue_families.size(); i++)
-    {
-        if (maximum_queue_infos.at(i).usedQueueCount > queue_families.at(i).queueCount)
-            return false;
-    }
-    return true;
 }

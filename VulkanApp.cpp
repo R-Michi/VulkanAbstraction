@@ -258,7 +258,7 @@ void VulkanApp::create_queues(void)
 	queue_fam_filter.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
 	queue_fam_filter.queueCount = 4;
 
-	size_t idx = vka::queue::find(queue_fam_properties, 0, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL);
+	size_t idx = vka::queue::find(queue_fam_properties, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL);
 	if(idx == vka::NPOS)
 	{
 		throw std::runtime_error("Failed to find queue family.");
@@ -266,7 +266,7 @@ void VulkanApp::create_queues(void)
 
 	this->graphics_queue_info.queueFamilyIndex = idx;
 	this->graphics_queue_info.usedQueueCount = queue_fam_filter.queueCount;
-	this->graphics_queue_info.queueBaseIndex = 0;
+	this->graphics_queue_info.queueOffset = 0;
 
 	if (!vka::queue::validate(queue_fam_properties, { this->graphics_queue_info }))
 		throw std::runtime_error("Validation of queue families failed!");
@@ -319,7 +319,7 @@ void VulkanApp::create_logical_device(void)
 	// get queues from device
 	this->graphics_queues = new VkQueue[this->graphics_queue_info.usedQueueCount];
 	for (uint32_t i = 0; i < this->graphics_queue_info.usedQueueCount; i++)
-		vkGetDeviceQueue(this->device, this->graphics_queue_info.queueFamilyIndex, i + this->graphics_queue_info.queueBaseIndex, this->graphics_queues + i);
+		vkGetDeviceQueue(this->device, this->graphics_queue_info.queueFamilyIndex, i + this->graphics_queue_info.queueOffset, this->graphics_queues + i);
 
 	// check for durface support
 	VkBool32 supported;

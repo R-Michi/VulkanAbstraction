@@ -40,37 +40,6 @@ bool vka::utility::supports_format_feature2(VkPhysicalDevice device, VkFormat fo
     return supports_format_feature(properties, tiling, format_feature);
 }
 
-constexpr void vka::utility::get_color_formats(VkFormat* formats) noexcept
-{
-    for (uint32_t i = 1; i <= 123; i++)
-        formats[i] = static_cast<VkFormat>(i);
-}
-
-constexpr void vka::utility::get_depth_formats(VkFormat* formats) noexcept
-{
-    formats[0] = VK_FORMAT_D16_UNORM;
-    formats[1] = VK_FORMAT_X8_D24_UNORM_PACK32;
-    formats[2] = VK_FORMAT_D32_SFLOAT;
-    formats[3] = VK_FORMAT_D16_UNORM_S8_UINT;
-    formats[4] = VK_FORMAT_D24_UNORM_S8_UINT;
-    formats[5] = VK_FORMAT_D32_SFLOAT_S8_UINT;
-}
-
-constexpr void vka::utility::get_stencil_formats(VkFormat* formats) noexcept
-{
-    formats[0] = VK_FORMAT_S8_UINT;
-    formats[1] = VK_FORMAT_D16_UNORM_S8_UINT;
-    formats[2] = VK_FORMAT_D24_UNORM_S8_UINT;
-    formats[3] = VK_FORMAT_D32_SFLOAT_S8_UINT;
-}
-
-constexpr void vka::utility::get_depth_stencil_formats(VkFormat* formats) noexcept
-{
-    formats[0] = VK_FORMAT_D16_UNORM_S8_UINT;
-    formats[1] = VK_FORMAT_D24_UNORM_S8_UINT;
-    formats[2] = VK_FORMAT_D32_SFLOAT_S8_UINT;
-}
-
 void vka::utility::get_supported_formats(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats)
 {
     formats.clear();
@@ -107,26 +76,6 @@ void vka::utility::get_supported_formats(VkPhysicalDevice physical_device, VkIma
     // format 1000464000
     if (supports_format_feature2(physical_device, VK_FORMAT_R16G16_S10_5_NV, tiling, format_feature))
         formats.push_back(VK_FORMAT_R16G16_S10_5_NV);
-}
-
-constexpr VkImageUsageFlags vka::utility::cvt_ff2iu(VkFormatFeatureFlags format_feature) noexcept
-{
-    constexpr size_t n_bits = 8 * sizeof(VkFlags);
-    
-    VkImageUsageFlags flags = 0;
-    for (size_t i = 0; i < n_bits; i++)
-        flags |= detail::utility::ff2iu_bit(static_cast<VkFormatFeatureFlagBits>(format_feature & (1 << i)));
-    return flags;
-}
-
-constexpr VkFormatFeatureFlags vka::utility::cvt_iu2ff(VkImageUsageFlags image_usage) noexcept
-{
-    constexpr size_t n_bits = 8 * sizeof(VkFlags);
-    
-    VkFormatFeatureFlags flags = 0;
-    for (size_t i = 0; i < n_bits; i++)
-        flags |= detail::utility::iu2ff_bit(static_cast<VkImageUsageFlagBits>(image_usage & (1 << i)));
-    return flags;
 }
 
 void vka::utility::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept

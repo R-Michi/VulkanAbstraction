@@ -64,6 +64,5 @@ namespace vka
     } // namespace detail
 } // namespace vka
 
-#ifdef VKA_IMPLEMENTATION
-    #include "vka_device_impl.inl"
-#endif
+#include "vka_device_inline_impl.inl"
+

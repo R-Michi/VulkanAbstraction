@@ -32,6 +32,4 @@ namespace vka
     }
 }
 
-#ifdef VKA_IMPLEMENTATION
-#include "vka_instance_impl.inl"
-#endif
+#include "vka_instance_inline_impl.inl"

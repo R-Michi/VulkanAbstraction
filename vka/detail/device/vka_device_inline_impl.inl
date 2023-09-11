@@ -1,6 +1,6 @@
 /**
 * @file     vka_device_impl.inl
-* @brief    Detailed implemenation of device functions.
+* @brief    Detailed implemenation of inline device functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -34,10 +34,10 @@ inline bool vka::detail::device::has_queue_flag(const VkQueueFamilyProperties* p
 
 inline uint32_t vka::detail::device::has_sequence(const VkPhysicalDeviceProperties& properties, const char* sequence) noexcept
 {
-    if (sequence == nullptr) return 0x0000;
+    if (sequence == nullptr) return 0;
     
     std::string_view device_name = properties.deviceName;
-    return ((device_name.find(sequence) == std::string::npos) ? 0x0001 : 0x0000);
+    return ((device_name.find(sequence) == std::string::npos) ? 0xFFFFFFFF : 0);
 }
 
 inline uint32_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const std::vector<VkMemoryPropertyFlags>& req_flags) noexcept
@@ -45,9 +45,9 @@ inline uint32_t vka::detail::device::has_memory_properties(const VkPhysicalDevic
     for (VkMemoryPropertyFlags flags : req_flags)
     {
         if (!has_memory_property(properties, flags))
-            return 0x0002;
+            return 0xFFFFFFFF;
     }
-    return 0x0000;
+    return 0;
 }
 
 inline uint32_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* properties, size_t n, const std::vector<VkQueueFlags>& req_flags) noexcept
@@ -55,9 +55,9 @@ inline uint32_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperti
     for (VkQueueFlags flags : req_flags)
     {
         if (!has_queue_flag(properties, n, flags))
-            return 0x0004;
+            return 0xFFFFFFFF;
     }
-    return 0x0000;
+    return 0;
 }
 
 #ifdef VKA_GLFW_ENABLE
@@ -67,9 +67,9 @@ inline uint32_t vka::detail::device::has_surface_support(const VkInstance instan
     for (uint32_t i = 0; i < qprop_count; i++)
     {
         if (glfwGetPhysicalDevicePresentationSupport(instance, device, i))
-            return 0x0000;
+            return 0xFFFFFFFF;
     }
-    return 0x0200;
+    return 0;
 }
 #endif
 
