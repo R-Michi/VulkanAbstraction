@@ -31,7 +31,7 @@ namespace vka
         * More formally, if 'req_count' > 0, 'max_count' is the maximum image count and 'min_count'
         * is the minium image count, then: min(max(image_count, min_count), max_count) is returned.
         */
-        uint32_t image_count(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t req_count = 0);
+        uint32_t image_count(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t req_count = 0) noexcept;
 
 
         /*
@@ -53,7 +53,7 @@ namespace vka
         * return_extent.height = min(max(req_extent.height, min_extent.height), max_extent.height)
         * is returned.
         */
-        VkExtent2D image_extent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D req_extent = { 0, 0 });
+        VkExtent2D image_extent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D req_extent = { 0, 0 }) noexcept;
 
         /*
         * Creates the swapchain and the corresponding image views. A device is requiered for this
@@ -63,7 +63,7 @@ namespace vka
         * the amount of specified images in the swapchain. If no error occured, VK_SUCCESS is
         * returned. If an error occured, the vulkan result is returned.
         */
-        VkResult setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views);
+        VkResult setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views) noexcept;
     }
 }
 

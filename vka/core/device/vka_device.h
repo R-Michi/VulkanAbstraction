@@ -19,10 +19,7 @@ namespace vka
     {
         /*
         * Returns all aviable physical devices of a given instance. The instance is specified by
-        * 'instance' and the returned physical devices are stored within 'devices'.
-        * NOTE: An std::vector is used because the number of devices is not known in advance.
-        * However, a good heuristic can be made of how many physical divices are aviable with which
-        * memory can be reserved in the vector to speed up querying.
+        * 'instance' and the returned physical devices are stored in 'devices'.
         */
         void get(VkInstance instance, std::vector<VkPhysicalDevice>& devices);
 

@@ -11,7 +11,7 @@
 
 #pragma once
 
-void vka::surface::formats(const VkPhysicalDevice device, const VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& formats)
+void vka::surface::formats(const VkPhysicalDevice device, VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& formats)
 {
     uint32_t n;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &n, nullptr);
@@ -19,7 +19,7 @@ void vka::surface::formats(const VkPhysicalDevice device, const VkSurfaceKHR sur
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &n, formats.data());
 }
 
-void vka::surface::presentation_modes(const VkPhysicalDevice device, const VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& modes)
+void vka::surface::presentation_modes(const VkPhysicalDevice device, VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& modes)
 {
     uint32_t n;
     vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &n, nullptr);
@@ -27,7 +27,7 @@ void vka::surface::presentation_modes(const VkPhysicalDevice device, const VkSur
     vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &n, modes.data());
 }
 
-bool vka::surface::supports_format(const std::vector<VkSurfaceFormatKHR>& formats, VkSurfaceFormatKHR req_format)
+bool vka::surface::supports_format(const std::vector<VkSurfaceFormatKHR>& formats, VkSurfaceFormatKHR req_format) noexcept
 {
     for (VkSurfaceFormatKHR format : formats)
     {
@@ -37,9 +37,9 @@ bool vka::surface::supports_format(const std::vector<VkSurfaceFormatKHR>& format
     return false;
 }
 
-size_t vka::surface::supports_formats(const std::vector<VkSurfaceFormatKHR>& formats, const std::vector<VkSurfaceFormatKHR>& req_formats)
+size_t vka::surface::supports_formats(const std::vector<VkSurfaceFormatKHR>& formats, VkSurfaceFormatKHR* req_formats, size_t n) noexcept
 {
-    for (size_t i = 0; i < req_formats.size(); i++)
+    for (size_t i = 0; i < n; i++)
     {
         if (!supports_format(formats, req_formats[i]))
             return i;
@@ -47,9 +47,9 @@ size_t vka::surface::supports_formats(const std::vector<VkSurfaceFormatKHR>& for
     return vka::NPOS;
 }
 
-size_t vka::surface::supports_any_format(const std::vector<VkSurfaceFormatKHR>& formats, const std::vector<VkSurfaceFormatKHR>& candidates)
+size_t vka::surface::supports_any_format(const std::vector<VkSurfaceFormatKHR>& formats, VkSurfaceFormatKHR* candidates, size_t n) noexcept
 {
-    for (size_t i = 0; i < candidates.size(); i++)
+    for (size_t i = 0; i < n; i++)
     {
         if (supports_format(formats, candidates[i]))
             return i;
@@ -57,7 +57,7 @@ size_t vka::surface::supports_any_format(const std::vector<VkSurfaceFormatKHR>& 
     return vka::NPOS;
 }
 
-bool vka::surface::supports_presentmode(const std::vector<VkPresentModeKHR>& modes, VkPresentModeKHR req_mode)
+bool vka::surface::supports_presentmode(const std::vector<VkPresentModeKHR>& modes, VkPresentModeKHR req_mode) noexcept
 {
     for (VkPresentModeKHR mode : modes)
     {
@@ -67,9 +67,9 @@ bool vka::surface::supports_presentmode(const std::vector<VkPresentModeKHR>& mod
     return false;
 }
 
-size_t vka::surface::supports_presentmodes(const std::vector<VkPresentModeKHR>& modes, const std::vector<VkPresentModeKHR>& req_modes)
+size_t vka::surface::supports_presentmodes(const std::vector<VkPresentModeKHR>& modes, VkPresentModeKHR* req_modes, size_t n) noexcept
 {
-    for (size_t i = 0; i < req_modes.size(); i++)
+    for (size_t i = 0; i < n; i++)
     {
         if (!supports_presentmode(modes, req_modes[i]))
             return i;
@@ -77,9 +77,9 @@ size_t vka::surface::supports_presentmodes(const std::vector<VkPresentModeKHR>& 
     return vka::NPOS;
 }
 
-size_t vka::surface::supports_any_presentmode(const std::vector<VkPresentModeKHR>& modes, const std::vector<VkPresentModeKHR>& candidates)
+size_t vka::surface::supports_any_presentmode(const std::vector<VkPresentModeKHR>& modes, VkPresentModeKHR* candidates, size_t n) noexcept
 {
-    for (size_t i = 0; i < candidates.size(); i++)
+    for (size_t i = 0; i < n; i++)
     {
         if (supports_presentmode(modes, candidates[i]))
             return i;
