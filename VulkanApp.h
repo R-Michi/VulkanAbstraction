@@ -47,6 +47,9 @@ private:
 	VkQueue* graphics_queues;
 	VkDevice device;
 
+	VkPhysicalDeviceProperties pdevice_properties;
+	VkPhysicalDeviceMemoryProperties memory_properties;
+
 	VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
 	vka::AttachmentImage depth_attachment;
 	std::vector<VkImageView> swapchain_image_views;

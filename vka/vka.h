@@ -11,8 +11,6 @@
 
 /*
 * Checklist:
-*   - surface
-*   - attachment
 *   - buffer
 *   - texture
 *   - shader

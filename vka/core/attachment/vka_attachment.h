@@ -16,100 +16,90 @@ namespace vka
     class AttachmentImage
     {
     private:
-        VkPhysicalDevice _physical_device;
-        VkDevice _device;
-        
-        VkImageCreateInfo _ici, _backup_ici;
-        VkImageViewCreateInfo _vci, _backup_vci;
-        VkMemoryPropertyFlags _properties;
-        
-        VkImage _image;
-        VkDeviceMemory _memory;
-        VkImageView _view;
+        VkDevice device;
 
-        size_t _mem_size;
+        VkDeviceMemory memory;
+        VkImage m_image;
+        VkImageView m_view;
+        VkExtent2D extent;
 
-        static void init_ici(VkImageCreateInfo& ci);
-        static void init_vci(VkImageViewCreateInfo& ci);
-    
-    public:
-        AttachmentImage(void) noexcept;
-        
-        /**
-        * @param[in] physical_device: physical device
-        * @param[in] device: logical device
+        /*
+        * Checks if everything is correct at creation. Throws exceptions if anything was worng
+        * initialized, or was not initialized.
         */
-        explicit AttachmentImage(VkPhysicalDevice physical_device, VkDevice device) noexcept;
-        
+        inline void validate(VkPhysicalDevice pdevice, const AttachmentImageCreateInfo& create_info);
+        inline void destroy_handles(void) noexcept;
+
+    public:
+        /*
+        * Initialization constructor which initializes 'this' with a device. The device does not
+        * have to be valid at initialization, it must be valid at creation. This constructor has
+        * the same functionality as the .init() function. Furthermore, this constructor is also
+        * used as the default constructor, where the device is initialized to a VK_NULL_HANDLE.
+        * All other handles are initialized to a VK_NULL_HANDLE and every other member variable
+        * contains its default initialization.
+        */
+        explicit AttachmentImage(VkDevice device = VK_NULL_HANDLE) noexcept;
+
+        // The AttachmentImage must not be copied.
         AttachmentImage(const AttachmentImage&) = delete;
         AttachmentImage& operator= (const AttachmentImage&) = delete;
-        
-        /** 
-         * @brief   Move constructor and move operator. 
-         * @note    Both the move constructor and move operator
-         *          copy all the properties of the image and transfer
-         *          ownership of the image object's handles.
-         *          Therefore, the source image will become cleared.
-         */
-        AttachmentImage(AttachmentImage&& src);
-        AttachmentImage& operator= (AttachmentImage&& src);
-        
-        virtual ~AttachmentImage(void);
-        
-        /** @brief Setter for the parameter of the VkImageCreateInfo struct. */
-        void set_image_format(VkFormat format) noexcept;
-        void set_image_extent(VkExtent2D extent) noexcept;
-        void set_image_extent(uint32_t w, uint32_t h) noexcept;
-        void set_image_samples(VkSampleCountFlagBits samples) noexcept;
-        void set_image_usage(VkImageUsageFlags usage) noexcept;
-        void set_image_queue_family_index(uint32_t index) noexcept;
-        
-        /** @brief Setter for the parameter of the VkImageViewCreateInfo struct. */
-        void set_view_format(VkFormat format) noexcept;
-        void set_view_components(VkComponentMapping component_mapping) noexcept;
-        void set_view_aspect_mask(VkImageAspectFlags aspect_mask) noexcept;
-        
-        /** @param[in] physical_device: physical device */
-        void set_physical_device(VkPhysicalDevice physical_device) noexcept;
-        
-        /** @param[in] device: logical device */
-        void set_device(VkDevice device) noexcept;
-        
-        /**
-        * @brief Creates the attachment image.
-        * @return vulkan result
+
+        /*
+        * Moves another object of AttachmentImage into 'this'. 'This' now holds the ownership of
+        * all the handles of the source object. The source object will become invalidated and
+        * contains its default initialization except for the device. The device will be copied and
+        * is preserved in the moved object. If 'this' was created and is a valid object, 'this' is
+        * destroyed and replaced by the handles of the moved object.
         */
-        VkResult create(void);
-        
-        /** @brief Cleares the attachment image. The attachment image is no longer aviable after a clear. */
-        void clear(void);
+        AttachmentImage(AttachmentImage&& src) noexcept;
+        AttachmentImage& operator= (AttachmentImage&& src) noexcept;
 
-        /** @return image create info at the time point when the attachment image was created */
-        const VkImageCreateInfo& get_image_create_info(void) const noexcept;
+        // The destructor destroyes all the vulkan handles.
+        virtual ~AttachmentImage(void);
 
-        /** @return image view create info at the time point when the attachment image was created */
-        const VkImageViewCreateInfo& get_view_create_info(void) const noexcept;
+        /*
+        * Initializes 'this' with a device. The device does not have to be valid at initialization.
+        * However, it must be valid at creation. The initialization cannot be changed, if the
+        * AttachmentImage is a valid object.
+        */
+        void init(VkDevice device) noexcept;
 
-        /** @return extent of the created attachment image */
-        VkExtent2D extent(void) const noexcept;
+        /*
+        * This function creates the AttachmentImage and the internal handles are now valid, if no
+        * error occured. If an error occured, the vulkan result is returned. If no error occured,
+        * VK_SUCCESS is returned. The attachment image is created with an AttachmentImageCreateInfo
+        * structure which is used for the creation of the image and image view handle. The create
+        * info is specified by 'create_info'. Additionally, the physical device and the memory
+        * properties of the physical device are requiered and are specified by 'pdevice' and
+        * 'properties' respectively. An std::invalid_argument exception is thrown, if 'this' has
+        * not been initialized with a device or if the image format specified in the create info is
+        * not supported.
+        */
+        VkResult create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
-        /** @return number of pixels stored inside the image */
-        uint32_t count(void) const noexcept;
+        /*
+        * Destroyes the AttachmentImage object. After destroying, 'this' holds its default
+        * initialization except for the device. The device will be preserved after destroying and
+        * 'this' does not need to be reinitialized. This is also done by the destructor.
+        */
+        void destroy(void) noexcept;
 
-        /** @return allocated memory size of the image in bytes */
-        size_t mem_size(void) const noexcept;
+        // Returns the size/extent of the image.
+        inline VkExtent2D size(void) const noexcept;
 
-        /** @return image handle */
-        VkImage image(void) const noexcept;
-        
-        /** @return image view handle */
-        VkImageView view(void) const noexcept;
+        // Returns the image handle.
+        inline VkImage handle(void) const noexcept;
 
-        /** @return Boolean wether the attachment image has already been created. */
-        bool is_created(void) const noexcept;
+        // Returns the image view handle.
+        inline VkImageView view(void) const noexcept;
+
+        // Returns true, if the AttachmentImage is a valid object and false otherwise.
+        inline bool is_valid(void) const noexcept;
     };
 }
 
 #ifdef VKA_IMPLEMENTATION
     #include "vka_attachment_impl.inl"
 #endif
+#include "vka_attachment_inline_impl.inl"

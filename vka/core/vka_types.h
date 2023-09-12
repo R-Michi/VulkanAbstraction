@@ -74,4 +74,18 @@ namespace vka
         VertexAttributeType type;
         size_t              spacing;
     };
+
+    struct AttachmentImageCreateInfo
+    {
+        VkFormat                imageFormat;
+        VkExtent2D              imageExtent;
+        VkSampleCountFlagBits   imageSamples;
+        VkImageUsageFlags       imageUsage;
+        VkSharingMode           imageSharingMode;
+        uint32_t                imageQueueFamilyIndexCount;
+        const uint32_t*         imageQueueFamilyIndices;
+        VkFormat                viewFormat;
+        VkComponentMapping      viewComponentMapping;
+        VkImageAspectFlags      viewAspectMask;
+    };
 }

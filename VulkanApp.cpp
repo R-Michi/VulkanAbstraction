@@ -113,7 +113,7 @@ void VulkanApp::vulkan_destroy(void)
 
 	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
 
-	this->depth_attachment.clear();
+	this->depth_attachment.destroy();
 	for (VkImageView val : this->swapchain_image_views)
 		vkDestroyImageView(this->device, val, nullptr);
 	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
@@ -238,7 +238,7 @@ void VulkanApp::create_physical_device(void)
 	filter.queueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
 	filter.surfaceSupport = true;
 
-	size_t idx = vka::device::find(this->instance, physical_devices, filter);
+	size_t idx = vka::device::find(this->instance, physical_devices, filter, &this->pdevice_properties, &this->memory_properties);
 	if (idx == vka::NPOS)
 		throw std::runtime_error("Failed to find physical device");
 
@@ -367,21 +367,20 @@ void VulkanApp::create_swapchain(void)
 void VulkanApp::create_depth_attachment(void)
 {
 	VkComponentMapping component_mapping = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
-
-	this->depth_attachment.set_physical_device(this->physical_device);
-	this->depth_attachment.set_device(this->device);
-
-	this->depth_attachment.set_image_format(DEPTH_FORMAT);
-	this->depth_attachment.set_image_extent({ static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) });
-	this->depth_attachment.set_image_samples(VK_SAMPLE_COUNT_1_BIT);
-	this->depth_attachment.set_image_usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	this->depth_attachment.set_image_queue_family_index(this->graphics_queue_info.queueFamilyIndex);
-
-	this->depth_attachment.set_view_format(DEPTH_FORMAT);
-	this->depth_attachment.set_view_components(component_mapping);
-	this->depth_attachment.set_view_aspect_mask(VK_IMAGE_ASPECT_DEPTH_BIT);
-
-	VkResult result = this->depth_attachment.create();
+	const vka::AttachmentImageCreateInfo ci = {
+		.imageFormat = DEPTH_FORMAT,
+		.imageExtent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) },
+		.imageSamples = VK_SAMPLE_COUNT_1_BIT,
+		.imageUsage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.imageQueueFamilyIndexCount = 1,
+		.imageQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.viewFormat = DEPTH_FORMAT,
+		.viewComponentMapping = component_mapping,
+		.viewAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
+	};
+	this->depth_attachment.init(this->device);
+	VkResult result = this->depth_attachment.create(this->physical_device, this->memory_properties, ci);
 	VULKAN_ASSERT(result);
 }
 
