@@ -508,9 +508,11 @@ VkResult vka::Texture::create(bool mipgen, VkFilter mip_filter)
     cbo_ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbo_ai.commandBufferCount = 1;
 
-    detail::utility::CommandBuffer cbo(this->_device, cbo_ai);
-    result = cbo.result();
+    VkCommandBuffer cbo;
+    result = vkAllocateCommandBuffers(this->_device, &cbo_ai, &cbo);
     if(result != VK_SUCCESS) { this->clear(); return result; }
+
+    const utility::CommandBufferGuard<true> cbo_guard(this->_device, this->_pool, cbo);
 
     // start command buffer recording
     VkCommandBufferBeginInfo bi = {};

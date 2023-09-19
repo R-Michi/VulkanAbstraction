@@ -11,6 +11,25 @@
 
 #pragma once
 
+template<bool Safe>
+inline vka::utility::CommandBufferGuard<Safe>::CommandBufferGuard(VkDevice device, VkCommandPool pool, VkCommandBuffer cbo) noexcept
+    : device(device), pool(pool), cbo(cbo)
+{}
+
+template<bool Safe>
+inline vka::utility::CommandBufferGuard<Safe>::~CommandBufferGuard(void)
+{
+    if constexpr (Safe)
+    {
+        vkFreeCommandBuffers(this->device, this->pool, 1, &cbo);
+    }
+    else
+    {
+        if (this->cbo != VK_NULL_HANDLE)
+            vkFreeCommandBuffers(this->device, this->pool, 1, &cbo);
+    }
+}
+
 constexpr void vka::utility::get_color_formats(VkFormat* formats) noexcept
 {
     for (uint32_t i = 1; i <= 123; i++)

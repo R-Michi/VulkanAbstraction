@@ -18,6 +18,25 @@ namespace vka
     namespace utility
     {
         /*
+        * This class stores a command buffer object and automatically destroyes it in the destructor.
+        * A template argument can be specified which indicates that the stored command buffer is
+        * already "safe". This means that the command buffer is already a valid handle and can
+        * never be VK_NULL_HANDLE. This template argument specified by 'Safe' is false by default.
+        */
+        template<bool Safe = false>
+        class CommandBufferGuard final
+        {
+        private:
+            VkDevice device;
+            VkCommandPool pool;
+            VkCommandBuffer cbo;
+
+        public:
+            inline CommandBufferGuard(VkDevice device, VkCommandPool pool, VkCommandBuffer cbo) noexcept;
+            inline ~CommandBufferGuard(void);
+        };
+
+        /*
         * Searches for a supported memory type index for a given memoryTypeBits bit-mask in the
         * physical device's memory types. The memory properties that contains all supported memory
         * types of the physical device is specified by 'properties'. The memory specific memory
@@ -112,23 +131,6 @@ namespace vka
         * NOTE: The function name stands for "convert std::string to const char pointer vector"
         */
         void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;
-
-        /*
-        * Executes multiple secondary command buffers. This function is especially used to
-        * execute buffer copy, image copy and image layout transision commands, enqueued by
-        * vka::Buffer::enqueue_copy, vka::Image::enqueue_copy, vka::Image::enqueue_change_layout.
-        * A logical device is requiered and is given by 'device'. The requiered command pool is
-        * given by 'pool' the the requiered queue is given by 'queue'. The number of secondary
-        * command buffers to execute is specified by 'count' and the secondary command buffers are
-        * specified by 'scbs'. Optionally a fence can be specified by 'fence' to wait for the
-        * commands to finish otherwise it is waited for the queue to go into idling mode.
-        * If a fence is specified, a timeout value can also be specified by 'timeout' which is set
-        * to infinite time by default. If no fence is specified the timeout paramater is ignored.
-        * A vulkan result is returned indicating, if something went wrong. On success VK_SUCCESS or
-        * VK_TIMEOUT is returned, where VK_TIMEOUT occures, if the fence has been timed out.
-        * If 'device', 'pool' or 'queue' is a VK_NULL_HANDLE, VK_RESULT_MAX_ENUM is returned.
-        */
-        VkResult execute_scb(VkDevice device, VkCommandPool pool, VkQueue queue, uint32_t count, const VkCommandBuffer* scbs, VkFence fence = VK_NULL_HANDLE, uint64_t timeout = vka::NO_TIMEOUT) noexcept;
 
         /*
         * Converts a vulkan format to a size in bytes. The format to convert is specified by

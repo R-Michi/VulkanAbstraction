@@ -88,4 +88,26 @@ namespace vka
         VkComponentMapping      viewComponentMapping;
         VkImageAspectFlags      viewAspectMask;
     };
+
+    struct BufferCreateInfo
+    {
+        VkBufferCreateFlags     bufferFlags;
+        VkDeviceSize            bufferSize;
+        VkBufferUsageFlags      bufferUsage;
+        VkSharingMode           bufferSharingMode;
+        uint32_t                bufferQueueFamilyIndexCount;
+        const uint32_t*         bufferQueueFamilyIndices;
+        VkMemoryPropertyFlags   memoryPropertyFlags;
+    };
+
+    struct BufferCopyBarrier
+    {
+        VkAccessFlags           srcAccessMask;
+        VkAccessFlags           dstAccessMask;
+        uint32_t                srcQueueFamilyIndex;
+        uint32_t                dstQueueFamilyIndex;
+        VkPipelineStageFlags    srcStageMask;
+        VkPipelineStageFlags    dstStageMask;
+        VkDependencyFlags       dependencyFlags;
+    };
 }

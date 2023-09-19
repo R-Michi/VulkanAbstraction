@@ -84,58 +84,6 @@ void vka::utility::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const
         ccp_out[i] = std_in[i].c_str();
 }
 
-VkResult vka::utility::execute_scb(VkDevice device, VkCommandPool pool, VkQueue queue, uint32_t count, const VkCommandBuffer* scbs, VkFence fence, uint64_t timeout) noexcept
-{
-    if (device == VK_NULL_HANDLE || pool == VK_NULL_HANDLE || queue == VK_NULL_HANDLE)
-        return VK_RESULT_MAX_ENUM;
-
-    const VkCommandBufferAllocateInfo ai = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = nullptr,
-        .commandPool = pool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
-    };
-
-    detail::utility::CommandBuffer cbo(device, ai);
-    VkResult res = cbo.result();
-    if(res != VK_SUCCESS) return res;
-
-    const VkCommandBufferBeginInfo bi = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = nullptr,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = nullptr
-    };
-
-    res = vkBeginCommandBuffer(cbo, &bi);
-    if (res != VK_SUCCESS) return res;
-
-    vkCmdExecuteCommands(cbo, count, scbs);
-
-    res = vkEndCommandBuffer(cbo);
-    if (res != VK_SUCCESS) return res;
-
-    const VkSubmitInfo si = {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = nullptr,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = nullptr,
-        .pWaitDstStageMask = nullptr,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cbo,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = nullptr
-    };
-
-    res = vkQueueSubmit(queue, 1, &si, fence);
-    if (res != VK_SUCCESS) return res;
-
-    if (fence == VK_NULL_HANDLE)    res = vkQueueWaitIdle(queue);
-    else                            res = vkWaitForFences(device, 1, &fence, VK_TRUE, timeout);
-    return res;
-}
-
 /*
 * Initialize the map only once at the first
 * call to that function.
