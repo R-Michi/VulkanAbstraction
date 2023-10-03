@@ -2,25 +2,40 @@
 The aim of this library is to minimize the code that must be written in order to setup a vulkan renderer.
 It abstracts and simplifies general duties, like finding a device, creating buffers and textures, setting up shaders and descriptors, etc.
 
+# Features
+- GLFW <br>
+  This feature can be enabled via the define VKA_GLFW_ENABLE.
+
+- Model loading <br>
+  This feature can be enabled via the define VKA_MODEL_LOADING_ENABLE.
+
+- Image loading <br>
+  This feature can be enabled via the define VKA_STB_IMAGE_LOAD_ENABLE.
+
 # External libraries
-1) vulkan library: You must have the vulkan SDK installed. (no na ned)
-2) GLFW 3.3.3: Vulkan is included via glfw. GLFW must be complied into a static library.
-3) GLM: GLM must be compiled into a static library.
-5) tiny_obj_loader: Tiny object loader library is used for the experimental model loading implemenation. Header only library.
-4) STB-MASTER: From stb-master, only the "stb_image.h" file is used by the testing application. Header only library.
+- vulkan library: <br>
+  The vulkan library is always included externally.
 
-NOTE: You must specify include/search directories for the 'Tiny object loader' libary (and the 'STB-MASTER' library if you want to build
-the testing sources).
-GLFW in included via #include <GLFW/glfw3.h>
+- GLFW 3.3.3: <br>
+  This library is optional and is only requiered, if the GLFW feature is enabled. This library can be included externally or internally via
+  the define VKA_INCLUDE_GLFW. If the GLFW feature is not enabled, defining VKA_INCLUDE_GLFW has no effect.
 
-IMPORTANT: YOU HAVE TO BUILD THE STATIC LIBRARIES BY YOURDELF!!!
+- tiny obj loader: <br>
+  This library is optional and is only requiered, if the model loading feature is enabled. This library can be included externally or
+  internally via the define VKA_INCLUDE_TINYOBJ. If the model loading feature is not enabled, defining VKA_INCLUDE_TINYOBJ has no effect.
+  This library is header only.
+
+- STB image: <br>
+  This library is optional and is only requiered, if the image loading feature is enabled. This library can be included externally or
+  internally via the define VKA_INCLUDE_STB_IMAGE. If the image loading feature is not enabled, defining VKA_INCLUDE_STB_IMAGE has no effect.
+  This library is header only and only the include file "stb_image.h" is requiered.
 
 # Building the testing sources
-This project is a CMAKE project and can be build with CMAKE.
-There is one folder named "lib" that is not dowloaded.
-This folder contains all precompiled and header only libraries to be able to build the testing sources.
-Now you have to set up following directory structure:
+This project is built with CMAKE. The requiered libraries are not included in this repository and must be installed manually.
+Following directory structure is requiered for a successful build. <br>
+NOTE: GLM and GLFW are requiered as static libraries (glfw3.lib and glm_static.lib) and you have to build them yourself.
 
+<pre>
 [project directory]
 +-- lib
     +-- glfw-3.3.3
@@ -31,9 +46,12 @@ Now you have to set up following directory structure:
     |       +-- glfw3.lib
     +-- glm
     |   +-- glm
-    |       +-- <all glm related files>
+    |       +-- lib
+    |       |   +-- glm_static.lib
+    |       +-- [all GLM files]
     +-- stb_master
     |   +-- stb
     |       +-- stb_image.h
     +-- tiny_obj_loader
         +-- tiny_obj_loader.h
+</pre>
