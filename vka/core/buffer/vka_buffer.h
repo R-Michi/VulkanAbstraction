@@ -20,6 +20,7 @@ namespace vka
         VkBuffer buffer;
         VkDeviceMemory memory;
         VkDeviceSize memory_size;
+        bool mapped;
 
         /*
         * Checks if everything is correct at creation. Throws exceptions if anything was worng
@@ -27,9 +28,6 @@ namespace vka
         */
         inline void validate(void);
         inline void destroy_handles(void) noexcept;
-
-        // Ends the copy command buffer and submits the commands.
-        static inline VkResult end_and_submit(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept;
 
     public:
         /*
@@ -43,8 +41,8 @@ namespace vka
         explicit Buffer(VkDevice device = VK_NULL_HANDLE) noexcept;
 
         /*
-        * In order to copy a buffer the function .copy() or Buffer::enqueue_copy() must be used.
-        * For more information see the description of these functions.
+        * In order to copy a buffer the function .copy() must be used. For more information see the
+        * description of these functions.
         */
         Buffer(const Buffer&) = delete;
         Buffer& operator= (const Buffer&) = delete;
@@ -86,6 +84,17 @@ namespace vka
         * need to be reinitialized. This is also done by the destructor.
         */
         void destroy(void) noexcept;
+
+        /*
+        * This functions maps the buffer's memory and returns a pointer to the mapped buffer.
+        * The region to map is specified by an offset and a size. The offset is specified by
+        * 'offset' and the size is specified by 'size'. If the mapping operation was not successful
+        * or if the buffer is not valid, nullptr is returned.
+        */
+        inline void* map(VkDeviceSize offset, VkDeviceSize size) noexcept;
+
+        // Unmaps all mapped memory of the buffer.
+        inline void unmap(void) noexcept;
 
         /*
         * This function records the requiered commands for the copy operation.
@@ -130,7 +139,7 @@ namespace vka
         // Returns the size in bytes of the buffer.
         inline VkDeviceSize size(void) const noexcept;
 
-        // Returns the buffer handle.
+        // Returns the vulkan buffer handle.
         inline VkBuffer handle(void) const noexcept;
 
         // Returns true, if the Buffer is a valid object and false otherwise.
@@ -157,32 +166,6 @@ namespace vka
         * applies to the optional regions specified by 'regions'.
         */
         static inline void is_copy_invalid(uint32_t count, const Buffer* src, const Buffer* dst, bool* results, const VkBufferCopy* regions = nullptr) noexcept;
-
-        /*
-        * Allocates a command buffer and begins its recording for copy operations. A device and
-        * command pool is requiered and is specified by 'device' and 'pool'. The allocated command
-        * buffer is returned via the parameter 'cbo'. If an error occured the, respectve result is
-        * returned. If no error occured, VK_SUCCESS is returned. If the allocation of the command
-        * buffer failed, the returned command buffer is VK_NULL_HANDLE.
-        */
-        static VkResult begin_copy(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
-
-        /*
-        * Ends the recording of the command buffer and submits it to the specified queue 'queue'.
-        * The command buffer to submit is specified by 'cbo'. Optionally, a fence can be specified
-        * for the submition. If an error occured the, respectve result is returned. If no error
-        * occured, VK_SUCCESS is returned.
-        */
-        static VkResult end_copy(VkQueue queue, VkCommandBuffer cbo, VkFence fence = VK_NULL_HANDLE) noexcept;
-
-        /*
-        * This function does the same as end_copy() but it additionally waits for the copy
-        * operation to finish. If no fence is specified, it is waited until the specified queue
-        * goes into idle mode. Otherwise, it is waited for the fence to become signaled, or if the
-        * timeout time has been elapsed. If the fence timed out VK_TIMEOUT is returned. The device
-        * is only requiered, if a fence is specified.
-        */
-        static VkResult end_wait_copy(VkQueue queue, VkCommandBuffer cbo, VkDevice device = VK_NULL_HANDLE, VkFence fence = VK_NULL_HANDLE, uint64_t timeout = vka::NO_TIMEOUT) noexcept;
     };
 }
 

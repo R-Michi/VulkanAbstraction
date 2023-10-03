@@ -95,10 +95,10 @@ void VulkanApp::vulkan_destroy(void)
 	vkDestroySemaphore(this->device, this->sem_img_aviable, nullptr);
 	vkDestroySemaphore(this->device, this->sem_rendering_done, nullptr);
 
-	this->texture.clear();
-	this->uniform_buffer.clear();
-	this->index_buffer.clear();
-	this->vertex_buffer.clear();
+	this->texture.destroy();
+	this->uniform_buffer.destroy();
+	this->index_buffer.destroy();
+	this->vertex_buffer.destroy();
 	vkFreeCommandBuffers(this->device, this->command_pool, this->swapchain_command_buffers.size(), this->swapchain_command_buffers.data());
 	vkDestroyCommandPool(this->device, this->command_pool, nullptr);
 
@@ -697,146 +697,169 @@ void VulkanApp::create_global_command_buffers(void)
 void VulkanApp::create_vertex_buffers(void)
 {
 	VkDeviceSize size = sizeof(vka::real_t) * this->vertices.size();
+	vka::BufferCreateInfo create_info = {
+		.bufferFlags = 0,
+		.bufferSize = size,
+		.bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.bufferQueueFamilyIndexCount = 1,
+		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	};
 
-	vka::Buffer staging_buffer;
-	staging_buffer.set_create_flags(0);
-	staging_buffer.set_create_size(size);
-	staging_buffer.set_create_usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-	staging_buffer.set_create_sharing_mode(VK_SHARING_MODE_EXCLUSIVE);
-	staging_buffer.set_create_queue_families(&this->graphics_queue_info.queueFamilyIndex, 1);
-	staging_buffer.set_memory_properties(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	staging_buffer.set_physical_device(this->physical_device);
-	staging_buffer.set_device(this->device);
+	vka::Buffer staging_buffer(this->device);
+	VkResult res = staging_buffer.create(this->memory_properties, create_info);
+	VULKAN_ASSERT(res);
 
-	VkResult result = staging_buffer.create();
-	VULKAN_ASSERT(result);
-
-	void* _map = staging_buffer.map(size, 0);
-	memcpy(_map, this->vertices.data(), size);
+	void* buff = staging_buffer.map(0, size);
+	memcpy(buff, this->vertices.data(), size);
 	staging_buffer.unmap();
 	this->vertices.clear();
 	this->vertices.shrink_to_fit();
 
-	this->vertex_buffer.set_create_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-	this->vertex_buffer.set_memory_properties(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	this->vertex_buffer.init(this->device);
+	res = this->vertex_buffer.create(this->memory_properties, create_info);
+	VULKAN_ASSERT(res);
 
-	VkCommandBuffer cbo = vka::Buffer::enqueue_copy(this->device, this->command_pool, 1, &staging_buffer, &this->vertex_buffer);
-	result = vka::utility::execute_scb(this->device, this->command_pool, this->graphics_queues[0], 1, &cbo);
-	VULKAN_ASSERT(result);
-	staging_buffer.clear();
+	VkCommandBuffer cbo;
+	res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
+	VULKAN_ASSERT(res);
+	this->vertex_buffer.copy(cbo, staging_buffer);
+	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
+	VULKAN_ASSERT(res);
+	vkFreeCommandBuffers(this->device, this->command_pool, 1, &cbo);
 }
 
 void VulkanApp::create_index_buffers(void)
 {
 	VkDeviceSize size = this->indices.size() * sizeof(uint32_t);
+	vka::BufferCreateInfo create_info = {
+		.bufferFlags = 0,
+		.bufferSize = size,
+		.bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.bufferQueueFamilyIndexCount = 1,
+		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	};
+	
+	vka::Buffer staging_buffer(this->device);
+	VkResult res = staging_buffer.create(this->memory_properties, create_info);
+	VULKAN_ASSERT(res);
 
-	vka::Buffer staging_buffer;
-	staging_buffer.set_create_flags(0);
-	staging_buffer.set_create_size(size);
-	staging_buffer.set_create_usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-	staging_buffer.set_create_sharing_mode(VK_SHARING_MODE_EXCLUSIVE);
-	staging_buffer.set_create_queue_families(&this->graphics_queue_info.queueFamilyIndex, 1);
-	staging_buffer.set_memory_properties(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	staging_buffer.set_physical_device(this->physical_device);
-	staging_buffer.set_device(this->device);
-
-	VkResult result = staging_buffer.create();
-	VULKAN_ASSERT(result);
-
-	void* _map = staging_buffer.map(size, 0);
-	memcpy(_map, this->indices.data(), size);
+	void* buff = staging_buffer.map(0, size);
+	memcpy(buff, this->indices.data(), size);
 	staging_buffer.unmap();
 	this->index_count = this->indices.size();
 	this->indices.clear();
 	this->indices.shrink_to_fit();
 
-	this->index_buffer.set_create_usage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-	this->index_buffer.set_memory_properties(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	this->index_buffer.init(this->device);
+	res = this->index_buffer.create(this->memory_properties, create_info);
+	VULKAN_ASSERT(res);
 
-	VkCommandBuffer cbo = vka::Buffer::enqueue_copy(this->device, this->command_pool, 1, &staging_buffer, &this->index_buffer);
-	result = vka::utility::execute_scb(this->device, this->command_pool, this->graphics_queues[0], 1, &cbo);
-	staging_buffer.clear();
+	VkCommandBuffer cbo;
+	res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
+	VULKAN_ASSERT(res);
+	this->index_buffer.copy(cbo, staging_buffer);
+	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
+	VULKAN_ASSERT(res);
+	vkFreeCommandBuffers(this->device, this->command_pool, 1, &cbo);
 }
 
 void VulkanApp::create_uniform_buffers(void)
 {
-	this->uniform_buffer.set_physical_device(this->physical_device);
-	this->uniform_buffer.set_device(this->device);
-
-	this->uniform_buffer.set_create_flags(0);
-	this->uniform_buffer.set_create_size(sizeof(UniformTranformMatrices));
-	this->uniform_buffer.set_create_usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-	this->uniform_buffer.set_create_sharing_mode(VK_SHARING_MODE_EXCLUSIVE);
-	this->uniform_buffer.set_create_queue_families(&this->graphics_queue_info.queueFamilyIndex, 1);
-	this->uniform_buffer.set_memory_properties(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
-
-	VkResult result = this->uniform_buffer.create();
-	VULKAN_ASSERT(result);
+	const vka::BufferCreateInfo create_info = {
+		.bufferFlags = 0,
+		.bufferSize = sizeof(UniformTranformMatrices),
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.bufferQueueFamilyIndexCount = 1,
+		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+	};
+	this->uniform_buffer.init(this->device);
+	VkResult res = this->uniform_buffer.create(this->memory_properties, create_info);
+	VULKAN_ASSERT(res);
 }
 
 void VulkanApp::create_textures(void)
 {
-	int w, h, c;
-	uint8_t* data = stbi_load("../../../assets/textures/texture.png", &w, &h, &c, STBI_rgb_alpha);
-	uint8_t* data2 = stbi_load("../../../assets/textures/texture2.jpeg", &w, &h, &c, STBI_rgb_alpha);
+	VkExtent3D size;
+	const void* const data[2] = {
+		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8>("../../../assets/textures/texture.png", size, 4),
+		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8>("../../../assets/textures/texture2.jpeg", size, 4)
+	};
+	if (data[0] == nullptr || data[1] == nullptr)
+		throw std::runtime_error("Failed to load image");
 
-	VkExtent3D extent = { (uint32_t)w, (uint32_t)h, 1 };
-	VkComponentMapping component_mapping;
-	component_mapping.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	component_mapping.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	component_mapping.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	component_mapping.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+	const vka::TextureCreateInfo create_info = {
+		.imageFlags = 0,
+		.imageType = VK_IMAGE_TYPE_2D,
+		.imageFormat = VK_FORMAT_R8G8B8A8_UNORM,
+		.imageExtent = size,
+		.imageArrayLayers = 2,
+		.imageQueueFamilyIndexCount = 1,
+		.imageQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.samplerMagFilter = VK_FILTER_NEAREST,
+		.samplerMinFilter = VK_FILTER_NEAREST,
+		.samplerMipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+		.samplerAddressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		.samplerAddressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		.samplerAddressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		.samplerLodBias = 0.0f,
+		.samplerAnisotropyEnable = VK_FALSE,
+		.samplerMaxAnisotropy = 0.0f,
+		.samplerCompareEnable = VK_FALSE,
+		.samplerCompareOp = VK_COMPARE_OP_ALWAYS,
+		.samplerMinLod = 0.0f,
+		.samplerMaxLod = (float)vka::Texture::level_count(size) - 1,	// max LOD = highest mip-level index = mip-level count - 1
+		.samplerBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+		.samplerUnnormalizedCoordinates = VK_FALSE,
+		.generateMipMap = true
+	};
 
-	vka::Texture tex(this->physical_device, this->device, this->command_pool, this->graphics_queues[0]);
-	tex.set_image_flags(0);
-	tex.set_image_type(VK_IMAGE_TYPE_2D);
-	tex.set_image_format(VK_FORMAT_R8G8B8A8_UNORM);
-	tex.set_image_extent(extent);
-	tex.set_image_array_layers(2);
-	tex.set_image_queue_families(this->graphics_queue_info.queueFamilyIndex);
-	tex.set_sampler_mag_filter(VK_FILTER_LINEAR);
-	tex.set_sampler_min_filter(VK_FILTER_LINEAR);
-	tex.set_sampler_mipmap_mode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
-	tex.set_sampler_address_mode(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-	tex.set_sampler_mip_lod_bias(0.0f);
-	tex.set_sampler_anisotropy_enable(false);
-	tex.set_sampler_max_anisotropy(0.0f);
-	tex.set_sampler_compare_enable(false);
-	tex.set_sampler_compare_op(VK_COMPARE_OP_ALWAYS);
-	tex.set_sampler_lod(0.0f, (float)vka::Texture::to_mip_levels(extent));
-	tex.set_sampler_border_color(VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK);
-	tex.set_sampler_unnormalized_coordinates(false);
+	vka::TextureViewCreateInfo view = {
+		.flags = 0,
+		.viewType = VK_IMAGE_VIEW_TYPE_2D,
+		.format = VK_FORMAT_R8G8B8A8_UNORM,
+		.components = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY },
+		.baseArrayLayer = 0,
+		.layerCount = 1
+	};
 
-	VkImageViewCreateInfo vci;
-	vci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	vci.pNext = nullptr;
-	vci.flags = 0;
-	vci.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	vci.format = VK_FORMAT_R8G8B8A8_UNORM;
-	vci.components = component_mapping;
-	vci.subresourceRange.baseArrayLayer = 0;
-	vci.subresourceRange.layerCount = 1;
-	tex.add_view(vci);
+	this->texture.init(this->device);
+	VkResult res = this->texture.create(this->memory_properties, create_info);
+	VULKAN_ASSERT(res);
 
-	vci.subresourceRange.baseArrayLayer = 1;
-	tex.add_view(vci);
+	res = this->texture.create_view(view);
+	VULKAN_ASSERT(res);
+	view.baseArrayLayer = 1;
+	res = this->texture.create_view(view);
+	VULKAN_ASSERT(res);
 
-	tex.load(0, data);
-	tex.load(1, data2);
-	if(tex.create(true, VK_FILTER_NEAREST) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create texture");
+	vka::Buffer staging_buffer;
+	this->texture.load_staging(data, staging_buffer, this->memory_properties, this->graphics_queue_info.queueFamilyIndex, 2);
 
-	this->texture = std::move(tex);
-
-	stbi_image_free(data);
-	stbi_image_free(data2);
+	VkCommandBuffer cbo;
+	res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
+	VULKAN_ASSERT(res);
+	this->texture.load(cbo, staging_buffer, 0, 2);
+	this->texture.finish(cbo, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
+	VULKAN_ASSERT(res);
+	vkFreeCommandBuffers(this->device, this->command_pool, 1, &cbo);
 }
 
 void VulkanApp::create_descriptors(void)
 {
 	VkDescriptorImageInfo descr_image_info;
 	descr_image_info.sampler = this->texture.sampler();
-	descr_image_info.imageView = this->texture.views().at(1);
+	descr_image_info.imageView = this->texture.view(1);
 	descr_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 	VkDescriptorBufferInfo descr_uniform_buffer_info;
@@ -895,7 +918,7 @@ void VulkanApp::record_command_buffers(void)
 		render_pass_begin_info.renderArea.extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
 
 		std::vector<VkClearValue> clear_values(2);
-		clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };	// clear color
+		clear_values[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };	// clear color
 		clear_values[1].depthStencil.depth = 1.0f;
 
 		render_pass_begin_info.clearValueCount = clear_values.size();
@@ -991,7 +1014,7 @@ void VulkanApp::update_frame_contents(void)
 	projection[1][1] *= -1.0f;
 	utm.MVP = projection * view * model;
 
-	void* _map = this->uniform_buffer.map(sizeof(UniformTranformMatrices), 0);
+	void* _map = this->uniform_buffer.map(0, sizeof(UniformTranformMatrices));
 	memcpy(_map, &utm, sizeof(UniformTranformMatrices));
 	this->uniform_buffer.unmap();
 }

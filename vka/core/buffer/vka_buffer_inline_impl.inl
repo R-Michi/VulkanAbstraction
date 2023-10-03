@@ -1,5 +1,5 @@
 /**
-* @file     vka_buffer_impl.inl
+* @file     vka_buffer_inline_impl.inl
 * @brief    Buffer implementation file of inline functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
@@ -13,6 +13,8 @@
 
 inline void vka::Buffer::destroy_handles(void) noexcept
 {
+    if (this->mapped)
+        vkUnmapMemory(this->device, this->memory);
     if (this->memory != VK_NULL_HANDLE)
         vkFreeMemory(this->device, this->memory, nullptr);
     if (this->buffer != VK_NULL_HANDLE)
@@ -78,23 +80,22 @@ inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, con
     vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &final_region);
 }
 
-inline VkResult vka::Buffer::end_and_submit(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
+inline void* vka::Buffer::map(VkDeviceSize offset, VkDeviceSize size) noexcept
 {
-    // end recording
-    const VkResult res = vkEndCommandBuffer(cbo);
-    if (res != VK_SUCCESS) return res;
+    if (!this->is_valid()) return nullptr;
 
-    // submit commands
-    const VkSubmitInfo submit_info = {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = nullptr,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = nullptr,
-        .pWaitDstStageMask = nullptr,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cbo,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = nullptr
-    };
-    return vkQueueSubmit(queue, 1, &submit_info, fence);
+    void* data;
+    if (vkMapMemory(this->device, this->memory, offset, size, 0, &data) != VK_SUCCESS)
+        return nullptr;
+    this->mapped = true;
+    return data;
+}
+
+inline void vka::Buffer::unmap(void) noexcept
+{
+    if (this->is_valid())
+    {
+        vkUnmapMemory(this->device, this->memory);
+        this->mapped = false;
+    }
 }

@@ -4,9 +4,15 @@ cmake_minimum_required (VERSION 3.8)
 # current project
 project("VulkanAbstraction")
 
+set(COMPILE_OPTIONS -mfma -mavx2 -mf16c)
+set(COMPILE_WARNINGS -Walloca -Wall)
+
 # use C++ 17
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-mfma -mavx2 -mf16c)
+add_compile_options(${COMPILE_OPTIONS} ${COMPILE_WARNINGS})
+
+# export compiler commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 find_package(Vulkan)
 
@@ -42,6 +48,3 @@ endif()
 #    PRE_BUILD COMMAND "compile_shader.bat"
 #    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 #)
-
-# export compiler commands
-set(CMAKE_EXPORT_COMPILE_COMMANDS on)

@@ -21,6 +21,9 @@ namespace vka
             constexpr VkFormatFeatureFlagBits iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept;
             void init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s);
 
+            // Ends the copy command buffer and submits the commands.
+            inline VkResult end_cbo_and_submit(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept;
+
         } // namespace utility
     } // namespace detail
 } // namespace vka

@@ -68,3 +68,24 @@ constexpr VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFl
     return static_cast<VkFormatFeatureFlagBits>(0);
 }
 
+inline VkResult vka::detail::utility::end_cbo_and_submit(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
+{
+    // end recording
+    const VkResult res = vkEndCommandBuffer(cbo);
+    if (res != VK_SUCCESS) return res;
+
+    // submit commands
+    const VkSubmitInfo submit_info = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = nullptr,
+        .waitSemaphoreCount = 0,
+        .pWaitSemaphores = nullptr,
+        .pWaitDstStageMask = nullptr,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cbo,
+        .signalSemaphoreCount = 0,
+        .pSignalSemaphores = nullptr
+    };
+    return vkQueueSubmit(queue, 1, &submit_info, fence);
+}
+

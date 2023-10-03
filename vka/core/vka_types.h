@@ -47,6 +47,15 @@ namespace vka
     };
     using ModelLoadOptionFlags = uint32_t;
 
+#ifdef VKA_STB_IMAGE_LOAD_ENABLE
+    enum ImageDataType
+    {
+        VKA_IMAGE_DATA_TYPE_INT8,
+        VKA_IMAGE_DATA_TYPE_INE16,
+        VKA_IMAGE_DATA_TYPE_FLOAT
+    };
+#endif
+
     struct PhysicalDeviceFilter
     {
         const char*                         sequence;
@@ -89,6 +98,7 @@ namespace vka
         VkImageAspectFlags      viewAspectMask;
     };
 
+    // see documentation of VkBufferCreateInfo and VkMemoryAllocateInfo
     struct BufferCreateInfo
     {
         VkBufferCreateFlags     bufferFlags;
@@ -100,14 +110,42 @@ namespace vka
         VkMemoryPropertyFlags   memoryPropertyFlags;
     };
 
-    struct BufferCopyBarrier
+    // see documentation of VkImageCreateInfo and VkSamplerCreateInfo
+    struct TextureCreateInfo
     {
-        VkAccessFlags           srcAccessMask;
-        VkAccessFlags           dstAccessMask;
-        uint32_t                srcQueueFamilyIndex;
-        uint32_t                dstQueueFamilyIndex;
-        VkPipelineStageFlags    srcStageMask;
-        VkPipelineStageFlags    dstStageMask;
-        VkDependencyFlags       dependencyFlags;
+        VkImageCreateFlags      imageFlags;
+        VkImageType             imageType;
+        VkFormat                imageFormat;
+        VkExtent3D              imageExtent;
+        uint32_t                imageArrayLayers;
+        uint32_t                imageQueueFamilyIndexCount;
+        const uint32_t*         imageQueueFamilyIndices;
+        VkFilter                samplerMagFilter;
+        VkFilter                samplerMinFilter;
+        VkSamplerMipmapMode     samplerMipmapMode;
+        VkSamplerAddressMode    samplerAddressModeU;
+        VkSamplerAddressMode    samplerAddressModeV;
+        VkSamplerAddressMode    samplerAddressModeW;
+        float                   samplerLodBias;
+        uint32_t                samplerAnisotropyEnable;
+        float                   samplerMaxAnisotropy;
+        uint32_t                samplerCompareEnable;
+        VkCompareOp             samplerCompareOp;
+        float                   samplerMinLod;
+        float                   samplerMaxLod;
+        VkBorderColor           samplerBorderColor;
+        uint32_t                samplerUnnormalizedCoordinates;
+        bool                    generateMipMap;
+    };
+
+    // image view create info for texture, see documentation of VkImageViewCreateInfo
+    struct TextureViewCreateInfo
+    {
+        VkImageViewCreateFlags  flags;
+        VkImageViewType         viewType;
+        VkFormat                format;
+        VkComponentMapping      components;
+        uint32_t                baseArrayLayer;
+        uint32_t                layerCount;
     };
 }

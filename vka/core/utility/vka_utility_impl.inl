@@ -84,16 +84,37 @@ void vka::utility::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const
         ccp_out[i] = std_in[i].c_str();
 }
 
-/*
-* Initialize the map only once at the first
-* call to that function.
-* Every subsequent call just returns the size of
-* the given format.
-*/
-size_t vka::utility::format_sizeof(VkFormat format)
+VkResult vka::utility::begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept
 {
-    static std::unordered_map<VkFormat, size_t> f2s;    // creates an empty map
-    if (f2s.empty())
-        detail::utility::init_format_sizeof(f2s);
-    return f2s.at(format);
+    const VkCommandBufferAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = pool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1
+    };
+    VkCommandBuffer cbo2 = VK_NULL_HANDLE;  // prevent using reference argument, should I ever remove the inline property of this function
+    const VkResult res = vkAllocateCommandBuffers(device, &alloc_info, &cbo2);
+    cbo = cbo2;
+    if (res != VK_SUCCESS) return res;
+
+    constexpr VkCommandBufferBeginInfo begin_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = nullptr,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = nullptr
+    };
+    return vkBeginCommandBuffer(cbo2, &begin_info);
+}
+
+VkResult vka::utility::end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
+{
+    return detail::utility::end_cbo_and_submit(queue, cbo, fence);
+}
+
+VkResult vka::utility::end_wait_cbo(VkQueue queue, VkCommandBuffer cbo, VkDevice device, VkFence fence, uint64_t timeout) noexcept
+{
+    const VkResult res = detail::utility::end_cbo_and_submit(queue, cbo, fence);
+    if (res != VK_SUCCESS) return res;
+    return (fence == VK_NULL_HANDLE) ? vkQueueWaitIdle(queue) : vkWaitForFences(device, 1, &fence, VK_TRUE, timeout);
 }

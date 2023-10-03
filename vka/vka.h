@@ -11,14 +11,30 @@
 
 /*
 * Checklist:
-*   - buffer
-*   - texture
 *   - shader
 *   - descriptor
+*   - NEW: push constants
 *   - model
 */
 
 #pragma once
+
+// VKA_INCLUDE_GLFW includes glfw.
+// VKA_INCLUDE_TINYOBJ includes the tiny-object-loader library.
+// VKA_INCLUDE_STB_IMAGE includes stb_image.h.
+// 
+// VKA_GLFW_ENABLE enables all functions that use GLFW. GLFW must be included externally before
+// including vka.h or by defining VKA_INCLUDE_GLFW.
+// 
+// VKA_MODEL_LOADING_ENABLE enables the model loading module. The tiny-object-loader library must
+// be included externally before including vka.h or by defining VKA_INCLUDE_TINYOBJ.
+// 
+// VKA_STB_IMAGE_LOAD_ENABLE enables texture functions to load images into memory. stb_image.h must
+// be included externally before including vka.h or by defining VKA_INCLUDE_STB_IMAGE.
+// 
+// VKA_MODEL_USE_DOUBLE forces tiny-object to use double as data type instead of float. Can only be
+// activated, if the tiny-object-loader library is included and model loading is activated.
+//
 
 #ifdef VKA_DEBUG
     #ifdef _MSVC_VER
@@ -38,15 +54,26 @@
     #error [VKA]: vulkan.h must be included before including vka.h.
 #endif
 
-#ifdef VKA_GLFW_ENABLE
+#if defined(VKA_GLFW_ENABLE) && defined(VKA_INCLUDE_GLFW)
     #include <GLFW/glfw3.h>
 #endif
 
-#ifdef VKA_MODEL_LOADING_ENABLE
+#if defined(VKA_MODEL_LOADING_ENABLE) && defined(VKA_INCLUDE_TINYOBJ)
     #ifdef VKA_MODEL_USE_DOUBLE
         #define TINYOBJLOADER_USE_DOUBLE
     #endif
     #include <tiny_obj_loader.h>
+#endif
+
+#if defined(VKA_STB_IMAGE_LOAD_ENABLE) && defined(VKA_INCLUDE_STB_IMAGE)
+    #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wempty-body"
+            #include <stb/stb_image.h>
+        #pragma clang diagnostic pop
+    #else
+        #include <stb/stb_image.h>
+    #endif
 #endif
  
 #include <vector>

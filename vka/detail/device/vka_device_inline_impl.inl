@@ -42,6 +42,7 @@ inline uint32_t vka::detail::device::has_sequence(const VkPhysicalDeviceProperti
 
 inline uint32_t vka::detail::device::has_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const std::vector<VkMemoryPropertyFlags>& req_flags) noexcept
 {
+    // all memory property flags must be supported
     for (VkMemoryPropertyFlags flags : req_flags)
     {
         if (!has_memory_property(properties, flags))
@@ -52,6 +53,7 @@ inline uint32_t vka::detail::device::has_memory_properties(const VkPhysicalDevic
 
 inline uint32_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperties* properties, size_t n, const std::vector<VkQueueFlags>& req_flags) noexcept
 {
+    // all queue flags must be supported
     for (VkQueueFlags flags : req_flags)
     {
         if (!has_queue_flag(properties, n, flags))
@@ -67,9 +69,9 @@ inline uint32_t vka::detail::device::has_surface_support(const VkInstance instan
     for (uint32_t i = 0; i < qprop_count; i++)
     {
         if (glfwGetPhysicalDevicePresentationSupport(instance, device, i))
-            return 0xFFFFFFFF;
+            return 0;
     }
-    return 0;
+    return 0xFFFFFFFF;
 }
 #endif
 

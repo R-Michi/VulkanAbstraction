@@ -11,25 +11,6 @@
 
 #pragma once
 
-template<bool Safe>
-inline vka::utility::CommandBufferGuard<Safe>::CommandBufferGuard(VkDevice device, VkCommandPool pool, VkCommandBuffer cbo) noexcept
-    : device(device), pool(pool), cbo(cbo)
-{}
-
-template<bool Safe>
-inline vka::utility::CommandBufferGuard<Safe>::~CommandBufferGuard(void)
-{
-    if constexpr (Safe)
-    {
-        vkFreeCommandBuffers(this->device, this->pool, 1, &cbo);
-    }
-    else
-    {
-        if (this->cbo != VK_NULL_HANDLE)
-            vkFreeCommandBuffers(this->device, this->pool, 1, &cbo);
-    }
-}
-
 constexpr void vka::utility::get_color_formats(VkFormat* formats) noexcept
 {
     for (uint32_t i = 1; i <= 123; i++)
@@ -79,4 +60,18 @@ constexpr VkFormatFeatureFlags vka::utility::cvt_iu2ff(VkImageUsageFlags image_u
     for (size_t i = 0; i < n_bits; i++)
         flags |= detail::utility::iu2ff_bit(static_cast<VkImageUsageFlagBits>(image_usage & (1 << i)));
     return flags;
+}
+
+/*
+* Initialize the map only once at the first
+* call to that function.
+* Every subsequent call just returns the size of
+* the given format.
+*/
+inline size_t vka::utility::format_sizeof(VkFormat format)
+{
+    static std::unordered_map<VkFormat, size_t> f2s;    // creates an empty map
+    if (f2s.empty())
+        detail::utility::init_format_sizeof(f2s);
+    return f2s.at(format);
 }

@@ -12,15 +12,16 @@
 #pragma once
 
 vka::Buffer::Buffer(VkDevice device) noexcept
-    : device(device), buffer(VK_NULL_HANDLE), memory(VK_NULL_HANDLE), memory_size(0)
+    : device(device), buffer(VK_NULL_HANDLE), memory(VK_NULL_HANDLE), memory_size(0), mapped(false)
 {}
 
 vka::Buffer::Buffer(Buffer&& src) noexcept
-    : device(src.device), buffer(src.buffer), memory(src.memory), memory_size(src.memory_size)
+    : device(src.device), buffer(src.buffer), memory(src.memory), memory_size(src.memory_size), mapped(src.mapped)
 {
     src.buffer = VK_NULL_HANDLE;
     src.memory = VK_NULL_HANDLE;
     src.memory_size = 0;
+    src.mapped = false;
 }
 
 vka::Buffer& vka::Buffer::operator= (Buffer&& src) noexcept
@@ -31,9 +32,11 @@ vka::Buffer& vka::Buffer::operator= (Buffer&& src) noexcept
     this->buffer = src.buffer;
     this->memory = src.memory;
     this->memory_size = src.memory_size;
+    this->mapped = src.mapped;
     src.buffer = VK_NULL_HANDLE;
     src.memory = VK_NULL_HANDLE;
     src.memory_size = 0;
+    src.mapped = false;
     return *this;
 }
 
@@ -92,39 +95,5 @@ void vka::Buffer::destroy(void) noexcept
     this->buffer = VK_NULL_HANDLE;
     this->memory = VK_NULL_HANDLE;
     this->memory_size = 0;
-}
-
-VkResult vka::Buffer::begin_copy(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept
-{
-    const VkCommandBufferAllocateInfo alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = nullptr,
-        .commandPool = pool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
-    };
-    VkCommandBuffer cbo2 = VK_NULL_HANDLE;  // prevent using reference argument, should I ever remove the inline property of this function
-    const VkResult res = vkAllocateCommandBuffers(device, &alloc_info, &cbo2);
-    cbo = cbo2;
-    if (res != VK_SUCCESS) return res;
-
-    constexpr VkCommandBufferBeginInfo begin_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = nullptr,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = nullptr
-    };
-    return vkBeginCommandBuffer(cbo2, &begin_info);
-}
-
-VkResult vka::Buffer::end_copy(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
-{
-    return end_and_submit(queue, cbo, fence);
-}
-
-VkResult vka::Buffer::end_wait_copy(VkQueue queue, VkCommandBuffer cbo, VkDevice device, VkFence fence, uint64_t timeout) noexcept
-{
-    const VkResult res = end_and_submit(queue, cbo, fence);
-    if (res != VK_SUCCESS) return res;
-    return (fence == VK_NULL_HANDLE) ? vkQueueWaitIdle(queue) : vkWaitForFences(device, 1, &fence, VK_TRUE, timeout);
+    this->mapped = false;
 }

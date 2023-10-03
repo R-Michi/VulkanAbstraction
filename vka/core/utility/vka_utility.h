@@ -18,25 +18,6 @@ namespace vka
     namespace utility
     {
         /*
-        * This class stores a command buffer object and automatically destroyes it in the destructor.
-        * A template argument can be specified which indicates that the stored command buffer is
-        * already "safe". This means that the command buffer is already a valid handle and can
-        * never be VK_NULL_HANDLE. This template argument specified by 'Safe' is false by default.
-        */
-        template<bool Safe = false>
-        class CommandBufferGuard final
-        {
-        private:
-            VkDevice device;
-            VkCommandPool pool;
-            VkCommandBuffer cbo;
-
-        public:
-            inline CommandBufferGuard(VkDevice device, VkCommandPool pool, VkCommandBuffer cbo) noexcept;
-            inline ~CommandBufferGuard(void);
-        };
-
-        /*
         * Searches for a supported memory type index for a given memoryTypeBits bit-mask in the
         * physical device's memory types. The memory properties that contains all supported memory
         * types of the physical device is specified by 'properties'. The memory specific memory
@@ -133,10 +114,37 @@ namespace vka
         void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;
 
         /*
+        * Allocates a command buffer and begins its recording for buffer copy and texture create
+        * operations. A device and command pool is requiered and is specified by 'device' and
+        * 'pool'. The allocated command buffer is returned via the parameter 'cbo'. If an error
+        * occured the, respectve result is returned. If no error occured, VK_SUCCESS is returned.
+        * If the allocation of the command buffer failed, the returned command buffer is
+        * VK_NULL_HANDLE.
+        */
+        VkResult begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
+
+        /*
+        * Ends the recording of the command buffer and submits it to the specified queue 'queue'.
+        * The command buffer to submit is specified by 'cbo'. Optionally, a fence can be specified
+        * for the submition. If an error occured the, respectve result is returned. If no error
+        * occured, VK_SUCCESS is returned.
+        */
+        VkResult end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence = VK_NULL_HANDLE) noexcept;
+
+        /*
+        * This function does the same as end_cbo() but it additionally waits for the copy
+        * operation to finish. If no fence is specified, it is waited until the specified queue
+        * goes into idle mode. Otherwise, it is waited for the fence to become signaled, or if the
+        * timeout time has been elapsed. If the fence timed out VK_TIMEOUT is returned. The device
+        * is only requiered, if a fence is specified.
+        */
+        VkResult end_wait_cbo(VkQueue queue, VkCommandBuffer cbo, VkDevice device = VK_NULL_HANDLE, VkFence fence = VK_NULL_HANDLE, uint64_t timeout = vka::NO_TIMEOUT) noexcept;
+
+        /*
         * Converts a vulkan format to a size in bytes. The format to convert is specified by
         * 'format'. The size in bytes is returned.
         */
-        size_t format_sizeof(VkFormat format);
+        inline size_t format_sizeof(VkFormat format);
     }
 }
 
