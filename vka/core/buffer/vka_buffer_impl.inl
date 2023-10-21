@@ -51,42 +51,40 @@ void vka::Buffer::init(VkDevice device) noexcept
         this->device = device;
 }
 
-VkResult vka::Buffer::create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
+void vka::Buffer::create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
 {
-    if (this->is_valid()) return VK_SUCCESS;
-    this->validate();
+    if (!this->is_valid())
+    {
+        this->validate();
 
-    // create buffer handle
-    const VkBufferCreateInfo buffer_ci = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = create_info.bufferFlags,
-        .size = create_info.bufferSize,
-        .usage = create_info.bufferUsage,
-        .sharingMode = create_info.bufferSharingMode,
-        .queueFamilyIndexCount = create_info.bufferQueueFamilyIndexCount,
-        .pQueueFamilyIndices = create_info.bufferQueueFamilyIndices
-    };
-    VkResult res = vkCreateBuffer(this->device, &buffer_ci, nullptr, &this->buffer);
-    if (res != VK_SUCCESS) return res;
+        // create buffer handle
+        const VkBufferCreateInfo buffer_ci = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = create_info.bufferFlags,
+            .size = create_info.bufferSize,
+            .usage = create_info.bufferUsage,
+            .sharingMode = create_info.bufferSharingMode,
+            .queueFamilyIndexCount = create_info.bufferQueueFamilyIndexCount,
+            .pQueueFamilyIndices = create_info.bufferQueueFamilyIndices
+        };
+        detail::error::check_result(vkCreateBuffer(this->device, &buffer_ci, nullptr, &this->buffer), BUFFER_CREATE_FAILED);
 
-    // query memory requierements
-    VkMemoryRequirements requierements;
-    vkGetBufferMemoryRequirements(this->device, this->buffer, &requierements);
-    this->memory_size = requierements.size;
+        // query memory requierements
+        VkMemoryRequirements requierements;
+        vkGetBufferMemoryRequirements(this->device, this->buffer, &requierements);
+        this->memory_size = requierements.size;
 
-    // allocate memory
-    const VkMemoryAllocateInfo memory_ai = {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .pNext = nullptr,
-        .allocationSize = requierements.size,
-        .memoryTypeIndex = utility::find_memory_type_index(properties, requierements.memoryTypeBits, create_info.memoryPropertyFlags)
-    };
-    res = vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory);
-    if (res != VK_SUCCESS) return res;
-
-    // bind memory to buffer
-    return vkBindBufferMemory(this->device, this->buffer, this->memory, 0);
+        // allocate memory
+        const VkMemoryAllocateInfo memory_ai = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .allocationSize = requierements.size,
+            .memoryTypeIndex = utility::find_memory_type_index(properties, requierements.memoryTypeBits, create_info.memoryPropertyFlags)
+        };
+        detail::error::check_result(vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory), ALLOC_MEMORY_FAILED);
+        detail::error::check_result(vkBindBufferMemory(this->device, this->buffer, this->memory, 0), BIND_MEMORY_FAILED);
+    }
 }
 
 void vka::Buffer::destroy(void) noexcept

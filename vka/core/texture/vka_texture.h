@@ -24,6 +24,13 @@ namespace vka
         };
 
     private:
+        static constexpr const char IMAGE_CREATE_FAILED[] = "[vka::Texture::create]: Failed to create image handle.";
+        static constexpr const char ALLOC_MEMORY_FAILED[] = "[vka::Texture::create]: Failed to allocate memory.";
+        static constexpr const char BIND_MEMORY_FAILED[] = "[vka::Texture::create]: Failed to bind memory to image.";
+        static constexpr const char MAP_MEMORY_FAILED[] = "[vka::Texture::load_staging]: Failed to map memory of staging buffer";
+        static constexpr const char VIEW_CREATE_FAILED[] = "[vka::Texture::create]: Failed to create image view.";
+        static constexpr const char SAMPLER_CREATE_FAILED[] = "[vka::Texture::create]: Failed to create sampler";
+
         VkDevice device;
         VkImage image;
         VkDeviceMemory memory;
@@ -133,23 +140,23 @@ namespace vka
 
         /*
         * This function creates the Texture and the internal handles are now valid, if no error
-        * occured. If an error occured, the vulkan result is returned. If no error occured,
-        * VK_SUCCESS is returned. The Texture is created with a TextureCreateInfo structure which
-        * is used for the creation of the image and sampler handle. The create info is specified by
-        * 'create_info'. Additionally, the memory properties of the physical device are requiered
-        * and specified by 'properties'. An std::invalid_argument exception is thrown, if 'this'
-        * has not been initialized.
+        * occured. If an error occured while creating, an std::runtime_error exception is thrown
+        * with an appropriate message about the error. The Texture is created with a
+        * TextureCreateInfo structure which is used for the creation of the image and sampler handle.
+        * The create info is specified by 'create_info'. Additionally, the memory properties of the
+        * physical device are requiered and specified by 'properties'. An std::invalid_argument
+        * exception is thrown, if 'this' has not been initialized.
         */
-        VkResult create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
+        void create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
         /*
         * Creates and adds an image view to the texture image, if no error occured. If an error
-        * occured, the vulkan result is returned. If no error occured, VK_SUCCESS is returned.
-        * If the texture has not been created yet (texture object is invalid), VK_RESULT_MAX_ENUM
-        * is returned.
+        * occured while creating, an std::runtime_error exception is thrown with an appropriate
+        * message about the error. If the texture has not been created yet (texture object is
+        * invalid), this function does nothing.
         * NOTE: If the creation of the image view failed, the view is not added to the texture.
         */
-        VkResult create_view(const TextureViewCreateInfo& create_info) noexcept;
+        void create_view(const TextureViewCreateInfo& create_info);
 
         /*
         * Destroyes the Texture object. After destroying, 'this' holds its default initialization
@@ -196,7 +203,7 @@ namespace vka
         * 'components' is the number of components of a pixel of the image and 'component_type' is
         * the type that is used by the color components of a pixel.
         */
-        inline VkResult load_staging(const void* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t level = 0) const noexcept;
+        inline void load_staging(const void* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t level = 0) const;
 
         /*
         * Lodas the data from multiple buffers provided by 'data' into one single staging buffer.
@@ -214,15 +221,7 @@ namespace vka
         * 'components' is the number of components of a pixel of the image and 'component_type' is
         * the type that is used by the color components of a pixel.
         */
-        VkResult load_staging(const void* const* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t layer_count, uint32_t level = 0) const noexcept;
-
-        /*
-        * Finishes the texture creation by creating the specified mip-map levels. And changing to
-        * the correct image layout. A command buffer is requiered for the execution and is
-        * specified by 'cbo'. Additionally, the (pipeline-) shader stages where the texture is used
-        * are specified by 'stages'.
-        * NOTE: This function must be called as the last operation when creating a texture.
-        */
+        void load_staging(const void* const* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t layer_count, uint32_t level = 0) const;
 
         /*
         * Finishes the texture creation. This function changes the layout of the image to the final

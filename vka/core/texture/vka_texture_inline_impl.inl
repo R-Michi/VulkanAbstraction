@@ -13,8 +13,8 @@
 
 inline void vka::Texture::validate(void)
 {
-    if (this->device == VK_NULL_HANDLE)
-        throw std::invalid_argument("[vka::Texture::create]: Device is a VK_NULL_HANDLE.");
+    if (this->device == VK_NULL_HANDLE) [[unlikely]]
+        detail::error::throw_invalid_argument("[vka::Texture::create]: Device is a VK_NULL_HANDLE.");
 }
 
 inline void vka::Texture::destroy_handles(void) noexcept
@@ -192,9 +192,9 @@ inline void vka::Texture::change_layout_L2F(VkCommandBuffer cbo, VkPipelineStage
     vkCmdPipelineBarrier(cbo, VK_PIPELINE_STAGE_TRANSFER_BIT, stages, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-inline VkResult vka::Texture::load_staging(const void* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t level) const noexcept
+inline void vka::Texture::load_staging(const void* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t level) const
 {
-    return this->load_staging(&data, buffer, properties, qfamidx, 1, level);
+    this->load_staging(&data, buffer, properties, qfamidx, 1, level);
 }
 
 inline VkExtent3D vka::Texture::size(uint32_t level) const noexcept

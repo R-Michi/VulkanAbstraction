@@ -44,8 +44,8 @@ inline bool vka::AttachmentImage::is_valid(void) const noexcept
 
 inline void vka::AttachmentImage::validate(VkPhysicalDevice pdevice, const AttachmentImageCreateInfo& create_info)
 {
-    if (this->device == VK_NULL_HANDLE)
-        throw std::invalid_argument("[vka::AttachmentImage::create]: Device is a VK_NULL_HANDLE.");
-    if (!utility::supports_format_feature2(pdevice, create_info.imageFormat, VK_IMAGE_TILING_OPTIMAL, utility::cvt_iu2ff(create_info.imageUsage)))
-        throw std::invalid_argument("[vka::AttachmentImage::create]: Image format is not supported.");
+    if (this->device == VK_NULL_HANDLE) [[unlikely]]
+        detail::error::throw_invalid_argument("[vka::AttachmentImage::create]: Device is a VK_NULL_HANDLE.");
+    if (!utility::supports_format_feature2(pdevice, create_info.imageFormat, VK_IMAGE_TILING_OPTIMAL, utility::cvt_iu2ff(create_info.imageUsage))) [[unlikely]]
+        detail::error::throw_invalid_argument("[vka::AttachmentImage::create]: Image format is not supported.");
 }

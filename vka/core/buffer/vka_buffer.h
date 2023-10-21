@@ -16,6 +16,10 @@ namespace vka
     class Buffer
     {
     private:
+        static constexpr const char BUFFER_CREATE_FAILED[] = "[vka::Buffer::create]: Failed to create buffer handle.";
+        static constexpr const char ALLOC_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to allocate memory.";
+        static constexpr const char BIND_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to bind memory to buffer.";
+
         VkDevice device;
         VkBuffer buffer;
         VkDeviceMemory memory;
@@ -69,14 +73,14 @@ namespace vka
 
         /*
         * This function creates the Buffer and the internal handles are now valid, if no error
-        * occured. If an error occured, the vulkan result is returned. If no error occured,
-        * VK_SUCCESS is returned. The Buffer is created with a BufferCreateInfo structure which is
-        * used for the creation of the buffer and memory handle. The create info is specified by
-        * 'create_info'. Additionally, the memory properties of the physical device are requiered
-        * and specified by 'properties'. An std::invalid_argument exception is thrown, if 'this'
-        * has not been initialized.
+        * occured. If an error occured while creating, an std::runtime_error exception is thrown
+        * with an appropriate message about the error. The Buffer is created with a BufferCreateInfo
+        * structure which is used for the creation of the buffer and memory handle. The create info
+        * is specified by 'create_info'. Additionally, the memory properties of the physical device
+        * are requiered and specified by 'properties'. An std::invalid_argument exception is thrown,
+        * if 'this' has not been initialized.
         */
-        VkResult create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
+        void create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
         /*
         * Destroyes the Buffer object. After destroying, 'this' holds its default initialization
@@ -111,7 +115,7 @@ namespace vka
         * More formally:
         *   'dst.size() >= src.size()'
         */
-        inline void copy(VkCommandBuffer cbo, const Buffer& src);
+        inline void copy(VkCommandBuffer cbo, const Buffer& src) noexcept;
 
         /*
         * Does the same as the copy() function but a copy region can be specified by
@@ -134,7 +138,7 @@ namespace vka
         * See the vulkan documentation for VkBufferCopy and vkCmdCopyBuffer as it also applies to
         * this copy operation as well, except for the one special case.
         */
-        inline void copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region);
+        inline void copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept;
 
         // Returns the size in bytes of the buffer.
         inline VkDeviceSize size(void) const noexcept;

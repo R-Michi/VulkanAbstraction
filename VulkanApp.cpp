@@ -380,8 +380,7 @@ void VulkanApp::create_depth_attachment(void)
 		.viewAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
 	};
 	this->depth_attachment.init(this->device);
-	VkResult result = this->depth_attachment.create(this->physical_device, this->memory_properties, ci);
-	VULKAN_ASSERT(result);
+	this->depth_attachment.create(this->physical_device, this->memory_properties, ci);
 }
 
 void VulkanApp::create_render_pass(void)

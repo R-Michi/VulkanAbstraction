@@ -39,8 +39,8 @@ inline bool vka::Buffer::is_valid(void) const noexcept
 
 inline void vka::Buffer::validate(void)
 {
-    if (this->device == VK_NULL_HANDLE)
-        throw std::invalid_argument("[vka::Buffer::create]: Device is a VK_NULL_HANDLE.");
+    if (this->device == VK_NULL_HANDLE) [[unlikely]]
+        detail::error::throw_invalid_argument("[vka::Buffer::create]: Device is a VK_NULL_HANDLE.");
 }
 
 inline bool vka::Buffer::is_copy_invalid(const Buffer& src, const Buffer& dst, const VkBufferCopy* region) noexcept
@@ -66,13 +66,13 @@ inline void vka::Buffer::is_copy_invalid(uint32_t count, const Buffer* src, cons
         results[i] = is_copy_invalid(src[i], dst[i], (regions == nullptr ? nullptr : regions + i));
 }
 
-inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src)
+inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 {
     const VkBufferCopy region = { 0, 0, src.memory_size };
     vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &region);
 }
 
-inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region)
+inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept
 {
     VkBufferCopy final_region = region;
     if (region.size == 0)

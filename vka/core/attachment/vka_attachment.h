@@ -16,6 +16,11 @@ namespace vka
     class AttachmentImage
     {
     private:
+        static constexpr const char IMAGE_CREATE_FAILED[] = "[vka::AttachmentImage::create]: Failed to create image handle.";
+        static constexpr const char ALLOC_MEMORY_FAILED[] = "[vka::AttachmentImage::create]: Failed to allocate memory.";
+        static constexpr const char BIND_MEMORY_FAILED[] = "[vka::AttachmentImage::create]: Failed to bind memory to image.";
+        static constexpr const char VIEW_CREATE_FAILED[] = "[vka::AttachmentImage::create]: Failed to create image view.";
+
         VkDevice device;
 
         VkDeviceMemory memory;
@@ -67,16 +72,16 @@ namespace vka
 
         /*
         * This function creates the AttachmentImage and the internal handles are now valid, if no
-        * error occured. If an error occured, the vulkan result is returned. If no error occured,
-        * VK_SUCCESS is returned. The attachment image is created with an AttachmentImageCreateInfo
-        * structure which is used for the creation of the image and image view handle. The create
-        * info is specified by 'create_info'. Additionally, the physical device and the memory
-        * properties of the physical device are requiered and are specified by 'pdevice' and
-        * 'properties' respectively. An std::invalid_argument exception is thrown, if 'this' has
-        * not been initialized with a device or if the image format specified in the create info is
-        * not supported.
+        * error occured. If an error occured while creating, an std::runtime_error exception is
+        * thrown with an appropriate message about the error. The attachment image is created with
+        * an AttachmentImageCreateInfo structure which is used for the creation of the image and
+        * image view handle. The create info is specified by 'create_info'. Additionally, the
+        * physical device and the memory properties of the physical device are requiered and are
+        * specified by 'pdevice' and 'properties' respectively. An std::invalid_argument exception
+        * is thrown, if 'this' has not been initialized with a device or if the image format
+        * specified in the create info is not supported.
         */
-        VkResult create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
+        void create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
         /*
         * Destroyes the AttachmentImage object. After destroying, 'this' holds its default

@@ -89,6 +89,9 @@
 #include "core/vka_global.h"
 #include "core/vka_types.h"
 
+// tmp
+#include "detail/error/vka_error.h"
+
 #include "core/instance/vka_instance.h"
 #include "core/device/vka_device.h"
 #include "core/queue/vka_queue.h"
