@@ -707,8 +707,7 @@ void VulkanApp::create_vertex_buffers(void)
 	};
 
 	vka::Buffer staging_buffer(this->device);
-	VkResult res = staging_buffer.create(this->memory_properties, create_info);
-	VULKAN_ASSERT(res);
+	staging_buffer.create(this->memory_properties, create_info);
 
 	void* buff = staging_buffer.map(0, size);
 	memcpy(buff, this->vertices.data(), size);
@@ -719,11 +718,10 @@ void VulkanApp::create_vertex_buffers(void)
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	this->vertex_buffer.init(this->device);
-	res = this->vertex_buffer.create(this->memory_properties, create_info);
-	VULKAN_ASSERT(res);
+	this->vertex_buffer.create(this->memory_properties, create_info);
 
 	VkCommandBuffer cbo;
-	res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
+	VkResult res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
 	VULKAN_ASSERT(res);
 	this->vertex_buffer.copy(cbo, staging_buffer);
 	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
@@ -745,8 +743,7 @@ void VulkanApp::create_index_buffers(void)
 	};
 	
 	vka::Buffer staging_buffer(this->device);
-	VkResult res = staging_buffer.create(this->memory_properties, create_info);
-	VULKAN_ASSERT(res);
+	staging_buffer.create(this->memory_properties, create_info);
 
 	void* buff = staging_buffer.map(0, size);
 	memcpy(buff, this->indices.data(), size);
@@ -758,11 +755,10 @@ void VulkanApp::create_index_buffers(void)
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	this->index_buffer.init(this->device);
-	res = this->index_buffer.create(this->memory_properties, create_info);
-	VULKAN_ASSERT(res);
+	this->index_buffer.create(this->memory_properties, create_info);
 
 	VkCommandBuffer cbo;
-	res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
+	VkResult res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
 	VULKAN_ASSERT(res);
 	this->index_buffer.copy(cbo, staging_buffer);
 	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
@@ -782,19 +778,16 @@ void VulkanApp::create_uniform_buffers(void)
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
 	};
 	this->uniform_buffer.init(this->device);
-	VkResult res = this->uniform_buffer.create(this->memory_properties, create_info);
-	VULKAN_ASSERT(res);
+	this->uniform_buffer.create(this->memory_properties, create_info);
 }
 
 void VulkanApp::create_textures(void)
 {
 	VkExtent3D size;
 	const void* const data[2] = {
-		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8>("../../../assets/textures/texture.png", size, 4),
-		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8>("../../../assets/textures/texture2.jpeg", size, 4)
+		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8, 4>("../../../assets/textures/texture.png", size),
+		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8, 4>("../../../assets/textures/texture2.jpeg", size)
 	};
-	if (data[0] == nullptr || data[1] == nullptr)
-		throw std::runtime_error("Failed to load image");
 
 	const vka::TextureCreateInfo create_info = {
 		.imageFlags = 0,
@@ -832,20 +825,17 @@ void VulkanApp::create_textures(void)
 	};
 
 	this->texture.init(this->device);
-	VkResult res = this->texture.create(this->memory_properties, create_info);
-	VULKAN_ASSERT(res);
+	this->texture.create(this->memory_properties, create_info);
 
-	res = this->texture.create_view(view);
-	VULKAN_ASSERT(res);
+	this->texture.create_view(view);
 	view.baseArrayLayer = 1;
-	res = this->texture.create_view(view);
-	VULKAN_ASSERT(res);
+	this->texture.create_view(view);
 
 	vka::Buffer staging_buffer;
 	this->texture.load_staging(data, staging_buffer, this->memory_properties, this->graphics_queue_info.queueFamilyIndex, 2);
 
 	VkCommandBuffer cbo;
-	res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
+	VkResult res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
 	VULKAN_ASSERT(res);
 	this->texture.load(cbo, staging_buffer, 0, 2);
 	this->texture.finish(cbo, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);

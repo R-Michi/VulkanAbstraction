@@ -19,6 +19,7 @@ namespace vka
         static constexpr const char BUFFER_CREATE_FAILED[] = "[vka::Buffer::create]: Failed to create buffer handle.";
         static constexpr const char ALLOC_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to allocate memory.";
         static constexpr const char BIND_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to bind memory to buffer.";
+        static constexpr const char MAP_MEMORY_FAILED[] = "[vka::Buffer::map]: Failed to map memory of buffer";
 
         VkDevice device;
         VkBuffer buffer;
@@ -90,14 +91,19 @@ namespace vka
         void destroy(void) noexcept;
 
         /*
-        * This functions maps the buffer's memory and returns a pointer to the mapped buffer.
+        * This function mapps the buffer'e memory and returns a pointer to the mapped buffer.
         * The region to map is specified by an offset and a size. The offset is specified by
-        * 'offset' and the size is specified by 'size'. If the mapping operation was not successful
-        * or if the buffer is not valid, nullptr is returned.
+        * 'offset' and the size is specified by 'size'.
+        * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
+        * Instead, an std::runtime_error exception is thrown which indicates that mapping the
+        * buffer failed.
         */
         inline void* map(VkDeviceSize offset, VkDeviceSize size) noexcept;
 
-        // Unmaps all mapped memory of the buffer.
+        /*
+        * Unmapps all mapped memory of the buffer. If the buffer is not mapped or if the buffer is
+        * invalid, this function does nothing.
+        */
         inline void unmap(void) noexcept;
 
         /*

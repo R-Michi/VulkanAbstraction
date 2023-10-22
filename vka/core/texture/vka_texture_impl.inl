@@ -175,6 +175,7 @@ void vka::Texture::create_view(const TextureViewCreateInfo& create_info)
         };
         VkImageView view;
         detail::error::check_result(vkCreateImageView(this->device, &ci, nullptr, &view), VIEW_CREATE_FAILED);
+        this->views.push_back(view);
     }
 }
 
@@ -317,8 +318,6 @@ void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, co
 
         // load data into staging buffer
         void* map = staging.map(0, create_info.bufferSize);
-        if (map == nullptr) [[unlikely]]
-            detail::error::throw_runtime_error(MAP_MEMORY_FAILED);
 
         for (uint32_t i = 0; i < layer_count; i++)
             memcpy(addvp(map, i * layer_size), data[i], layer_size);

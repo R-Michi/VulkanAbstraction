@@ -27,9 +27,11 @@ namespace vka
         static constexpr const char IMAGE_CREATE_FAILED[] = "[vka::Texture::create]: Failed to create image handle.";
         static constexpr const char ALLOC_MEMORY_FAILED[] = "[vka::Texture::create]: Failed to allocate memory.";
         static constexpr const char BIND_MEMORY_FAILED[] = "[vka::Texture::create]: Failed to bind memory to image.";
-        static constexpr const char MAP_MEMORY_FAILED[] = "[vka::Texture::load_staging]: Failed to map memory of staging buffer";
         static constexpr const char VIEW_CREATE_FAILED[] = "[vka::Texture::create]: Failed to create image view.";
         static constexpr const char SAMPLER_CREATE_FAILED[] = "[vka::Texture::create]: Failed to create sampler";
+#ifdef VKA_STB_IMAGE_LOAD_ENABLE
+        static constexpr const char IMAGE_LOAD_FAILED[] = "[vka::Texture::load_image]: Loading image from file failed.";
+#endif
 
         VkDevice device;
         VkImage image;
@@ -102,6 +104,17 @@ namespace vka
 
         // adds an offset to a void pointer
         static inline void* addvp(void* vp, uint64_t offset) noexcept;
+
+        /*
+        * This is a wrapper function for stbi_load, stbi_load_16 and stbi_loadf. It decides at
+        * compile-time which function is called depending on the template argument.
+        * Additionally, it returns the size of the image as VkExtent3D and the number of components
+        * as uint32_t instead of an int.
+        */
+#ifdef VKA_STB_IMAGE_LOAD_ENABLE
+        template<ImageDataType Type>
+        static inline void* load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components,  const uint32_t force_components) noexcept;
+#endif
 
     public:
         /*
@@ -276,7 +289,7 @@ namespace vka
 
         /*
         * Returns the vulkan image view handle at the specified index 'i'. However, this function
-        * does not perform a range check.
+        * does not perform a range check. 
         */
         inline VkImageView viewu(size_t i) const noexcept;
 
@@ -286,18 +299,30 @@ namespace vka
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
         /*
         * Loads an image from a file. The path to the file is specified by 'path'. The size of the
-        * image is returned via the 'extent' parameter. Optionally, the number of color components
-        * are returned via the parameter 'components'. This parameter is nullptr by default which
-        * indicates that nothing is returned here. Additionally, you can (also optionally) force
-        * this function to load a desired number of color components by setting the argument
-        * 'force_components' to a value greater than 0. This argument has a value of 0 by default
-        * which indicates that the number of color components that are stored in the image file are
-        * loaded. The (the address of the-) image's memory is returned.
-        * NOTE: As the image's memory is allocated dynamically, it must be freed MANUALLY!
-        * NOTE: The 'depth' component of 'extent' is always 1.
+        * image is returned via the 'extent' and the number of color components/channels of the
+        * image is returned via the 'components' parameter. The (address of the-) image's memory is
+        * returned. The template argument 'T' specifies the data type of the color components.
+        * NOTE: 'extent.depth' is always 1.
+        * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
+        * Instead, an std::runtime_error exception is thrown which indicates that this operation
+        * failed or, if memory allocation failed.
         */
         template<ImageDataType Type>
-        static inline void* load_image(const char* path, VkExtent3D& extent, uint32_t force_components = 0, uint32_t* components = nullptr) noexcept;
+        static inline void* load_image(const char* path, VkExtent3D& extent, uint32_t& components) noexcept;
+
+        /*
+        * Loads an image from a file. The path to the file is specified by 'path'. The size of the
+        * image is returned via the 'extent' parameter. The (address of the-) image's memory is
+        * returned. The template argument 'T' specifies the data type of the color components and
+        * 'force_components' forces the implementation to load a specified number of color
+        * components/channels.
+        * NOTE: 'extent.depth' is always 1.
+        * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
+        * Instead, an std::runtime_error exception is thrown which indicates that this operation
+        * failed or, if memory allocation failed.
+        */
+        template<ImageDataType Type, uint32_t force_components>
+        static inline void* load_image(const char* path, VkExtent3D& extent) noexcept;
 
         // Frees allocated image data. Is just a wrapper for the function free().
         static inline void free_image(void* data) noexcept;

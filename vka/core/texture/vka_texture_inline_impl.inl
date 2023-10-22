@@ -256,24 +256,44 @@ inline bool vka::Texture::is_valid(void) const noexcept
 }
 
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
+template<vka::ImageDataType Type>
+inline void* vka::Texture::load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components, const uint32_t force_components) noexcept
+{
+    void* data = nullptr;
+    int w, h;
+    if constexpr        (Type == VKA_IMAGE_DATA_TYPE_INT8)  data = stbi_load(path, &w, &h, reinterpret_cast<int*>(components), force_components);
+    else if constexpr   (Type == VKA_IMAGE_DATA_TYPE_INT16) data = stbi_load_16(path, &w, &h, reinterpret_cast<int*>(components), force_components);
+    else if constexpr   (Type == VKA_IMAGE_DATA_TYPE_FLOAT) data = stbi_loadf(path, &w, &h, reinterpret_cast<int*>(components), force_components);
+    else                static_assert(false, "[vka::Texture::load_image]: Cannot load image with specified data type.");
+
+    // image loading failed
+    if (data == nullptr) [[unlikely]]
+        detail::error::throw_runtime_error(IMAGE_LOAD_FAILED);
+
+    extent = { (uint32_t)w, (uint32_t)h, 1 };
+    return data;
+}
 
 template<vka::ImageDataType Type>
-inline void* vka::Texture::load_image(const char* path, VkExtent3D& extent, uint32_t force_components, uint32_t* components) noexcept
+inline void* vka::Texture::load_image(const char* path, VkExtent3D& extent, uint32_t& components) noexcept
 {
-    int w, h, c;
-    void* data = nullptr;
-    if constexpr (Type == VKA_IMAGE_DATA_TYPE_INT8)
-        data = stbi_load(path, &w, &h, &c, (int)force_components);
-    else if constexpr (Type == VKA_IMAGE_DATA_TYPE_INE16)
-        data = stbi_load_16(path, &w, &h, &c, (int)force_components);
-    else if constexpr (Type == VKA_IMAGE_DATA_TYPE_FLOAT)
-        data = stbi_loadf(path, &w, &h, &c, (int)force_components);
-    else
-        static_assert("[vka::utility::load_image]: false image type.");
-    extent = { (uint32_t)w, (uint32_t)h, 1};
-    if (components != nullptr)
-        *components = (uint32_t)c;
-    return data;
+    return load_image_internal<Type>(path, extent, &components, 0);
+}
+
+template<vka::ImageDataType Type, uint32_t force_components>
+inline void* vka::Texture::load_image(const char* path, VkExtent3D& extent) noexcept
+{
+    static_assert(
+        force_components <= 4, 
+        "[vka::Texture::load_image<Type, force_components>]: Template argument \"force_components\" "
+        "must not be greater than 4"
+    );
+    static_assert(
+        force_components != 0,
+        "[vka::Texture::load_image<Type, force_components>]: For loading automatically the number of color compoents, use the function "
+        "without the \"force_components\" template argument."
+    );
+    return load_image_internal<Type>(path, extent, nullptr, force_components);
 }
 
 inline void vka::Texture::free_image(void* data) noexcept

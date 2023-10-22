@@ -14,7 +14,7 @@
 namespace vka
 {
     constexpr size_t NPOS = ~static_cast<size_t>(0);
-    constexpr size_t NPOS32 = 0xFFFFFFFF;
+    constexpr uint32_t NPOS32 = 0xFFFFFFFF;
     constexpr uint32_t INVALID_MTL_ID = 0xFFFFFFFF;
     constexpr uint64_t NO_TIMEOUT = 0xFFFFFFFFFFFFFFFF;
 }

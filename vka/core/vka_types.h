@@ -51,7 +51,7 @@ namespace vka
     enum ImageDataType
     {
         VKA_IMAGE_DATA_TYPE_INT8,
-        VKA_IMAGE_DATA_TYPE_INE16,
+        VKA_IMAGE_DATA_TYPE_INT16,
         VKA_IMAGE_DATA_TYPE_FLOAT
     };
 #endif

@@ -68,32 +68,35 @@ inline void vka::Buffer::is_copy_invalid(uint32_t count, const Buffer* src, cons
 
 inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 {
-    const VkBufferCopy region = { 0, 0, src.memory_size };
-    vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &region);
+    if (this->is_valid() && src.is_valid())
+    {
+        const VkBufferCopy region = { 0, 0, src.memory_size };
+        vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &region);
+    }
 }
 
 inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept
 {
-    VkBufferCopy final_region = region;
-    if (region.size == 0)
-        final_region.size = src.size() - region.srcOffset;
-    vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &final_region);
+    if (this->is_valid() && src.is_valid())
+    {
+        VkBufferCopy final_region = region;
+        if (region.size == 0)
+            final_region.size = src.size() - region.srcOffset;
+        vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &final_region);
+    }
 }
 
 inline void* vka::Buffer::map(VkDeviceSize offset, VkDeviceSize size) noexcept
 {
-    if (!this->is_valid()) return nullptr;
-
     void* data;
-    if (vkMapMemory(this->device, this->memory, offset, size, 0, &data) != VK_SUCCESS)
-        return nullptr;
+    detail::error::check_result(vkMapMemory(this->device, this->memory, offset, size, 0, &data), MAP_MEMORY_FAILED); // does also check, if buffer is invalid
     this->mapped = true;
     return data;
 }
 
 inline void vka::Buffer::unmap(void) noexcept
 {
-    if (this->is_valid())
+    if (this->mapped)
     {
         vkUnmapMemory(this->device, this->memory);
         this->mapped = false;
