@@ -124,7 +124,7 @@ namespace vka
         * input command buffer with VK_NULL_HANDLE in order to free the command buffer in the case
         * of an error, if it has been allocated.
         */
-        VkResult begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
+        VkCommandBuffer begin_cbo(VkDevice device, VkCommandPool pool) noexcept;
 
         /*
         * Ends the recording of the command buffer and submits it to the specified queue 'queue'.
@@ -133,7 +133,7 @@ namespace vka
         * submitting the command buffer to the queue, an std::runtime_error exception is thrown
         * with an appropriate message about the error.
         */
-        VkResult end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence = VK_NULL_HANDLE) noexcept;
+        void end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence = VK_NULL_HANDLE) noexcept;
 
         /*
         * This function does the same as end_cbo() but it additionally waits for the copy

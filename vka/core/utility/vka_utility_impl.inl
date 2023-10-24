@@ -84,8 +84,11 @@ void vka::utility::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const
         ccp_out[i] = std_in[i].c_str();
 }
 
-VkResult vka::utility::begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept
+VkCommandBuffer vka::utility::begin_cbo(VkDevice device, VkCommandPool pool) noexcept
 {
+    constexpr const char CBO_ALLOC_FAILED[] = "[vka::utility::begin_cbo]: Failed to allocate command buffer.";
+    constexpr const char CBO_BEGIN_FAILED[] = "[vka::utility::begin_cbo]: Failed to begin command buffer recording";
+
     const VkCommandBufferAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
@@ -93,10 +96,8 @@ VkResult vka::utility::begin_cbo(VkDevice device, VkCommandPool pool, VkCommandB
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1
     };
-    VkCommandBuffer cbo2 = VK_NULL_HANDLE;  // prevent using reference argument, should I ever remove the inline property of this function
-    const VkResult res = vkAllocateCommandBuffers(device, &alloc_info, &cbo2);
-    cbo = cbo2;
-    if (res != VK_SUCCESS) return res;
+    VkCommandBuffer cbo;
+    detail::error::check_result(vkAllocateCommandBuffers(device, &alloc_info, &cbo), CBO_ALLOC_FAILED);
 
     constexpr VkCommandBufferBeginInfo begin_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -104,7 +105,12 @@ VkResult vka::utility::begin_cbo(VkDevice device, VkCommandPool pool, VkCommandB
         .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
         .pInheritanceInfo = nullptr
     };
-    return vkBeginCommandBuffer(cbo2, &begin_info);
+    if (detail::error::is_error(vkBeginCommandBuffer(cbo, &begin_info))) [[unlikely]]
+    {
+        vkFreeCommandBuffers(device, pool, 1, &cbo);
+        detail::error::throw_runtime_error(CBO_BEGIN_FAILED);
+    }
+    return cbo;
 }
 
 VkResult vka::utility::end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
