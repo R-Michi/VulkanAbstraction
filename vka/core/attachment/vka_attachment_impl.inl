@@ -87,7 +87,7 @@ void vka::AttachmentImage::create(VkPhysicalDevice pdevice, const VkPhysicalDevi
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
             .pNext = nullptr,
             .allocationSize = requierements.size,
-            .memoryTypeIndex = utility::find_memory_type_index(properties, requierements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+            .memoryTypeIndex = memory::find_type_index(properties, requierements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
         };
         detail::error::check_result(vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory), ALLOC_MEMORY_FAILED);
         detail::error::check_result(vkBindImageMemory(this->device, this->m_image, this->memory, 0), BIND_MEMORY_FAILED);

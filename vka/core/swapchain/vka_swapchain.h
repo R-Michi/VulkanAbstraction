@@ -20,7 +20,7 @@ namespace vka
         * 'req_count' is 0, which it is by default, the minimum image count for the swapchain is
         * returned.
         * 
-        * If the requiered image count given by 'req_count' is 0xFFFFFFFF (unsigend 32-bit integer huan
+        * If the requiered image count given by 'req_count' is 0xFFFFFFFF (unsigend 32-bit integer
         * limit), the maximum image count for the swapchain is returned.
         * 
         * If 'req_count' is any other value, then the requiered image count is returned, if it is

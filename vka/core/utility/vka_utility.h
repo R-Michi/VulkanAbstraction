@@ -18,19 +18,6 @@ namespace vka
     namespace utility
     {
         /*
-        * Searches for a supported memory type index for a given memoryTypeBits bit-mask in the
-        * physical device's memory types. The memory properties that contains all supported memory
-        * types of the physical device is specified by 'properties'. The memory specific memory
-        * types is given by a bit mask and specified by 'bits'. For every aviable memory type a bit
-        * is set in the mask at the corresponding index of the memory type. This mask can be
-        * queried from VkMemoryRequierements::memoryTypeBits. The memory type flags that are
-        * requiered are specified by 'req_flags'. If the requiered flags are supported by one
-        * memory type, the index of the memory type is returned. Otherwise, if the flags are not
-        * supported, vka::NPOS32 is returned.
-        */
-        uint32_t find_memory_type_index(const VkPhysicalDeviceMemoryProperties& properties, uint32_t bits, VkMemoryPropertyFlags req_flags) noexcept;
-
-        /*
         * Checks if a format feature is supported for a given image tiling. The format properties
         * that contains all supported format features is specified by 'properties'. The requiered
         * format feature flags are specified by 'format_feature'. If the requiered format features

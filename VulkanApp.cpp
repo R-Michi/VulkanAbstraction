@@ -718,12 +718,9 @@ void VulkanApp::create_vertex_buffers(void)
 	this->vertex_buffer.init(this->device);
 	this->vertex_buffer.create(this->memory_properties, create_info);
 
-	VkCommandBuffer cbo;
-	VkResult res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
-	VULKAN_ASSERT(res);
+	VkCommandBuffer cbo = vka::utility::begin_cbo(this->device, this->command_pool);
 	this->vertex_buffer.copy(cbo, staging_buffer);
-	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
-	VULKAN_ASSERT(res);
+	vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
 	vkFreeCommandBuffers(this->device, this->command_pool, 1, &cbo);
 }
 
@@ -755,12 +752,9 @@ void VulkanApp::create_index_buffers(void)
 	this->index_buffer.init(this->device);
 	this->index_buffer.create(this->memory_properties, create_info);
 
-	VkCommandBuffer cbo;
-	VkResult res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
-	VULKAN_ASSERT(res);
+	VkCommandBuffer cbo = vka::utility::begin_cbo(this->device, this->command_pool);
 	this->index_buffer.copy(cbo, staging_buffer);
-	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
-	VULKAN_ASSERT(res);
+	vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
 	vkFreeCommandBuffers(this->device, this->command_pool, 1, &cbo);
 }
 
@@ -832,13 +826,10 @@ void VulkanApp::create_textures(void)
 	vka::Buffer staging_buffer;
 	this->texture.load_staging(data, staging_buffer, this->memory_properties, this->graphics_queue_info.queueFamilyIndex, 2);
 
-	VkCommandBuffer cbo;
-	VkResult res = vka::utility::begin_cbo(this->device, this->command_pool, cbo);
-	VULKAN_ASSERT(res);
+	VkCommandBuffer cbo = vka::utility::begin_cbo(this->device, this->command_pool);
 	this->texture.load(cbo, staging_buffer, 0, 2);
 	this->texture.finish(cbo, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-	res = vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
-	VULKAN_ASSERT(res);
+	vka::utility::end_wait_cbo(this->graphics_queues[0], cbo);
 	vkFreeCommandBuffers(this->device, this->command_pool, 1, &cbo);
 }
 

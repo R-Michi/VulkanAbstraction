@@ -11,20 +11,6 @@
 
 #pragma once
 
-uint32_t vka::utility::find_memory_type_index(const VkPhysicalDeviceMemoryProperties& properties, uint32_t bits, VkMemoryPropertyFlags req_flags) noexcept
-{
-    // If a memory type is supported, the corresponding bit is set in the memoryTypeBit bit mask.
-    // This bit mask is specified by 'bits'. This loop iterates over all set bits in the mask and
-    // checks, if the requiered flags 'req_flags' are contained in the memoryType's propertyFlags.
-    // If this is the case, the index of the memory type is returned.
-    for (uint32_t i = 0; i < properties.memoryTypeCount; i++)
-    {
-        if ((bits & (0b1 << i)) && (properties.memoryTypes[i].propertyFlags & req_flags) == req_flags)
-            return i;
-    }
-    return vka::NPOS32;
-}
-
 bool vka::utility::supports_format_feature(const VkFormatProperties& properties, VkImageTiling tiling, VkFormatFeatureFlags format_feature) noexcept
 {   
     // check if the format properties of the given format supports the given format features
@@ -113,9 +99,9 @@ VkCommandBuffer vka::utility::begin_cbo(VkDevice device, VkCommandPool pool) noe
     return cbo;
 }
 
-VkResult vka::utility::end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
+void vka::utility::end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
 {
-    return detail::utility::end_cbo_and_submit(queue, cbo, fence);
+    detail::utility::end_cbo_and_submit(queue, cbo, fence);
 }
 
 VkResult vka::utility::end_wait_cbo(VkQueue queue, VkCommandBuffer cbo, VkDevice device, VkFence fence, uint64_t timeout) noexcept

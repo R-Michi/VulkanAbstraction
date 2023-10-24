@@ -97,7 +97,10 @@
 #include "core/queue/vka_queue.h"
 #include "core/surface/vka_surface.h"
 #include "core/swapchain/vka_swapchain.h"
+
 #include "core/utility/vka_utility.h"
+#include "core/memory/vka_memory.h"
+
 #include "core/shader/vka_shader.h"
 #include "core/descriptor/vka_descriptor.h"
 #include "core/buffer/vka_buffer.h"

@@ -80,7 +80,7 @@ void vka::Buffer::create(const VkPhysicalDeviceMemoryProperties& properties, con
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
             .pNext = nullptr,
             .allocationSize = requierements.size,
-            .memoryTypeIndex = utility::find_memory_type_index(properties, requierements.memoryTypeBits, create_info.memoryPropertyFlags)
+            .memoryTypeIndex = memory::find_type_index(properties, requierements.memoryTypeBits, create_info.memoryPropertyFlags)
         };
         detail::error::check_result(vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory), ALLOC_MEMORY_FAILED);
         detail::error::check_result(vkBindBufferMemory(this->device, this->buffer, this->memory, 0), BIND_MEMORY_FAILED);

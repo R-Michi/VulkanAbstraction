@@ -36,7 +36,7 @@ include_directories(
 )
 
 # compile and link executable
-add_executable(vka "main.cpp" "VulkanApp.cpp")
+add_executable(vka "main.cpp" "VulkanApp.cpp" "vka/core/memory/vka_memory.h")
 target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
 
 # custom command to compile shaders while compiling the program
