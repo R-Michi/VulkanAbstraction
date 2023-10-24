@@ -12,31 +12,31 @@
 #pragma once
 
 vka::Buffer::Buffer(VkDevice device) noexcept
-    : device(device), buffer(VK_NULL_HANDLE), memory(VK_NULL_HANDLE), b_size(0), mapped(false)
+    : m_device(device), m_buffer(VK_NULL_HANDLE), m_memory(VK_NULL_HANDLE), m_size(0), m_mapped(false)
 {}
 
 vka::Buffer::Buffer(Buffer&& src) noexcept
-    : device(src.device), buffer(src.buffer), memory(src.memory), b_size(src.b_size), mapped(src.mapped)
+    : m_device(src.m_device), m_buffer(src.m_buffer), m_memory(src.m_memory), m_size(src.m_size), m_mapped(src.m_mapped)
 {
-    src.buffer = VK_NULL_HANDLE;
-    src.memory = VK_NULL_HANDLE;
-    src.b_size = 0;
-    src.mapped = false;
+    src.m_buffer = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
+    src.m_size = 0;
+    src.m_mapped = false;
 }
 
 vka::Buffer& vka::Buffer::operator= (Buffer&& src) noexcept
 {
-    // destroyes the buffer, if it has been created, otherwise this function does nothing
+    // destroys the buffer, if it has been created, otherwise this function does nothing
     this->destroy_handles();
-    this->device = src.device;
-    this->buffer = src.buffer;
-    this->memory = src.memory;
-    this->b_size = src.b_size;
-    this->mapped = src.mapped;
-    src.buffer = VK_NULL_HANDLE;
-    src.memory = VK_NULL_HANDLE;
-    src.b_size = 0;
-    src.mapped = false;
+    this->m_device = src.m_device;
+    this->m_buffer = src.m_buffer;
+    this->m_memory = src.m_memory;
+    this->m_size = src.m_size;
+    this->m_mapped = src.m_mapped;
+    src.m_buffer = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
+    src.m_size = 0;
+    src.m_mapped = false;
     return *this;
 }
 
@@ -48,7 +48,7 @@ vka::Buffer::~Buffer(void)
 void vka::Buffer::init(VkDevice device) noexcept
 {
     if (!this->is_valid())
-        this->device = device;
+        this->m_device = device;
 }
 
 void vka::Buffer::create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
@@ -68,30 +68,30 @@ void vka::Buffer::create(const VkPhysicalDeviceMemoryProperties& properties, con
             .queueFamilyIndexCount = create_info.bufferQueueFamilyIndexCount,
             .pQueueFamilyIndices = create_info.bufferQueueFamilyIndices
         };
-        detail::error::check_result(vkCreateBuffer(this->device, &buffer_ci, nullptr, &this->buffer), BUFFER_CREATE_FAILED);
-        this->b_size = buffer_ci.size;
+        detail::error::check_result(vkCreateBuffer(this->m_device, &buffer_ci, nullptr, &this->m_buffer), BUFFER_CREATE_FAILED);
+        this->m_size = buffer_ci.size;
 
-        // query memory requierements
-        VkMemoryRequirements requierements;
-        vkGetBufferMemoryRequirements(this->device, this->buffer, &requierements);
+        // query memory requirements
+        VkMemoryRequirements requirements;
+        vkGetBufferMemoryRequirements(this->m_device, this->m_buffer, &requirements);
 
         // allocate memory
         const VkMemoryAllocateInfo memory_ai = {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
             .pNext = nullptr,
-            .allocationSize = requierements.size,
-            .memoryTypeIndex = memory::find_type_index(properties, requierements.memoryTypeBits, create_info.memoryPropertyFlags)
+            .allocationSize = requirements.size,
+            .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, create_info.memoryPropertyFlags)
         };
-        detail::error::check_result(vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory), ALLOC_MEMORY_FAILED);
-        detail::error::check_result(vkBindBufferMemory(this->device, this->buffer, this->memory, 0), BIND_MEMORY_FAILED);
+        detail::error::check_result(vkAllocateMemory(this->m_device, &memory_ai, nullptr, &this->m_memory), ALLOC_MEMORY_FAILED);
+        detail::error::check_result(vkBindBufferMemory(this->m_device, this->m_buffer, this->m_memory, 0), BIND_MEMORY_FAILED);
     }
 }
 
 void vka::Buffer::destroy(void) noexcept
 {
     this->destroy_handles();
-    this->buffer = VK_NULL_HANDLE;
-    this->memory = VK_NULL_HANDLE;
-    this->b_size = 0;
-    this->mapped = false;
+    this->m_buffer = VK_NULL_HANDLE;
+    this->m_memory = VK_NULL_HANDLE;
+    this->m_size = 0;
+    this->m_mapped = false;
 }

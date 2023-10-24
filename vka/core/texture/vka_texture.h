@@ -33,19 +33,19 @@ namespace vka
         static constexpr const char IMAGE_LOAD_FAILED[] = "[vka::Texture::load_image]: Loading image from file failed.";
 #endif
 
-        VkDevice device;
-        VkImage image;
-        VkDeviceMemory memory;
+        VkDevice m_device;
+        VkImage m_image;
+        VkDeviceMemory m_memory;
         VkSampler m_sampler;
-        std::vector<VkImageView> views;
+        std::vector<VkImageView> m_views;
         VkExtent3D m_extent;
         uint32_t m_level_count;
         uint32_t m_layer_count;
-        VkFormat format;
-        State state;
+        VkFormat m_format;
+        State m_state;
 
         /*
-        * Checks if everything is correct at creation. Throws exceptions if anything was worng
+        * Checks if everything is correct at creation. Throws exceptions if anything was wrong
         * initialized, or was not initialized.
         */
         inline void validate(void);
@@ -58,45 +58,45 @@ namespace vka
         * 
         * Changes the image to the correct layout, before loading data into the image or before
         * generating mip-map levels. This specific implementation changes the layout from the
-        * 'created' state into the layout requiered by the 'loading' state.
+        * 'created' state into the layout required by the 'loading' state.
         */
         inline void change_layout_C2L(VkCommandBuffer cbo) noexcept;
 
         /*
         * Changes the image to the correct layout, before loading data into the image or before
         * generating mip-map levels. This specific implementation changes the layout from the
-        * 'finished' state into the layout requiered by the 'loading' state.
+        * 'finished' state into the layout required by the 'loading' state.
         */
         inline void change_layout_F2L(VkCommandBuffer cbo) noexcept;
 
         /*
         * This specific implementation changes the layout from the mip-map creation process into
-        * the layout requiered by the 'finished' state.
+        * the layout required by the 'finished' state.
         */
         inline void change_layout_M2F(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
 
         /*
         * This specific implementation changes the layout from the 'created' state into the layout
-        * requiered by the 'finished' state.
+        * required by the 'finished' state.
         */
         inline void change_layout_C2F(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
 
         /*
         * This specific implementation changes the layout from the 'loading' state into the layout
-        * requiered by the 'finished' state.
+        * required by the 'finished' state.
         */
         inline void change_layout_L2F(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
 
-        // Retruns the extent of a given mip level.
+        // Reruns the extent of a given mip level.
         inline VkExtent3D size(uint32_t level) const noexcept;
 
         /*
-        * Executes the commands to create the mip-map levels. A command buffer is requiered for the
+        * Executes the commands to create the mip-map levels. A command buffer is required for the
         * execution and is specified by 'cbo'.
         */
         void create_mip_levels(VkCommandBuffer cbo) noexcept;
 
-        // combutes the integer logarithm
+        // computes the integer logarithm
         static inline uint32_t log2i(uint32_t x) noexcept;
 
         // returns the maximum integer logarithm of the 3 components
@@ -113,7 +113,7 @@ namespace vka
         */
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
         template<ImageDataType Type>
-        static inline void* load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components,  const uint32_t force_components) noexcept;
+        static inline void* load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components,  uint32_t force_components) noexcept;
 #endif
 
     public:
@@ -141,7 +141,7 @@ namespace vka
         Texture(Texture&& src) noexcept;
         Texture& operator= (Texture&& src) noexcept;
 
-        // The destructor destroyes all the vulkan handles.
+        // The destructor destroys all the vulkan handles.
         virtual ~Texture(void);
 
         /*
@@ -153,18 +153,18 @@ namespace vka
 
         /*
         * This function creates the Texture and the internal handles are now valid, if no error
-        * occured. If an error occured while creating, an std::runtime_error exception is thrown
+        * occured. If an error occured while creating, a std::runtime_error exception is thrown
         * with an appropriate message about the error. The Texture is created with a
         * TextureCreateInfo structure which is used for the creation of the image and sampler handle.
-        * The create info is specified by 'create_info'. Additionally, the memory properties of the
-        * physical device are requiered and specified by 'properties'. An std::invalid_argument
+        * The create-info is specified by 'create_info'. Additionally, the memory properties of the
+        * physical device are required and specified by 'properties'. A std::invalid_argument
         * exception is thrown, if 'this' has not been initialized.
         */
         void create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
         /*
         * Creates and adds an image view to the texture image, if no error occured. If an error
-        * occured while creating, an std::runtime_error exception is thrown with an appropriate
+        * occured while creating, a std::runtime_error exception is thrown with an appropriate
         * message about the error. If the texture has not been created yet (texture object is
         * invalid), this function does nothing.
         * NOTE: If the creation of the image view failed, the view is not added to the texture.
@@ -172,7 +172,7 @@ namespace vka
         void create_view(const TextureViewCreateInfo& create_info);
 
         /*
-        * Destroyes the Texture object. After destroying, 'this' holds its default initialization
+        * Destroys the Texture object. After destroying, 'this' holds its default initialization
         * except for the device. The device will be preserved after destroying and 'this' does not
         * need to be reinitialized. This is also done by the destructor.
         */
@@ -184,8 +184,8 @@ namespace vka
         * specified by 'cbo', the staging buffer is specified by 'data' and the target array layer
         * of the image is specified by 'layer'. If the given buffer is invalid, this function does
         * nothing. Optionally, an amount of array layers can be specified, if the buffer holds data
-        * for multiple array layers. Also a mip level can optionally be specified by 'level'.
-        * By default the number of array layers is 1 and the mip-map level is 0 (original image).
+        * for multiple array layers. Also, a mip level can optionally be specified by 'level'.
+        * By default, the number of array layers is 1 and the mip-map level is 0 (original image).
         * The maximum number of mip-levels can be queried by the function 'level_count()'. 
         */
         void load(VkCommandBuffer cbo, const vka::Buffer& data, uint32_t layer, uint32_t layer_count = 1, uint32_t level = 0) noexcept;
@@ -195,7 +195,7 @@ namespace vka
         * specified by 'buffer'. If the Buffer has already been created, it is replaced with the
         * staging buffer. Everything that was previously stored inside the buffer is lost.
         * Additionally, the memory properties of the physical device and the queue family for the
-        * staging buffer is requiered. Optionally, a mip level can be specified by 'level'.
+        * staging buffer is required. Optionally, a mip level can be specified by 'level'.
         * 
         * The size of the given data must match the size of the image (in bytes) which is:
         *   'size = width * height * depth * utility::format_sizeof(format)'
@@ -219,13 +219,13 @@ namespace vka
         inline void load_staging(const void* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t level = 0) const;
 
         /*
-        * Lodas the data from multiple buffers provided by 'data' into one single staging buffer.
+        * Loads the data from multiple buffers provided by 'data' into one single staging buffer.
         * Every data buffer corresponds to one array layer of the final texture image which are all
         * stored inside one staging buffer. The returned staging buffer is specified by 'buffer'.
         * If the Buffer has already been created, it is replaced with the staging buffer.
         * Everything that was previously stored inside the buffer is lost. Additionally, the memory
         * properties of the physical device and the queue family for the staging buffer is
-        * requiered. Optionally, a mip level can be specified by 'level'.
+        * required. Optionally, a mip level can be specified by 'level'.
         * 
         * For the size of the buffers of 'data' see the description of the previous function.
         * It applies to this function as well for every single buffer specified by 'data'.
@@ -238,9 +238,9 @@ namespace vka
 
         /*
         * Finishes the texture creation. This function changes the layout of the image to the final
-        * layout requiered for rendering. Additionally, if mip-map level generation is active, this
+        * layout required for rendering. Additionally, if mip-map level generation is active, this
         * function also records the commands to generate the mip-map levels. A command buffer is
-        * specified by 'cbo' which is used to record all requiered commands. Furthermore, the
+        * specified by 'cbo' which is used to record all required commands. Furthermore, the
         * (pipeline-) shader stages where the texture is used are specified by 'stages'.
         * NOTE: This function must be called as the last operation when creating a texture.
         */
@@ -249,7 +249,7 @@ namespace vka
         /*
         * Finishes the texture creation, if the mip-map levels are specified manually. This function
         * does not generate mip-map levels even, if mip-map generation is activated. It only changes
-        * the layout from the image to the final layout requiered for rendering. A command buffer is
+        * the layout from the image to the final layout required for rendering. A command buffer is
         * specified by 'cbo' which is used to record all requiered commands. Furthermore, the
         * (pipeline-) shader stages where the texture is used are specified by 'stages'.
         * NOTE: This function must be called as the last operation when creating a texture.
@@ -282,7 +282,7 @@ namespace vka
 
         /*
         * Returns the vulkan image view handle at the specified index 'i'. This function does
-        * perform a range check and throws an std::out_of_range exception, if the specified index
+        * perform a range check and throws a std::out_of_range exception, if the specified index
         * is greater than or equal to the number of views.
         */
         inline VkImageView view(size_t i) const;
@@ -304,7 +304,7 @@ namespace vka
         * returned. The template argument 'T' specifies the data type of the color components.
         * NOTE: 'extent.depth' is always 1.
         * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
-        * Instead, an std::runtime_error exception is thrown which indicates that this operation
+        * Instead, a std::runtime_error exception is thrown which indicates that this operation
         * failed or, if memory allocation failed.
         */
         template<ImageDataType Type>
@@ -318,7 +318,7 @@ namespace vka
         * components/channels.
         * NOTE: 'extent.depth' is always 1.
         * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
-        * Instead, an std::runtime_error exception is thrown which indicates that this operation
+        * Instead, a std::runtime_error exception is thrown which indicates that this operation
         * failed or, if memory allocation failed.
         */
         template<ImageDataType Type, uint32_t force_components>

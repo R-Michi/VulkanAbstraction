@@ -21,14 +21,14 @@ namespace vka
         static constexpr const char BIND_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to bind memory to buffer.";
         static constexpr const char MAP_MEMORY_FAILED[] = "[vka::Buffer::map]: Failed to map memory of buffer";
 
-        VkDevice device;
-        VkBuffer buffer;
-        VkDeviceMemory memory;
-        VkDeviceSize b_size;
-        bool mapped;
+        VkDevice m_device;
+        VkBuffer m_buffer;
+        VkDeviceMemory m_memory;
+        VkDeviceSize m_size;
+        bool m_mapped;
 
         /*
-        * Checks if everything is correct at creation. Throws exceptions if anything was worng
+        * Checks if everything is correct at creation. Throws exceptions if anything was wrong
         * initialized, or was not initialized.
         */
         inline void validate(void);
@@ -62,7 +62,7 @@ namespace vka
         Buffer(Buffer&& src) noexcept;
         Buffer& operator= (Buffer&& src) noexcept;
 
-        // The destructor destroyes all the vulkan handles.
+        // The destructor destroys all the vulkan handles.
         virtual ~Buffer(void);
 
         /*
@@ -74,45 +74,45 @@ namespace vka
 
         /*
         * This function creates the Buffer and the internal handles are now valid, if no error
-        * occured. If an error occured while creating, an std::runtime_error exception is thrown
+        * occured. If an error occured while creating, a std::runtime_error exception is thrown
         * with an appropriate message about the error. The Buffer is created with a BufferCreateInfo
-        * structure which is used for the creation of the buffer and memory handle. The create info
+        * structure which is used for the creation of the buffer and memory handle. The create-info
         * is specified by 'create_info'. Additionally, the memory properties of the physical device
-        * are requiered and specified by 'properties'. An std::invalid_argument exception is thrown,
+        * are required and specified by 'properties'. A std::invalid_argument exception is thrown,
         * if 'this' has not been initialized.
         */
         void create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
         /*
-        * Destroyes the Buffer object. After destroying, 'this' holds its default initialization
+        * Destroys the Buffer object. After destroying, 'this' holds its default initialization
         * except for the device. The device will be preserved after destroying and 'this' does not
         * need to be reinitialized. This is also done by the destructor.
         */
         void destroy(void) noexcept;
 
         /*
-        * This function mapps the buffer'e memory and returns a pointer to the mapped buffer.
+        * This function maps the buffer's memory and returns a pointer to the mapped buffer.
         * The region to map is specified by an offset and a size. The offset is specified by
         * 'offset' and the size is specified by 'size'.
         * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
-        * Instead, an std::runtime_error exception is thrown which indicates that mapping the
-        * buffer failed.
+        * Instead, this function throws a std::runtime_error exception which indicates that mapping
+        * the buffer failed.
         */
         inline void* map(VkDeviceSize offset, VkDeviceSize size) noexcept;
 
         /*
-        * Unmapps all mapped memory of the buffer. If the buffer is not mapped or if the buffer is
+        * Unmaps all mapped memory of the buffer. If the buffer is not mapped or if the buffer is
         * invalid, this function does nothing.
         */
         inline void unmap(void) noexcept;
 
         /*
-        * This function records the requiered commands for the copy operation.
+        * This function records the required commands for the copy operation.
         *
         * The source and the destination buffers must be valid objects. If they are invalid, this
         * function does nothing. The destination buffer must be a valid object (must have been
         * created) because it can have a different initialization and different properties than the
-        * source buffer. Addtionally, the source buffer must have the usage flag
+        * source buffer. Additionally, the source buffer must have the usage flag
         * VK_BUFFER_USAGE_TRANSFER_SRC_BIT set and the destination buffer must have the usage flag
         * VK_BUFFER_USAGE_TRANSFER_DST_BIT set.
         *
@@ -164,7 +164,7 @@ namespace vka
         * FALSE, if a copy is VALID. The source buffer is specified by 'src' and the destination
         * buffer is specified by 'dst'. A region can optionally be specified by 'region' like the
         * copy functions.
-        * NOTE: If a buffer has the corrent usage flags set, is not tested here because those flags
+        * NOTE: If a buffer has the current usage flags set, is not tested here because those flags
         * are not stored after the buffer has been created.
         */
         static inline bool is_copy_invalid(const Buffer& src, const Buffer& dst, const VkBufferCopy* region = nullptr) noexcept;

@@ -11,26 +11,20 @@
 
 #pragma once
 
-namespace vka
+// These functions exist to optimize better for valid code paths and optimize less for error paths.
+namespace vka::detail::error
 {
-    namespace detail
-    {
-        // These functions exist to optimize better for valid code paths and optimize less for error paths.
-        namespace error
-        {
-            // Throws an std::invalid_argument exception with a message.
-            void throw_invalid_argument(const char* msg);
+    // Throws a std::invalid_argument exception with a message.
+    void throw_invalid_argument(const char* msg);
 
-            // Throws an std::runtime_error exception with a message.
-            void throw_runtime_error(const char* msg);
+    // Throws a std::runtime_error exception with a message.
+    void throw_runtime_error(const char* msg);
 
-            // Checks, if the vulkan result is an error.
-            inline bool is_error(VkResult res) noexcept;
+    // Checks, if the vulkan result is an error.
+    inline bool is_error(VkResult res) noexcept;
 
-            // Checks, if the vulkan result is an error and throws an std::runtime_error exception.
-            inline void check_result(VkResult res, const char* msg) noexcept;
-        }
-    }
+    // Checks, if the vulkan result is an error and throws a std::runtime_error exception.
+    inline void check_result(VkResult res, const char* msg) noexcept;
 }
 
 #ifdef VKA_IMPLEMENTATION

@@ -13,20 +13,20 @@
 
 inline void vka::Texture::validate(void)
 {
-    if (this->device == VK_NULL_HANDLE) [[unlikely]]
+    if (this->m_device == VK_NULL_HANDLE) [[unlikely]]
         detail::error::throw_invalid_argument("[vka::Texture::create]: Device is a VK_NULL_HANDLE.");
 }
 
 inline void vka::Texture::destroy_handles(void) noexcept
 {
-    for (VkImageView view : views)  // VK_NULL_HANDLE view's are not added
-        vkDestroyImageView(this->device, view, nullptr);
+    for (VkImageView view : m_views)  // VK_NULL_HANDLE views are not added
+        vkDestroyImageView(this->m_device, view, nullptr);
     if (this->m_sampler != VK_NULL_HANDLE)
-        vkDestroySampler(this->device, this->m_sampler, nullptr);
-    if (this->memory != VK_NULL_HANDLE)
-        vkFreeMemory(this->device, this->memory, nullptr);
-    if (this->image != VK_NULL_HANDLE)
-        vkDestroyImage(this->device, this->image, nullptr);
+        vkDestroySampler(this->m_device, this->m_sampler, nullptr);
+    if (this->m_memory != VK_NULL_HANDLE)
+        vkFreeMemory(this->m_device, this->m_memory, nullptr);
+    if (this->m_image != VK_NULL_HANDLE)
+        vkDestroyImage(this->m_device, this->m_image, nullptr);
 }
 
 inline uint32_t vka::Texture::log2i(uint32_t x) noexcept
@@ -60,7 +60,7 @@ inline void vka::Texture::change_layout_C2L(VkCommandBuffer cbo) noexcept
         .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = this->image,
+        .image = this->m_image,
         .subresourceRange = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0,
@@ -83,7 +83,7 @@ inline void vka::Texture::change_layout_F2L(VkCommandBuffer cbo) noexcept
         .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = this->image,
+        .image = this->m_image,
         .subresourceRange = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0,
@@ -94,7 +94,7 @@ inline void vka::Texture::change_layout_F2L(VkCommandBuffer cbo) noexcept
     };
     // Also synchronize between shader read operations and write operations of the loading process.
     // The transfer operations must wait for every shader read operation from all previous commands
-    // as we dont know the specific shader pipeline stages. But all commands includes any shader
+    // as we don't know the specific shader pipeline stages. But all commands includes any shader
     // pipeline stage that reads from the texture.
     vkCmdPipelineBarrier(cbo, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
@@ -112,7 +112,7 @@ inline void vka::Texture::change_layout_M2F(VkCommandBuffer cbo, VkPipelineStage
             .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image = this->image,
+            .image = this->m_image,
             .subresourceRange = {
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                 .baseMipLevel = 0,
@@ -131,7 +131,7 @@ inline void vka::Texture::change_layout_M2F(VkCommandBuffer cbo, VkPipelineStage
             .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image = this->image,
+            .image = this->m_image,
             .subresourceRange = {
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                 .baseMipLevel = this->m_level_count - 1,
@@ -156,7 +156,7 @@ inline void vka::Texture::change_layout_C2F(VkCommandBuffer cbo, VkPipelineStage
         .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = this->image,
+        .image = this->m_image,
         .subresourceRange = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0,
@@ -179,7 +179,7 @@ inline void vka::Texture::change_layout_L2F(VkCommandBuffer cbo, VkPipelineStage
         .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = this->image,
+        .image = this->m_image,
         .subresourceRange = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0,
@@ -232,7 +232,7 @@ inline uint32_t vka::Texture::layer_count(void) const noexcept
 
 inline VkImage vka::Texture::handle(void) const noexcept
 {
-    return this->image;
+    return this->m_image;
 }
 
 inline VkSampler vka::Texture::sampler(void) const noexcept
@@ -242,17 +242,17 @@ inline VkSampler vka::Texture::sampler(void) const noexcept
 
 inline VkImageView vka::Texture::view(size_t i) const
 {
-    return this->views.at(i);
+    return this->m_views.at(i);
 }
 
 inline VkImageView vka::Texture::viewu(size_t i) const noexcept
 {
-    return this->views[i];
+    return this->m_views[i];
 }
 
 inline bool vka::Texture::is_valid(void) const noexcept
 {
-    return this->state != STATE_INVALID;
+    return this->m_state != STATE_INVALID;
 }
 
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
@@ -261,9 +261,9 @@ inline void* vka::Texture::load_image_internal(const char* path, VkExtent3D& ext
 {
     void* data = nullptr;
     int w, h;
-    if constexpr        (Type == VKA_IMAGE_DATA_TYPE_INT8)  data = stbi_load(path, &w, &h, reinterpret_cast<int*>(components), force_components);
-    else if constexpr   (Type == VKA_IMAGE_DATA_TYPE_INT16) data = stbi_load_16(path, &w, &h, reinterpret_cast<int*>(components), force_components);
-    else if constexpr   (Type == VKA_IMAGE_DATA_TYPE_FLOAT) data = stbi_loadf(path, &w, &h, reinterpret_cast<int*>(components), force_components);
+    if constexpr        (Type == VKA_IMAGE_DATA_TYPE_INT8)  data = stbi_load(path, &w, &h, reinterpret_cast<int*>(components), (int)force_components);
+    else if constexpr   (Type == VKA_IMAGE_DATA_TYPE_INT16) data = stbi_load_16(path, &w, &h, reinterpret_cast<int*>(components), (int)force_components);
+    else if constexpr   (Type == VKA_IMAGE_DATA_TYPE_FLOAT) data = stbi_loadf(path, &w, &h, reinterpret_cast<int*>(components), (int)force_components);
     else                static_assert(false, "[vka::Texture::load_image]: Cannot load image with specified data type.");
 
     // image loading failed

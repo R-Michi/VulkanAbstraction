@@ -15,7 +15,6 @@
 
 #include "VulkanApp.h"
 
-#include <string.h>
 #include <iostream>
 
 int main()
@@ -29,7 +28,7 @@ int main()
     }
     catch (std::exception& e)
     {
-        std::cerr << "Runtime error ocurred!\nWhat: " << e.what() << std::endl;
+        std::cerr << "Runtime error occurred!\nWhat: " << e.what() << std::endl;
     }
     return 0;
 }

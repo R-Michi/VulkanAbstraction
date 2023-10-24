@@ -1,6 +1,6 @@
 /**
 * @file     vka_device_impl.inl
-* @brief    Detailed implemenation of inline device functions.
+* @brief    Detailed implementation of inline device functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -63,10 +63,10 @@ inline uint32_t vka::detail::device::has_queue_flags(const VkQueueFamilyProperti
 }
 
 #ifdef VKA_GLFW_ENABLE
-inline uint32_t vka::detail::device::has_surface_support(const VkInstance instance, const VkPhysicalDevice device, uint32_t qprop_count) noexcept
+inline uint32_t vka::detail::device::has_surface_support(VkInstance instance, VkPhysicalDevice device, uint32_t qfamily_count) noexcept
 {
     // check if at least one queue family has surface support
-    for (uint32_t i = 0; i < qprop_count; i++)
+    for (uint32_t i = 0; i < qfamily_count; i++)
     {
         if (glfwGetPhysicalDevicePresentationSupport(instance, device, i))
             return 0;

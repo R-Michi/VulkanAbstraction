@@ -14,16 +14,16 @@
 inline void vka::AttachmentImage::destroy_handles(void) noexcept
 {
     if (this->m_view != VK_NULL_HANDLE)
-        vkDestroyImageView(this->device, this->m_view, nullptr);
-    if (this->memory != VK_NULL_HANDLE)
-        vkFreeMemory(this->device, this->memory, nullptr);
+        vkDestroyImageView(this->m_device, this->m_view, nullptr);
+    if (this->m_memory != VK_NULL_HANDLE)
+        vkFreeMemory(this->m_device, this->m_memory, nullptr);
     if (this->m_image != VK_NULL_HANDLE)
-        vkDestroyImage(this->device, this->m_image, nullptr);
+        vkDestroyImage(this->m_device, this->m_image, nullptr);
 }
 
-inline VkExtent2D vka::AttachmentImage::size(void) const noexcept
+VkExtent2D vka::AttachmentImage::size(void) const noexcept
 {
-    return this->extent;
+    return this->m_extent;
 }
 
 inline VkImage vka::AttachmentImage::handle(void) const noexcept
@@ -44,7 +44,7 @@ inline bool vka::AttachmentImage::is_valid(void) const noexcept
 
 inline void vka::AttachmentImage::validate(VkPhysicalDevice pdevice, const AttachmentImageCreateInfo& create_info)
 {
-    if (this->device == VK_NULL_HANDLE) [[unlikely]]
+    if (this->m_device == VK_NULL_HANDLE) [[unlikely]]
         detail::error::throw_invalid_argument("[vka::AttachmentImage::create]: Device is a VK_NULL_HANDLE.");
     if (!utility::supports_format_feature2(pdevice, create_info.imageFormat, VK_IMAGE_TILING_OPTIMAL, utility::cvt_iu2ff(create_info.imageUsage))) [[unlikely]]
         detail::error::throw_invalid_argument("[vka::AttachmentImage::create]: Image format is not supported.");

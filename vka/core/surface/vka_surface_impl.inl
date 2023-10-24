@@ -11,7 +11,7 @@
 
 #pragma once
 
-void vka::surface::formats(const VkPhysicalDevice device, VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& formats)
+void vka::surface::formats(VkPhysicalDevice device, VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& formats)
 {
     uint32_t n;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &n, nullptr);
@@ -19,7 +19,7 @@ void vka::surface::formats(const VkPhysicalDevice device, VkSurfaceKHR surface, 
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &n, formats.data());
 }
 
-void vka::surface::presentation_modes(const VkPhysicalDevice device, VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& modes)
+void vka::surface::presentation_modes(VkPhysicalDevice device, VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& modes)
 {
     uint32_t n;
     vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &n, nullptr);

@@ -1,6 +1,6 @@
 /**
 * @file     vka_texture_impl.h
-* @brief    Texture implemenation file.
+* @brief    Texture implementation file.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -12,61 +12,61 @@
 #pragma once
 
 vka::Texture::Texture(VkDevice device) noexcept :
-    device(device),
-    image(VK_NULL_HANDLE),
-    memory(VK_NULL_HANDLE),
+    m_device(device),
+    m_image(VK_NULL_HANDLE),
+    m_memory(VK_NULL_HANDLE),
     m_sampler(VK_NULL_HANDLE),
     m_extent({0, 0, 0}), 
     m_level_count(0),
     m_layer_count(0),
-    format(VK_FORMAT_MAX_ENUM),
-    state(STATE_INVALID)
+    m_format(VK_FORMAT_MAX_ENUM),
+    m_state(STATE_INVALID)
 {}
 
 vka::Texture::Texture(Texture&& src) noexcept :
-    device(src.device), 
-    image(src.image),
-    memory(src.memory), 
+    m_device(src.m_device),
+    m_image(src.m_image),
+    m_memory(src.m_memory),
     m_sampler(src.m_sampler), 
-    views(std::move(src.views)), 
+    m_views(std::move(src.m_views)),
     m_extent(src.m_extent), 
     m_level_count(src.m_level_count),
     m_layer_count(src.m_layer_count),
-    format(src.format),
-    state(src.state)
+    m_format(src.m_format),
+    m_state(src.m_state)
 {
-    src.image = VK_NULL_HANDLE;
-    src.memory = VK_NULL_HANDLE;
+    src.m_image = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
     src.m_sampler = VK_NULL_HANDLE;
     src.m_extent = { 0, 0, 0 };
     src.m_level_count = 0;
     src.m_layer_count = 0;
-    src.format = VK_FORMAT_MAX_ENUM;
-    src.state = STATE_INVALID;
+    src.m_format = VK_FORMAT_MAX_ENUM;
+    src.m_state = STATE_INVALID;
 }
 
 vka::Texture& vka::Texture::operator= (Texture&& src) noexcept
 {
-    // destroyes the texture, if it has been created, otherwise this function does nothing
+    // destroys the texture, if it has been created, otherwise this function does nothing
     this->destroy_handles();
-    this->device = src.device;
-    this->image = src.image;
-    this->memory = src.memory;
+    this->m_device = src.m_device;
+    this->m_image = src.m_image;
+    this->m_memory = src.m_memory;
     this->m_sampler = src.m_sampler;
-    this->views = std::move(src.views);
+    this->m_views = std::move(src.m_views);
     this->m_extent = src.m_extent;
     this->m_level_count = src.m_level_count;
     this->m_layer_count = src.m_layer_count;
-    this->format = src.format;
-    this->state = src.state;
-    src.image = VK_NULL_HANDLE;
-    src.memory = VK_NULL_HANDLE;
+    this->m_format = src.m_format;
+    this->m_state = src.m_state;
+    src.m_image = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
     src.m_sampler = VK_NULL_HANDLE;
     src.m_extent = { 0, 0, 0 };
     src.m_level_count = 0;
     src.m_layer_count = 0;
-    src.format = VK_FORMAT_MAX_ENUM;
-    src.state = STATE_INVALID;
+    src.m_format = VK_FORMAT_MAX_ENUM;
+    src.m_state = STATE_INVALID;
     return *this;
 }
 
@@ -78,7 +78,7 @@ vka::Texture::~Texture(void)
 void vka::Texture::init(VkDevice device) noexcept
 {
     if (!this->is_valid())
-        this->device = device;
+        this->m_device = device;
 }
 
 void vka::Texture::create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info)
@@ -91,7 +91,7 @@ void vka::Texture::create(const VkPhysicalDeviceMemoryProperties& properties, co
         this->m_extent = create_info.imageExtent;
         this->m_level_count = create_info.generateMipMap ? level_count(create_info.imageExtent) : 1;
         this->m_layer_count = create_info.imageArrayLayers;
-        this->format = create_info.imageFormat;
+        this->m_format = create_info.imageFormat;
 
         // create image
         const VkImageCreateInfo image_ci = {
@@ -111,11 +111,11 @@ void vka::Texture::create(const VkPhysicalDeviceMemoryProperties& properties, co
             .pQueueFamilyIndices = create_info.imageQueueFamilyIndices,
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
-        detail::error::check_result(vkCreateImage(this->device, &image_ci, nullptr, &this->image), IMAGE_CREATE_FAILED);
+        detail::error::check_result(vkCreateImage(this->m_device, &image_ci, nullptr, &this->m_image), IMAGE_CREATE_FAILED);
 
         // query memory requirements
         VkMemoryRequirements requirements;
-        vkGetImageMemoryRequirements(this->device, this->image, &requirements);
+        vkGetImageMemoryRequirements(this->m_device, this->m_image, &requirements);
 
         // allocate memory
         const VkMemoryAllocateInfo memory_ai = {
@@ -124,8 +124,8 @@ void vka::Texture::create(const VkPhysicalDeviceMemoryProperties& properties, co
             .allocationSize = requirements.size,
             .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
         };
-        detail::error::check_result(vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory), ALLOC_MEMORY_FAILED);
-        detail::error::check_result(vkBindImageMemory(this->device, this->image, this->memory, 0), BIND_MEMORY_FAILED);
+        detail::error::check_result(vkAllocateMemory(this->m_device, &memory_ai, nullptr, &this->m_memory), ALLOC_MEMORY_FAILED);
+        detail::error::check_result(vkBindImageMemory(this->m_device, this->m_image, this->m_memory, 0), BIND_MEMORY_FAILED);
 
         // create sampler
         const VkSamplerCreateInfo sampler_ci = {
@@ -148,8 +148,8 @@ void vka::Texture::create(const VkPhysicalDeviceMemoryProperties& properties, co
             .borderColor = create_info.samplerBorderColor,
             .unnormalizedCoordinates = create_info.samplerUnnormalizedCoordinates
         };
-        detail::error::check_result(vkCreateSampler(this->device, &sampler_ci, nullptr, &this->m_sampler), SAMPLER_CREATE_FAILED);
-        this->state = STATE_CREATED;
+        detail::error::check_result(vkCreateSampler(this->m_device, &sampler_ci, nullptr, &this->m_sampler), SAMPLER_CREATE_FAILED);
+        this->m_state = STATE_CREATED;
     }
 }
 
@@ -161,7 +161,7 @@ void vka::Texture::create_view(const TextureViewCreateInfo& create_info)
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
         .flags = create_info.flags,
-        .image = this->image,
+        .image = this->m_image,
         .viewType = create_info.viewType,
         .format = create_info.format,
         .components = create_info.components,
@@ -174,23 +174,23 @@ void vka::Texture::create_view(const TextureViewCreateInfo& create_info)
         }
         };
         VkImageView view;
-        detail::error::check_result(vkCreateImageView(this->device, &ci, nullptr, &view), VIEW_CREATE_FAILED);
-        this->views.push_back(view);
+        detail::error::check_result(vkCreateImageView(this->m_device, &ci, nullptr, &view), VIEW_CREATE_FAILED);
+        this->m_views.push_back(view);
     }
 }
 
 void vka::Texture::destroy(void) noexcept
 {
     this->destroy_handles();
-    this->image = VK_NULL_HANDLE;
-    this->memory = VK_NULL_HANDLE;
+    this->m_image = VK_NULL_HANDLE;
+    this->m_memory = VK_NULL_HANDLE;
     this->m_sampler = VK_NULL_HANDLE;
-    this->views.clear();
+    this->m_views.clear();
     this->m_extent = { 0, 0, 0 };
     this->m_level_count = 0;
     this->m_layer_count = 0;
-    this->format = VK_FORMAT_MAX_ENUM;
-    this->state = STATE_INVALID;
+    this->m_format = VK_FORMAT_MAX_ENUM;
+    this->m_state = STATE_INVALID;
 }
 
 void vka::Texture::create_mip_levels(VkCommandBuffer cbo) noexcept
@@ -204,7 +204,7 @@ void vka::Texture::create_mip_levels(VkCommandBuffer cbo) noexcept
         .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = this->image,
+        .image = this->m_image,
         .subresourceRange = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0xFFFFFFFF,
@@ -256,25 +256,25 @@ void vka::Texture::create_mip_levels(VkCommandBuffer cbo) noexcept
         blit.dstOffsets[1] = extent;
 
         vkCmdPipelineBarrier(cbo, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-        vkCmdBlitImage(cbo, this->image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, this->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_NEAREST);
+        vkCmdBlitImage(cbo, this->m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, this->m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_NEAREST);
     }
 }
 
 void vka::Texture::load(VkCommandBuffer cbo, const vka::Buffer& data, uint32_t layer, uint32_t layer_count, uint32_t level) noexcept
 {
-    if (this->state != STATE_INVALID && data.is_valid())
+    if (this->m_state != STATE_INVALID && data.is_valid())
     {
         // If we are not in loading state, change the layout to the requiered layout
         // for the loading state and set the state to "loading".
-        if (this->state == STATE_CREATED)
+        if (this->m_state == STATE_CREATED)
         {
             this->change_layout_C2L(cbo);
-            this->state = STATE_LOADING;
+            this->m_state = STATE_LOADING;
         }
-        else if (this->state == STATE_FINISHED)
+        else if (this->m_state == STATE_FINISHED)
         {
             this->change_layout_F2L(cbo);
-            this->state = STATE_LOADING;
+            this->m_state = STATE_LOADING;
         }
         
         // copy buffer into the image
@@ -292,16 +292,16 @@ void vka::Texture::load(VkCommandBuffer cbo, const vka::Buffer& data, uint32_t l
             .imageOffset = {0, 0, 0},
             .imageExtent = extent
         };
-        vkCmdCopyBufferToImage(cbo, data.handle(), this->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        vkCmdCopyBufferToImage(cbo, data.handle(), this->m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 }
 
 void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t layer_count, uint32_t level) const
 {
-    if (this->state != STATE_INVALID)
+    if (this->m_state != STATE_INVALID)
     {
         const VkExtent3D extent = this->size(level);
-        const VkDeviceSize layer_size = (VkDeviceSize)extent.width * extent.height * extent.depth * utility::format_sizeof(this->format);
+        const VkDeviceSize layer_size = (VkDeviceSize)extent.width * extent.height * extent.depth * utility::format_sizeof(this->m_format);
         const BufferCreateInfo create_info = {
             .bufferFlags = 0,
             .bufferSize = layer_size * layer_count,
@@ -313,7 +313,7 @@ void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, co
         };
 
         // create staging buffer
-        vka::Buffer staging(this->device);
+        vka::Buffer staging(this->m_device);
         staging.create(properties, create_info);
 
         // load data into staging buffer
@@ -329,7 +329,7 @@ void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, co
 
 void vka::Texture::finish(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept
 {
-    if (this->state == STATE_LOADING)
+    if (this->m_state == STATE_LOADING)
     {
         // only create mip levels, if the texture is in loading state
         // generating mip levels without loaded data will not have any effect
@@ -342,25 +342,25 @@ void vka::Texture::finish(VkCommandBuffer cbo, VkPipelineStageFlags stages) noex
         {
             this->change_layout_L2F(cbo, stages);
         }
-        this->state = STATE_FINISHED;
+        this->m_state = STATE_FINISHED;
     }
-    else if (this->state == STATE_CREATED)
+    else if (this->m_state == STATE_CREATED)
     {
         this->change_layout_C2F(cbo, stages);
-        this->state = STATE_FINISHED;
+        this->m_state = STATE_FINISHED;
     }
 }
 
 void vka::Texture::finish_manual(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept
 {
-    if (this->state == STATE_LOADING)
+    if (this->m_state == STATE_LOADING)
     {
         this->change_layout_L2F(cbo, stages);
-        this->state = STATE_FINISHED;
+        this->m_state = STATE_FINISHED;
     }
-    else if (this->state == STATE_CREATED)
+    else if (this->m_state == STATE_CREATED)
     {
         this->change_layout_C2F(cbo, stages);
-        this->state = STATE_FINISHED;
+        this->m_state = STATE_FINISHED;
     }
 }

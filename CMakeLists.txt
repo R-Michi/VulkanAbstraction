@@ -17,14 +17,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 # find vulkan library
 find_package(Vulkan)
 if(NOT Vulkan_FOUND)
-    message(FATAL_ERROR "Vulkan not found but requiered.")
+    message(FATAL_ERROR "Vulkan not found but required.")
 endif()
 message(STATUS "Vulkan found. Version: ${Vulkan_VERSION}")
 
 # find GLFW library
 find_library(GLFW_LIBRARY NAMES "glfw3.lib" PATHS "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/lib")
 if(NOT GLFW_LIBRARY)
-    message(FATAL_ERROR "GLFW3 not found but requiered.")
+    message(FATAL_ERROR "GLFW3 not found but required.")
 endif()
 message(STATUS "GLFW3 found: ${GLFW_LIBRARY}")
 
@@ -36,7 +36,7 @@ include_directories(
 )
 
 # compile and link executable
-add_executable(vka "main.cpp" "VulkanApp.cpp" "vka/core/memory/vka_memory.h")
+add_executable(vka "main.cpp" "VulkanApp.cpp")
 target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
 
 # custom command to compile shaders while compiling the program

@@ -11,16 +11,10 @@
 
 #pragma once
 
-namespace vka
+namespace vka::detail::queue
 {
-    namespace detail
-    {
-        namespace queue
-        {
-            inline uint32_t has_flags(const VkQueueFamilyProperties& properties, VkQueueFlags req_flags) noexcept;
-            inline uint32_t has_count(const VkQueueFamilyProperties& properties, uint32_t req_count) noexcept;
-        } // namespace queue  
-    } // namespace detail 
-} // namespace vka
+    inline uint32_t has_flags(const VkQueueFamilyProperties& properties, VkQueueFlags req_flags) noexcept;
+    inline uint32_t has_count(const VkQueueFamilyProperties& properties, uint32_t req_count) noexcept;
+} // namespace vka::detail::queue
 
 #include "vka_queue_inline_impl.inl"

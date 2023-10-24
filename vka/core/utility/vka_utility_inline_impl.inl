@@ -1,6 +1,6 @@
 /**
 * @file     vka_utility_impl.h
-* @brief    Implemenation of inline utility functions.
+* @brief    Implementation of inline utility functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *

@@ -33,8 +33,7 @@ constexpr VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFl
         return VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT;
     case VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM:
         return VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
-    default:
-        return static_cast<VkImageUsageFlagBits>(0);
+    default: break; // do nothing
     };
     return static_cast<VkImageUsageFlagBits>(0);
 }
@@ -61,9 +60,7 @@ constexpr VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFl
         return VK_FORMAT_FEATURE_FRAGMENT_DENSITY_MAP_BIT_EXT;
     case VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM:
         return VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM;
-    default:
-        return static_cast<VkFormatFeatureFlagBits>(0);
-
+    default: break; // do nothing
     };
     return static_cast<VkFormatFeatureFlagBits>(0);
 }

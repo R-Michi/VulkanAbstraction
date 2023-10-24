@@ -13,33 +13,33 @@
 
 inline void vka::Buffer::destroy_handles(void) noexcept
 {
-    if (this->mapped)
-        vkUnmapMemory(this->device, this->memory);
-    if (this->memory != VK_NULL_HANDLE)
-        vkFreeMemory(this->device, this->memory, nullptr);
-    if (this->buffer != VK_NULL_HANDLE)
-        vkDestroyBuffer(this->device, this->buffer, nullptr);
+    if (this->m_mapped)
+        vkUnmapMemory(this->m_device, this->m_memory);
+    if (this->m_memory != VK_NULL_HANDLE)
+        vkFreeMemory(this->m_device, this->m_memory, nullptr);
+    if (this->m_buffer != VK_NULL_HANDLE)
+        vkDestroyBuffer(this->m_device, this->m_buffer, nullptr);
 }
 
 inline VkDeviceSize vka::Buffer::size(void) const noexcept
 {
-    return this->b_size;
+    return this->m_size;
 }
 
 inline VkBuffer vka::Buffer::handle(void) const noexcept
 {
-    return this->buffer;
+    return this->m_buffer;
 }
 
 inline bool vka::Buffer::is_valid(void) const noexcept
 {
     // memory is the last handle created
-    return (this->memory != VK_NULL_HANDLE);
+    return (this->m_memory != VK_NULL_HANDLE);
 }
 
 inline void vka::Buffer::validate(void)
 {
-    if (this->device == VK_NULL_HANDLE) [[unlikely]]
+    if (this->m_device == VK_NULL_HANDLE) [[unlikely]]
         detail::error::throw_invalid_argument("[vka::Buffer::create]: Device is a VK_NULL_HANDLE.");
 }
 
@@ -70,8 +70,8 @@ inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 {
     if (this->is_valid() && src.is_valid())
     {
-        const VkBufferCopy region = { 0, 0, src.b_size };
-        vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &region);
+        const VkBufferCopy region = { 0, 0, src.m_size };
+        vkCmdCopyBuffer(cbo, src.m_buffer, this->m_buffer, 1, &region);
     }
 }
 
@@ -82,23 +82,23 @@ inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, con
         VkBufferCopy final_region = region;
         if (region.size == 0)
             final_region.size = src.size() - region.srcOffset;
-        vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &final_region);
+        vkCmdCopyBuffer(cbo, src.m_buffer, this->m_buffer, 1, &final_region);
     }
 }
 
 inline void* vka::Buffer::map(VkDeviceSize offset, VkDeviceSize size) noexcept
 {
     void* data;
-    detail::error::check_result(vkMapMemory(this->device, this->memory, offset, size, 0, &data), MAP_MEMORY_FAILED); // does also check, if buffer is invalid
-    this->mapped = true;
+    detail::error::check_result(vkMapMemory(this->m_device, this->m_memory, offset, size, 0, &data), MAP_MEMORY_FAILED); // does also check, if buffer is invalid
+    this->m_mapped = true;
     return data;
 }
 
 inline void vka::Buffer::unmap(void) noexcept
 {
-    if (this->mapped)
+    if (this->m_mapped)
     {
-        vkUnmapMemory(this->device, this->memory);
-        this->mapped = false;
+        vkUnmapMemory(this->m_device, this->m_memory);
+        this->m_mapped = false;
     }
 }

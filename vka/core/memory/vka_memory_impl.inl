@@ -15,7 +15,7 @@ uint32_t vka::memory::find_type_index(const VkPhysicalDeviceMemoryProperties& pr
 {
     // If a memory type is supported, the corresponding bit is set in the memoryTypeBit bit mask.
     // This bit mask is specified by 'bits'. This loop iterates over all set bits in the mask and
-    // checks, if the requiered flags 'req_flags' are contained in the memoryType's propertyFlags.
+    // checks, if the required flags 'req_flags' are contained in the memoryType's propertyFlags.
     // If this is the case, the index of the memory type is returned.
     for (uint32_t i = 0; i < properties.memoryTypeCount; i++)
     {

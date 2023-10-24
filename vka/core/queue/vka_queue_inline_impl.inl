@@ -1,6 +1,6 @@
 /**
 * @file     vka_queue_inline_impl.h
-* @brief    Implemenation of inline queue functions.
+* @brief    Implementation of inline queue functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *

@@ -1,6 +1,6 @@
 /**
 * @file     vka_instance_impl.inl
-* @brief    Implemenation of the instance related functions.
+* @brief    Implementation of the instance related functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *

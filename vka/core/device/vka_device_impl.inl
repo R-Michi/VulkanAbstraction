@@ -1,6 +1,6 @@
 /**
 * @file     vka_device_impl.inl
-* @brief    Implemenation of the device related functions.
+* @brief    Implementation of the device related functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -51,11 +51,11 @@ size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice
     }
 
     // find best matching from the selected candidates
-    for(size_t i = 0; i < filter.deviceTypeHirachy.size(); i++)
+    for (VkPhysicalDeviceType type : filter.deviceTypeHirachy)
     {
-        for(size_t cur_idx : candidates)
+        for (size_t cur_idx : candidates)
         {
-            if (properties[cur_idx].deviceType == filter.deviceTypeHirachy[i])
+            if (properties[cur_idx].deviceType == type)
             {
                 if (prop != nullptr) *prop = properties[cur_idx];
                 if (mem_prop != nullptr) vkGetPhysicalDeviceMemoryProperties(devices[cur_idx], mem_prop);

@@ -21,15 +21,14 @@ namespace vka
         static constexpr const char BIND_MEMORY_FAILED[] = "[vka::AttachmentImage::create]: Failed to bind memory to image.";
         static constexpr const char VIEW_CREATE_FAILED[] = "[vka::AttachmentImage::create]: Failed to create image view.";
 
-        VkDevice device;
-
-        VkDeviceMemory memory;
+        VkDevice m_device;
+        VkDeviceMemory m_memory;
         VkImage m_image;
         VkImageView m_view;
-        VkExtent2D extent;
+        VkExtent2D m_extent;
 
         /*
-        * Checks if everything is correct at creation. Throws exceptions if anything was worng
+        * Checks if everything is correct at creation. Throws exceptions if anything was wrong
         * initialized, or was not initialized.
         */
         inline void validate(VkPhysicalDevice pdevice, const AttachmentImageCreateInfo& create_info);
@@ -60,7 +59,7 @@ namespace vka
         AttachmentImage(AttachmentImage&& src) noexcept;
         AttachmentImage& operator= (AttachmentImage&& src) noexcept;
 
-        // The destructor destroyes all the vulkan handles.
+        // The destructor destroys all the vulkan handles.
         virtual ~AttachmentImage(void);
 
         /*
@@ -72,19 +71,19 @@ namespace vka
 
         /*
         * This function creates the AttachmentImage and the internal handles are now valid, if no
-        * error occured. If an error occured while creating, an std::runtime_error exception is
+        * error occurred. If an error occured while creating, a std::runtime_error exception is
         * thrown with an appropriate message about the error. The attachment image is created with
         * an AttachmentImageCreateInfo structure which is used for the creation of the image and
-        * image view handle. The create info is specified by 'create_info'. Additionally, the
-        * physical device and the memory properties of the physical device are requiered and are
-        * specified by 'pdevice' and 'properties' respectively. An std::invalid_argument exception
+        * image view handle. The create-info is specified by 'create_info'. Additionally, the
+        * physical device and the memory properties of the physical device are required and are
+        * specified by 'device' and 'properties' respectively. A std::invalid_argument exception
         * is thrown, if 'this' has not been initialized with a device or if the image format
-        * specified in the create info is not supported.
+        * specified in the create-info is not supported.
         */
         void create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
         /*
-        * Destroyes the AttachmentImage object. After destroying, 'this' holds its default
+        * Destroys the AttachmentImage object. After destroying, 'this' holds its default
         * initialization except for the device. The device will be preserved after destroying and
         * 'this' does not need to be reinitialized. This is also done by the destructor.
         */

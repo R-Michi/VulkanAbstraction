@@ -12,31 +12,31 @@
 #pragma once
 
 vka::AttachmentImage::AttachmentImage(VkDevice device) noexcept
-    : device(device), memory(VK_NULL_HANDLE), m_image(VK_NULL_HANDLE), m_view(VK_NULL_HANDLE), extent({0, 0})
+    : m_device(device), m_memory(VK_NULL_HANDLE), m_image(VK_NULL_HANDLE), m_view(VK_NULL_HANDLE), m_extent({0, 0})
 {}
 
 vka::AttachmentImage::AttachmentImage(AttachmentImage&& src) noexcept
-    : device(src.device), memory(src.memory), m_image(src.m_image), m_view(src.m_view), extent(src.extent)
+    : m_device(src.m_device), m_memory(src.m_memory), m_image(src.m_image), m_view(src.m_view), m_extent(src.m_extent)
 {
-    src.memory = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
     src.m_image = VK_NULL_HANDLE;
     src.m_view = VK_NULL_HANDLE;
-    src.extent = { 0, 0 };
+    src.m_extent = { 0, 0 };
 }
 
 vka::AttachmentImage& vka::AttachmentImage::operator= (AttachmentImage&& src) noexcept
 {
-    // destroyes the attachment image, if it has been created, otherwise this function does nothing
+    // destroys the attachment image, if it has been created, otherwise this function does nothing
     this->destroy_handles();
-    this->device = src.device;
-    this->memory = src.memory;
+    this->m_device = src.m_device;
+    this->m_memory = src.m_memory;
     this->m_image = src.m_image;
     this->m_view = src.m_view;
-    this->extent = src.extent;
-    src.memory = VK_NULL_HANDLE;
+    this->m_extent = src.m_extent;
+    src.m_memory = VK_NULL_HANDLE;
     src.m_image = VK_NULL_HANDLE;
     src.m_view = VK_NULL_HANDLE;
-    src.extent = { 0, 0 };
+    src.m_extent = { 0, 0 };
     return *this;
 }
 
@@ -48,7 +48,7 @@ vka::AttachmentImage::~AttachmentImage(void)
 void vka::AttachmentImage::init(VkDevice device) noexcept
 {
     if (!this->is_valid())
-        this->device = device;
+        this->m_device = device;
 }
 
 void vka::AttachmentImage::create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info)
@@ -56,7 +56,7 @@ void vka::AttachmentImage::create(VkPhysicalDevice pdevice, const VkPhysicalDevi
     if (!this->is_valid())
     {
         this->validate(pdevice, create_info);
-        this->extent = create_info.imageExtent;
+        this->m_extent = create_info.imageExtent;
 
         // create image
         const VkImageCreateInfo image_ci = {
@@ -76,21 +76,21 @@ void vka::AttachmentImage::create(VkPhysicalDevice pdevice, const VkPhysicalDevi
             .pQueueFamilyIndices = create_info.imageQueueFamilyIndices,
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
-        detail::error::check_result(vkCreateImage(this->device, &image_ci, nullptr, &this->m_image), IMAGE_CREATE_FAILED);
+        detail::error::check_result(vkCreateImage(this->m_device, &image_ci, nullptr, &this->m_image), IMAGE_CREATE_FAILED);
 
-        // query memory requierements
-        VkMemoryRequirements requierements;
-        vkGetImageMemoryRequirements(this->device, this->m_image, &requierements);
+        // query memory requirements
+        VkMemoryRequirements requirements;
+        vkGetImageMemoryRequirements(this->m_device, this->m_image, &requirements);
 
         // allocate memory for the image
         const VkMemoryAllocateInfo memory_ai = {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
             .pNext = nullptr,
-            .allocationSize = requierements.size,
-            .memoryTypeIndex = memory::find_type_index(properties, requierements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+            .allocationSize = requirements.size,
+            .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
         };
-        detail::error::check_result(vkAllocateMemory(this->device, &memory_ai, nullptr, &this->memory), ALLOC_MEMORY_FAILED);
-        detail::error::check_result(vkBindImageMemory(this->device, this->m_image, this->memory, 0), BIND_MEMORY_FAILED);
+        detail::error::check_result(vkAllocateMemory(this->m_device, &memory_ai, nullptr, &this->m_memory), ALLOC_MEMORY_FAILED);
+        detail::error::check_result(vkBindImageMemory(this->m_device, this->m_image, this->m_memory, 0), BIND_MEMORY_FAILED);
 
         // create image view from image
         const VkImageViewCreateInfo view_ci = {
@@ -104,20 +104,20 @@ void vka::AttachmentImage::create(VkPhysicalDevice pdevice, const VkPhysicalDevi
             .subresourceRange = {
                 .aspectMask = create_info.viewAspectMask,
                 .baseMipLevel = 0,
-                .levelCount = 1,        // we dont use mip-mapping on attachment images
+                .levelCount = 1,        // we don't use mip-mapping on attachment images
                 .baseArrayLayer = 0,
                 .layerCount = 1
             }
         };
-        detail::error::check_result(vkCreateImageView(this->device, &view_ci, nullptr, &this->m_view), VIEW_CREATE_FAILED);
+        detail::error::check_result(vkCreateImageView(this->m_device, &view_ci, nullptr, &this->m_view), VIEW_CREATE_FAILED);
     }
 }
 
 void vka::AttachmentImage::destroy(void) noexcept
 {
     this->destroy_handles();
-    this->memory = VK_NULL_HANDLE;
+    this->m_memory = VK_NULL_HANDLE;
     this->m_image = VK_NULL_HANDLE;
     this->m_view = VK_NULL_HANDLE;
-    this->extent = { 0, 0 };
+    this->m_extent = { 0, 0 };
 }

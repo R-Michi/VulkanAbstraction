@@ -1,6 +1,6 @@
 /**
 * @file     vka_queue_impl.h
-* @brief    Implemenation of queue functions.
+* @brief    Implementation of queue functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -25,7 +25,7 @@ size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_famili
     VkQueueFlags min_flags = VK_QUEUE_FLAG_BITS_MAX_ENUM;
     for(size_t i = 0; i < queue_families.size(); i++)
     {
-        // check, if queue family has requiered properties
+        // check, if queue family has required properties
         uint32_t failed = 0;
         failed |= detail::queue::has_flags(queue_families[i], filter.queueFlags);
         failed |= detail::queue::has_count(queue_families[i], filter.queueCount);
