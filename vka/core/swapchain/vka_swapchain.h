@@ -20,7 +20,7 @@ namespace vka
         * 'req_count' is 0, which it is by default, the minimum image count for the swapchain is
         * returned.
         * 
-        * If the requiered image count given by 'req_count' is 0xFFFFFFFF (unsigend 32-bit integer
+        * If the requiered image count given by 'req_count' is 0xFFFFFFFF (unsigend 32-bit integer huan
         * limit), the maximum image count for the swapchain is returned.
         * 
         * If 'req_count' is any other value, then the requiered image count is returned, if it is
@@ -60,10 +60,14 @@ namespace vka
         * operation and is specified by 'device'. The create info for the swapchain is specified by
         * 'create_info' and the swapchain is stored in 'swapchain'. The image views of the
         * swapchain are stored in the 'image_views' array. The array must have a length of at least
-        * the amount of specified images in the swapchain. If no error occured, VK_SUCCESS is
-        * returned. If an error occured, the vulkan result is returned.
+        * the amount of specified images in the swapchain. If an error occured while setting up, an
+        * std::runtime_error exception is thrown with an appropriate message about the error.
+        * NOTE: If an error occured it was either caused by creating the swapchain or one of the
+        * image views. Therefore, it is recommended to initialize the input swapchain and the input
+        * image views with VK_NULL_HANDLE in order to delete the handles that have been created in
+        * the case of an error.
         */
-        VkResult setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views) noexcept;
+        void setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views) noexcept;
     }
 }
 

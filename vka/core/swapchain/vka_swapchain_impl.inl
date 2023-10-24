@@ -32,11 +32,13 @@ VkExtent2D vka::swapchain::image_extent(const VkSurfaceCapabilitiesKHR& capabili
     };
 }
 
-VkResult vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views) noexcept
+void vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views) noexcept
 {
-    VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain);
-    if (result != VK_SUCCESS) return result;
-    
+    constexpr const char SWAPCHAIN_CREATE_FAILED[] = "[vka::swapchain::setup]: Failed to create swapchain.";
+    constexpr const char IMAGE_VIEW_CREATE_FAILED[] = "[vka::swapchain::setup]: Failed to create image view";
+
+    detail::error::check_result(vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain), SWAPCHAIN_CREATE_FAILED);
+
     uint32_t image_count;
     vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
     VkImage images[image_count];
@@ -68,8 +70,6 @@ VkResult vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& 
     { 
         iv_ci.image = images[i];
         iv_ci.format = create_info.imageFormat;
-        result = vkCreateImageView(device, &iv_ci, nullptr, image_views + i);
-        if (result != VK_SUCCESS) return result;
+        detail::error::check_result(vkCreateImageView(device, &iv_ci, nullptr, image_views + i), IMAGE_VIEW_CREATE_FAILED);
     }
-    return VK_SUCCESS;
 }

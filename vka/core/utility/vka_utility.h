@@ -116,18 +116,22 @@ namespace vka
         /*
         * Allocates a command buffer and begins its recording for buffer copy and texture create
         * operations. A device and command pool is requiered and is specified by 'device' and
-        * 'pool'. The allocated command buffer is returned via the parameter 'cbo'. If an error
-        * occured the, respectve result is returned. If no error occured, VK_SUCCESS is returned.
-        * If the allocation of the command buffer failed, the returned command buffer is
-        * VK_NULL_HANDLE.
+        * 'pool'. The allocated command buffer is returned. If an error occurd while allocating the
+        * command buffer or while beginning the command buffer recording, an std::runtime_error
+        * exception is thrown with an appropriate message about the error.
+        * NOTE: If an error occured it was either caused by allocating the command buffer or by
+        * beginning the command buffer recording. Therefore, it is recommended to initialize the
+        * input command buffer with VK_NULL_HANDLE in order to free the command buffer in the case
+        * of an error, if it has been allocated.
         */
-        VkResult begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
+        void begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
 
         /*
         * Ends the recording of the command buffer and submits it to the specified queue 'queue'.
         * The command buffer to submit is specified by 'cbo'. Optionally, a fence can be specified
-        * for the submition. If an error occured the, respectve result is returned. If no error
-        * occured, VK_SUCCESS is returned.
+        * for the submition. If an error occured while ending the command buffer recording or while
+        * submitting the command buffer to the queue, an std::runtime_error exception is thrown
+        * with an appropriate message about the error.
         */
         VkResult end_cbo(VkQueue queue, VkCommandBuffer cbo, VkFence fence = VK_NULL_HANDLE) noexcept;
 
@@ -135,8 +139,10 @@ namespace vka
         * This function does the same as end_cbo() but it additionally waits for the copy
         * operation to finish. If no fence is specified, it is waited until the specified queue
         * goes into idle mode. Otherwise, it is waited for the fence to become signaled, or if the
-        * timeout time has been elapsed. If the fence timed out VK_TIMEOUT is returned. The device
-        * is only requiered, if a fence is specified.
+        * timeout time has been elapsed. If the fence timed out VK_TIMEOUT is returned. If the
+        * fence did not time out, VK_SUCCESS is returned. The device is only requiered, if a fence
+        * is specified. If an error occured while waiting on either the queue or the fence, an
+        * std::runtime_error exception is thrown with an appropriate message about the error.
         */
         VkResult end_wait_cbo(VkQueue queue, VkCommandBuffer cbo, VkDevice device = VK_NULL_HANDLE, VkFence fence = VK_NULL_HANDLE, uint64_t timeout = vka::NO_TIMEOUT) noexcept;
 
