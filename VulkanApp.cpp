@@ -180,7 +180,7 @@ void VulkanApp::create_instance(void)
 	std::vector<std::string> extensions;
 	vka::instance::get_glfw_extensions(extensions);
 #ifdef VKA_DEBUG
-	extensions.push_back("VK_EXT_debug_utils");
+	//extensions.push_back("VK_EXT_debug_utils");
 #endif
 
 	size_t idx;

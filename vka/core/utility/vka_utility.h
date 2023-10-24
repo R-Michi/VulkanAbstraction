@@ -124,7 +124,7 @@ namespace vka
         * input command buffer with VK_NULL_HANDLE in order to free the command buffer in the case
         * of an error, if it has been allocated.
         */
-        void begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
+        VkResult begin_cbo(VkDevice device, VkCommandPool pool, VkCommandBuffer& cbo) noexcept;
 
         /*
         * Ends the recording of the command buffer and submits it to the specified queue 'queue'.

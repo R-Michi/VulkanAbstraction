@@ -24,7 +24,7 @@ namespace vka
         VkDevice device;
         VkBuffer buffer;
         VkDeviceMemory memory;
-        VkDeviceSize memory_size;
+        VkDeviceSize b_size;
         bool mapped;
 
         /*

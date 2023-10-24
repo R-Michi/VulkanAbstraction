@@ -23,7 +23,7 @@ inline void vka::Buffer::destroy_handles(void) noexcept
 
 inline VkDeviceSize vka::Buffer::size(void) const noexcept
 {
-    return this->memory_size;
+    return this->b_size;
 }
 
 inline VkBuffer vka::Buffer::handle(void) const noexcept
@@ -70,7 +70,7 @@ inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 {
     if (this->is_valid() && src.is_valid())
     {
-        const VkBufferCopy region = { 0, 0, src.memory_size };
+        const VkBufferCopy region = { 0, 0, src.b_size };
         vkCmdCopyBuffer(cbo, src.buffer, this->buffer, 1, &region);
     }
 }

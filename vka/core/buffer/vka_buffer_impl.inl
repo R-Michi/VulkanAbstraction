@@ -12,15 +12,15 @@
 #pragma once
 
 vka::Buffer::Buffer(VkDevice device) noexcept
-    : device(device), buffer(VK_NULL_HANDLE), memory(VK_NULL_HANDLE), memory_size(0), mapped(false)
+    : device(device), buffer(VK_NULL_HANDLE), memory(VK_NULL_HANDLE), b_size(0), mapped(false)
 {}
 
 vka::Buffer::Buffer(Buffer&& src) noexcept
-    : device(src.device), buffer(src.buffer), memory(src.memory), memory_size(src.memory_size), mapped(src.mapped)
+    : device(src.device), buffer(src.buffer), memory(src.memory), b_size(src.b_size), mapped(src.mapped)
 {
     src.buffer = VK_NULL_HANDLE;
     src.memory = VK_NULL_HANDLE;
-    src.memory_size = 0;
+    src.b_size = 0;
     src.mapped = false;
 }
 
@@ -31,11 +31,11 @@ vka::Buffer& vka::Buffer::operator= (Buffer&& src) noexcept
     this->device = src.device;
     this->buffer = src.buffer;
     this->memory = src.memory;
-    this->memory_size = src.memory_size;
+    this->b_size = src.b_size;
     this->mapped = src.mapped;
     src.buffer = VK_NULL_HANDLE;
     src.memory = VK_NULL_HANDLE;
-    src.memory_size = 0;
+    src.b_size = 0;
     src.mapped = false;
     return *this;
 }
@@ -69,11 +69,11 @@ void vka::Buffer::create(const VkPhysicalDeviceMemoryProperties& properties, con
             .pQueueFamilyIndices = create_info.bufferQueueFamilyIndices
         };
         detail::error::check_result(vkCreateBuffer(this->device, &buffer_ci, nullptr, &this->buffer), BUFFER_CREATE_FAILED);
+        this->b_size = buffer_ci.size;
 
         // query memory requierements
         VkMemoryRequirements requierements;
         vkGetBufferMemoryRequirements(this->device, this->buffer, &requierements);
-        this->memory_size = requierements.size;
 
         // allocate memory
         const VkMemoryAllocateInfo memory_ai = {
@@ -92,6 +92,6 @@ void vka::Buffer::destroy(void) noexcept
     this->destroy_handles();
     this->buffer = VK_NULL_HANDLE;
     this->memory = VK_NULL_HANDLE;
-    this->memory_size = 0;
+    this->b_size = 0;
     this->mapped = false;
 }

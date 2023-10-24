@@ -7,16 +7,27 @@ project("VulkanAbstraction")
 set(COMPILE_OPTIONS -mfma -mavx2 -mf16c)
 set(COMPILE_WARNINGS -Walloca -Wall)
 
-# use C++ 17
-set(CMAKE_CXX_STANDARD 17)
+# use C++ 20
+set(CMAKE_CXX_STANDARD 20)
 add_compile_options(${COMPILE_OPTIONS} ${COMPILE_WARNINGS})
 
 # export compiler commands
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
+# find vulkan library
 find_package(Vulkan)
+if(NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Vulkan not found but requiered.")
+endif()
+message(STATUS "Vulkan found. Version: ${Vulkan_VERSION}")
 
-# used include directories for libraries
+# find GLFW library
+find_library(GLFW_LIBRARY NAMES "glfw3.lib" PATHS "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/lib")
+if(NOT GLFW_LIBRARY)
+    message(FATAL_ERROR "GLFW3 not found but requiered.")
+endif()
+message(STATUS "GLFW3 found: ${GLFW_LIBRARY}")
+
 include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm"
@@ -24,23 +35,9 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/tiny_obj_loader"
 )
 
-# linker search directories for libraries
-link_directories(
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm/glm/lib"
-)
-
 # compile and link executable
-add_executable(vka "main.cpp" "VulkanApp.cpp" "vka/detail/instance/vka_instance.h" "vka/detail/error/vka_error.h" )
-target_link_libraries(vka PRIVATE 
-    "-lglm_static" 
-    "-lglfw3" 
-)
-
-if(Vulkan_FOUND)
-    message(STATUS "Vulkan found. Version: ${Vulkan_VERSION}")
-    target_link_libraries(vka PUBLIC Vulkan::Vulkan)
-endif()
+add_executable(vka "main.cpp" "VulkanApp.cpp")
+target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
 
 # custom command to compile shaders while compiling the program
 #add_custom_command(
