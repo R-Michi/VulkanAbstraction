@@ -35,6 +35,9 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/tiny_obj_loader"
 )
 
+# testing library
+add_library(vka_test "test/vka_test.cpp")
+
 # compile and link executable
 add_executable(vka "main.cpp" "VulkanApp.cpp"
         vka/core/common/vka_common.h
@@ -47,7 +50,7 @@ add_executable(vka "main.cpp" "VulkanApp.cpp"
         vka/detail/common/vka_common_impl.inl
         vka/detail/common/vka_common_inline_impl.inl
 )
-target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
+target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY} vka_test)
 
 # custom command to compile shaders while compiling the program
 #add_custom_command(

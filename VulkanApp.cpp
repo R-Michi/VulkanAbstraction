@@ -1,6 +1,6 @@
 /**
 * @file     VulkanApp.cpp
-* @brief    Implemenation of the testing vulkan application.
+* @brief    Implementation of the testing vulkan application.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -10,22 +10,15 @@
 */
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define VKA_TEMPLATE_IMPLEMENTATION
 
 #include "VulkanApp.h"
 #include <iostream>
 #include <string>
-#include <stb/stb_image.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
-VulkanApp::VulkanApp(void)
-{
-
-}
 
 VulkanApp::~VulkanApp(void)
 {
@@ -127,8 +120,6 @@ void VulkanApp::vulkan_destroy(void)
 
 void VulkanApp::load_models(void)
 {
-	uint32_t vertex_count = 0, index_count = 0;
-
 	vka::Model model;
 	model.load("../../../assets/models/test.obj", vka::VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL);
 
@@ -148,13 +139,13 @@ void VulkanApp::load_models(void)
 		std::cout << "Mesh material ID count: " << mesh.materials().size() << std::endl;
 		std::cout << "Mesh triangle count:    " << mesh.primitive_count() << std::endl;
 	}
-	vertex_count = base_index;
-	index_count = this->indices.size();
+    const uint32_t idx_count = this->indices.size();
+    const uint32_t vertex_count = base_index;
 
 	std::cout << "Number if meshes: " << model.meshes().size() << std::endl;
 	std::cout << "Number of materials: " << model.materials().size() << std::endl;
 	std::cout << "Number of vertices: " << vertex_count << std::endl;
-	std::cout << "Number of indices: " << index_count << std::endl;
+	std::cout << "Number of indices: " << idx_count << std::endl;
 }
 
 
@@ -173,9 +164,9 @@ void VulkanApp::create_instance(void)
 {
 	std::vector<std::string> layers;
 #ifdef VKA_DEBUG
-	layers.push_back("VK_LAYER_KHRONOS_validation");
+	layers.emplace_back("VK_LAYER_KHRONOS_validation");
 #endif 
-	layers.push_back("VK_LAYER_LUNARG_monitor");
+	layers.emplace_back("VK_LAYER_LUNARG_monitor");
 
 	std::vector<std::string> extensions;
 	vka::instance::get_glfw_extensions(extensions);
@@ -254,7 +245,7 @@ void VulkanApp::create_queues(void)
 	std::vector<VkQueueFamilyProperties> queue_fam_properties;
 	vka::queue::properties(this->physical_device, queue_fam_properties);
 
-	vka::QueueFamilyFilter queue_fam_filter;
+	vka::QueueFamilyFilter queue_fam_filter = {};
 	queue_fam_filter.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
 	queue_fam_filter.queueCount = 4;
 
@@ -612,7 +603,7 @@ void VulkanApp::create_pipeline(void)
 
 	VkGraphicsPipelineCreateInfo pipeline_create_info;
 	pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipeline_create_info.pNext = 0;
+	pipeline_create_info.pNext = nullptr;
 	pipeline_create_info.flags = 0;
 	pipeline_create_info.stageCount = 2;
 	pipeline_create_info.pStages = this->main_shader.get_stages();
@@ -638,14 +629,14 @@ void VulkanApp::create_pipeline(void)
 
 void VulkanApp::create_framebuffers(void)
 {
-	for (size_t i = 0; i < this->swapchain_image_views.size(); i++)
+	for (VkImageView view : this->swapchain_image_views)
 	{
 		VkImageView attachments[2] = {
-			this->swapchain_image_views[i],
+			view,
 			this->depth_attachment.view()
 		};
 
-		VkFramebufferCreateInfo fbo_creare_info;
+		VkFramebufferCreateInfo fbo_creare_info = {};
 		fbo_creare_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		fbo_creare_info.pNext = nullptr;
 		fbo_creare_info.flags = 0;
@@ -760,7 +751,7 @@ void VulkanApp::create_uniform_buffers(void)
 {
 	const vka::BufferCreateInfo create_info = {
 		.bufferFlags = 0,
-		.bufferSize = sizeof(UniformTranformMatrices),
+		.bufferSize = sizeof(UniformTransformMatrices),
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
@@ -980,7 +971,7 @@ void VulkanApp::draw_frame(void)
 
 void VulkanApp::update_frame_contents(void)
 {
-	UniformTranformMatrices utm;
+	UniformTransformMatrices utm = {};
 
 	glm::mat4 model(1.0f);
 	model = glm::rotate(model, static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -989,8 +980,8 @@ void VulkanApp::update_frame_contents(void)
 	projection[1][1] *= -1.0f;
 	utm.MVP = projection * view * model;
 
-	void* _map = this->uniform_buffer.map(0, sizeof(UniformTranformMatrices));
-	memcpy(_map, &utm, sizeof(UniformTranformMatrices));
+	void* _map = this->uniform_buffer.map(0, sizeof(UniformTransformMatrices));
+	memcpy(_map, &utm, sizeof(UniformTransformMatrices));
 	this->uniform_buffer.unmap();
 }
 

@@ -35,7 +35,7 @@
 
 class VulkanApp
 {
-	struct UniformTranformMatrices
+	struct UniformTransformMatrices
 	{
 		glm::mat4 MVP;
 	};
@@ -129,7 +129,7 @@ private:
 	void update_frame_contents(void);
 
 public:
-	VulkanApp(void);
+	VulkanApp(void) = default;
 	virtual ~VulkanApp(void);
 
 	void init(void);
