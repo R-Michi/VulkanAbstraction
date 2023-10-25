@@ -1,6 +1,6 @@
 /**
 * @file     vka_utility_impl.inl
-* @brief    Detailed implementation of inline utility functions.
+* @brief    Detailed implementation of inline common functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -11,7 +11,7 @@
 
 #pragma once
 
-constexpr VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept
+constexpr VkImageUsageFlagBits vka::detail::common::ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept
 {
     switch (format_feature)
     {
@@ -38,7 +38,7 @@ constexpr VkImageUsageFlagBits vka::detail::utility::ff2iu_bit(VkFormatFeatureFl
     return static_cast<VkImageUsageFlagBits>(0);
 }
 
-constexpr VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept
+constexpr VkFormatFeatureFlagBits vka::detail::common::iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept
 {
     switch (image_usage)
     {
@@ -64,25 +64,3 @@ constexpr VkFormatFeatureFlagBits vka::detail::utility::iu2ff_bit(VkImageUsageFl
     };
     return static_cast<VkFormatFeatureFlagBits>(0);
 }
-
-inline VkResult vka::detail::utility::end_cbo_and_submit(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept
-{
-    // end recording
-    const VkResult res = vkEndCommandBuffer(cbo);
-    if (res != VK_SUCCESS) return res;
-
-    // submit commands
-    const VkSubmitInfo submit_info = {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = nullptr,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = nullptr,
-        .pWaitDstStageMask = nullptr,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cbo,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = nullptr
-    };
-    return vkQueueSubmit(queue, 1, &submit_info, fence);
-}
-

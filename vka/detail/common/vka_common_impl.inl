@@ -1,6 +1,6 @@
 /**
 * @file     vka_utility_impl.inl
-* @brief    Detailed implementation of utility functions.
+* @brief    Detailed implementation of common functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -11,7 +11,7 @@
 
 #pragma once
 
-void vka::detail::utility::init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s)
+void vka::detail::common::init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s)
 {
     f2s[VK_FORMAT_UNDEFINED] = 0;
     f2s[VK_FORMAT_R4G4_UNORM_PACK8] = 1;

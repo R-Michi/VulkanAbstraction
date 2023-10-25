@@ -198,7 +198,7 @@ namespace vka
         * staging buffer is required. Optionally, a mip level can be specified by 'level'.
         * 
         * The size of the given data must match the size of the image (in bytes) which is:
-        *   'size = width * height * depth * utility::format_sizeof(format)'
+        *   'size = width * height * depth * common::format_sizeof(format)'
         * 'Width', 'height' and 'depth' are the dimensions of the image, 'format' is the used
         * format of the image and 'size' is the resulting data size.
         * 
@@ -210,9 +210,9 @@ namespace vka
         * 'W', 'h' and 'd' are the downscaled image dimensions for the specified mip-level which is
         * represented by 'level'. However, any dimension cannot be 0 and therefore has at least a
         * size of 1. The data size must then be:
-        *   'size = w * h * d * utility::format_sizeof(format)'.
+        *   'size = w * h * d * common::format_sizeof(format)'.
         * 
-        * NOTE: 'utility::format_sizeof(format) = components * sizeof(component_type)', where
+        * NOTE: 'common::format_sizeof(format) = components * sizeof(component_type)', where
         * 'components' is the number of components of a pixel of the image and 'component_type' is
         * the type that is used by the color components of a pixel.
         */
@@ -230,7 +230,7 @@ namespace vka
         * For the size of the buffers of 'data' see the description of the previous function.
         * It applies to this function as well for every single buffer specified by 'data'.
         * 
-        * NOTE: 'utility::format_sizeof(format) = components * sizeof(component_type)', where
+        * NOTE: 'common::format_sizeof(format) = components * sizeof(component_type)', where
         * 'components' is the number of components of a pixel of the image and 'component_type' is
         * the type that is used by the color components of a pixel.
         */

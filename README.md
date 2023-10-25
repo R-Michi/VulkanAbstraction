@@ -1,16 +1,16 @@
 # VulkanAbstraction
-The aim of this library is to minimize the code that must be written in order to setup a vulkan renderer.
+The aim of this library is to minimize the code that must be written in order to set up a vulkan renderer.
 It abstracts and simplifies general duties, like finding a device, creating buffers and textures, setting up shaders and descriptors, etc.
 
 # Features
 - GLFW <br>
-  This feature can be enabled via the define VKA_GLFW_ENABLE.
+  This feature can be enabled via define VKA_GLFW_ENABLE.
 
 - Model loading <br>
-  This feature can be enabled via the define VKA_MODEL_LOADING_ENABLE.
+  This feature can be enabled via define VKA_MODEL_LOADING_ENABLE.
 
 - Image loading <br>
-  This feature can be enabled via the define VKA_STB_IMAGE_LOAD_ENABLE.
+  This feature can be enabled via define VKA_STB_IMAGE_LOAD_ENABLE.
 
 # External libraries
 - vulkan library: <br>
@@ -18,16 +18,16 @@ It abstracts and simplifies general duties, like finding a device, creating buff
 
 - GLFW 3.3.3: <br>
   This library is optional and is only requiered, if the GLFW feature is enabled. This library can be included externally or internally via
-  the define VKA_INCLUDE_GLFW. If the GLFW feature is not enabled, defining VKA_INCLUDE_GLFW has no effect.
+  define VKA_INCLUDE_GLFW. If the GLFW feature is not enabled, defining VKA_INCLUDE_GLFW has no effect.
 
 - tiny obj loader: <br>
   This library is optional and is only requiered, if the model loading feature is enabled. This library can be included externally or
-  internally via the define VKA_INCLUDE_TINYOBJ. If the model loading feature is not enabled, defining VKA_INCLUDE_TINYOBJ has no effect.
+  internally via define VKA_INCLUDE_TINYOBJ. If the model loading feature is not enabled, defining VKA_INCLUDE_TINYOBJ has no effect.
   This library is header only.
 
 - STB image: <br>
   This library is optional and is only requiered, if the image loading feature is enabled. This library can be included externally or
-  internally via the define VKA_INCLUDE_STB_IMAGE. If the image loading feature is not enabled, defining VKA_INCLUDE_STB_IMAGE has no effect.
+  internally via define VKA_INCLUDE_STB_IMAGE. If the image loading feature is not enabled, defining VKA_INCLUDE_STB_IMAGE has no effect.
   This library is header only and only the include file "stb_image.h" is requiered.
 
 # Building the testing sources

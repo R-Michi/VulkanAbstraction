@@ -301,7 +301,7 @@ void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, co
     if (this->m_state != STATE_INVALID)
     {
         const VkExtent3D extent = this->size(level);
-        const VkDeviceSize layer_size = (VkDeviceSize)extent.width * extent.height * extent.depth * utility::format_sizeof(this->m_format);
+        const VkDeviceSize layer_size = (VkDeviceSize)extent.width * extent.height * extent.depth * common::format_sizeof(this->m_format);
         const BufferCreateInfo create_info = {
             .bufferFlags = 0,
             .bufferSize = layer_size * layer_count,

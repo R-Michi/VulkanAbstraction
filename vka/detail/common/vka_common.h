@@ -1,6 +1,6 @@
 /**
 * @file     vka_utility.h
-* @brief    Detailed declaration of utility functions.
+* @brief    Detailed declaration of common functions.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -11,18 +11,14 @@
 
 #pragma once
 
-namespace vka::detail::utility
+namespace vka::detail::common
 {
     constexpr VkImageUsageFlagBits ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept;
     constexpr VkFormatFeatureFlagBits iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept;
     void init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s);
-
-    // Ends the copy command buffer and submits the commands.
-    inline VkResult end_cbo_and_submit(VkQueue queue, VkCommandBuffer cbo, VkFence fence) noexcept;
-
-} // namespace vka::detail::utility
+} // namespace vka::detail::common
 
 #ifdef VKA_IMPLEMENTATION
-    #include "vka_utility_impl.inl"
+    #include "vka_common_impl.inl"
 #endif
-#include "vka_utility_inline_impl.inl"
+#include "vka_common_inline_impl.inl"

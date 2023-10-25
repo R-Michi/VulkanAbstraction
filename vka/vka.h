@@ -89,18 +89,16 @@
 #include "core/vka_global.h"
 #include "core/vka_types.h"
 
-// tmp
 #include "detail/error/vka_error.h"
 
 #include "core/instance/vka_instance.h"
 #include "core/device/vka_device.h"
 #include "core/queue/vka_queue.h"
+#include "core/common/vka_common.h"
+#include "core/memory/vka_memory.h"
+#include "core/format/vka_format.h"
 #include "core/surface/vka_surface.h"
 #include "core/swapchain/vka_swapchain.h"
-
-#include "core/utility/vka_utility.h"
-#include "core/memory/vka_memory.h"
-
 #include "core/shader/vka_shader.h"
 #include "core/descriptor/vka_descriptor.h"
 #include "core/buffer/vka_buffer.h"
