@@ -129,3 +129,76 @@ size_t vka::Shader::size(void) const noexcept
 {
     return this->_size;
 }
+
+
+
+vka::Shader2::Shader2(VkDevice device)
+    : m_device(device), m_module(VK_NULL_HANDLE)
+{}
+
+vka::Shader2::Shader2(Shader2&& src) noexcept
+    : m_device(src.m_device), m_module(src.m_module)
+{
+    src.m_module = VK_NULL_HANDLE;
+}
+
+vka::Shader2& vka::Shader2::operator= (Shader2&& src) noexcept
+{
+    // destroy 'this' shader, if it has been created, otherwise this function does nothing
+    this->destroy_handles();
+    this->m_device = src.m_device;
+    this->m_module = src.m_module;
+    src.m_module = VK_NULL_HANDLE;
+    return *this;
+}
+
+vka::Shader2::~Shader2(void)
+{
+    this->destroy_handles();
+}
+
+void vka::Shader2::init(VkDevice device) noexcept
+{
+    if (!this->is_valid())
+        this->m_device = device;
+}
+
+void vka::Shader2::create(const char* path)
+{
+    if (!this->is_valid())
+    {
+        this->validate();
+
+        // read shader file
+        std::ifstream file(path, std::ios::binary | std::ios::ate);
+        if (!file)
+            detail::error::throw_runtime_error(FILE_OPEN_FAILED);
+
+        // get size of file and set cursor to begin of file
+        size_t file_size = file.tellg();
+        file.seekg(0, file.beg);
+
+        // allocate buffer and read file
+        // use unique ptr for memory guard
+        std::unique_ptr<char> code(new char[file_size]);
+        if (code == nullptr)
+            detail::error::throw_bad_alloc();
+        file.read(code.get(), file_size);
+        file.close();
+
+        const VkShaderModuleCreateInfo ci = {
+            .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .codeSize = file_size,
+            .pCode = reinterpret_cast<uint32_t*>(code.get()) // shader code size is always a multiple of 4, its ok to cast from char* to uint32_t*
+        };
+        detail::error::check_result(vkCreateShaderModule(this->m_device, &ci, nullptr, &this->m_module), SHADER_CREATE_FAILED);
+    }
+}
+
+void vka::Shader2::destroy(void) noexcept
+{
+    this->destroy_handles();
+    this->m_module = VK_NULL_HANDLE;
+}

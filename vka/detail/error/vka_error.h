@@ -20,6 +20,9 @@ namespace vka::detail::error
     // Throws a std::runtime_error exception with a message.
     void throw_runtime_error(const char* msg);
 
+    // Throws a std::bad_alloc exception with a message.
+    void throw_bad_alloc(void);
+
     // Checks, if the vulkan result is an error.
     inline bool is_error(VkResult res) noexcept;
 

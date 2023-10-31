@@ -15,7 +15,7 @@ namespace vka
 {
     class Texture
     {
-        enum State : uint8_t
+        enum State
         {
             STATE_INVALID   = 0,    // 00
             STATE_CREATED   = 1,    // 01
