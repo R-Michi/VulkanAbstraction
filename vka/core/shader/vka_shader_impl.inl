@@ -163,7 +163,7 @@ void vka::Shader2::init(VkDevice device) noexcept
         this->m_device = device;
 }
 
-void vka::Shader2::create(const char* path)
+void vka::Shader2::create(const std::string& path)
 {
     if (!this->is_valid())
     {

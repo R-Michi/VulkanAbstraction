@@ -171,7 +171,7 @@ namespace vka
         * is "main" by default. A std::invalid_argument exception is thrown, if 'this' has not been
         * initialized.
         */
-        void create(const char* path);
+        void create(const std::string& path);
 
         /*
         * Destroys the Shader object. After destroying, 'this' holds its default initialization
