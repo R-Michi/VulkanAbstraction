@@ -181,8 +181,6 @@ void vka::Shader2::create(const char* path)
         // allocate buffer and read file
         // use unique ptr for memory guard
         std::unique_ptr<char> code(new char[file_size]);
-        if (code == nullptr) [[unlikely]]
-            detail::error::throw_bad_alloc();
         file.read(code.get(), file_size);
         file.close();
 
