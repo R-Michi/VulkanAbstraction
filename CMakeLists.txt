@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.8)
 # current project
 project("VulkanAbstraction")
 
-set(COMPILE_OPTIONS -mfma -mavx2 -mf16c)
+set(COMPILE_OPTIONS -mf16c -mfma -mavx2)
 set(COMPILE_WARNINGS -Walloca -Wall)
 
 # use C++ 20
