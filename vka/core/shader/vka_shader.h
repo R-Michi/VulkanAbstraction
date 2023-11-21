@@ -16,104 +16,6 @@ namespace vka
     class Shader
     {
     private:
-        VkDevice _device;
-        char* _entry_point;
-        VkShaderStageFlagBits _stage;
-        VkShaderModule _module;
-        size_t _size;
-    
-    public:
-        Shader(void) noexcept;
-    
-        /**
-        * @param[in] device         logical device
-        * @param[in] entry_point    the shader's entry point
-        */
-        explicit Shader(VkDevice device, const std::string& entry_point = "main") noexcept;
-        
-        Shader(const Shader&) = delete;
-        Shader& operator= (const Shader&) = delete;
-        
-        Shader(Shader&& shader);
-        Shader& operator= (Shader&& shader);
-        
-        virtual ~Shader(void);
-        
-        /**
-        * @brief            Loads the pre-compiled shader file (file extension: .spv)
-        * @param[in] path   path to the shader file
-        * @param[in] stage  shader stage (vertex, geometry, fragment,...)
-        * @return           vulkan result
-        */
-        VkResult load(const std::string& path, VkShaderStageFlagBits stage);
-        
-        /** @brief Clears the shader. The shader can be reloaded again. */
-        void clear(void);
-        
-        /** @param[in] device logical device */
-        void set_device(VkDevice device) noexcept;
-        
-        /** @param[in] entry_point shader entry point */
-        void set_entry_point(const std::string& entry_point) noexcept;
-        
-        /** @return shader module handle */
-        VkShaderModule get_module(void) const noexcept;
-        
-        /** @return shader stage */
-        VkShaderStageFlagBits get_stage(void) const noexcept;
-        
-        /** @return shader entry point */
-        const char* get_entry_point(void) const noexcept;
-        
-        /** @return shader code size in bytes */
-        size_t size(void) const noexcept;
-    };
-
-    class ShaderProgram
-    {
-    private:
-        std::vector<VkPipelineShaderStageCreateInfo> _shader_stages;
-        std::vector<Shader> _shaders;
-    
-    public:
-        ShaderProgram(void) noexcept = default;
-        
-        /**
-        * @brief                Constructor to attach multiple shaders.
-        * @param[in] shaders    shaders to attach
-        */
-        explicit ShaderProgram(std::vector<Shader>& shaders);
-        
-        ShaderProgram(const ShaderProgram&) = delete;
-        ShaderProgram& operator= (const ShaderProgram&) = delete;
-        
-        ShaderProgram(ShaderProgram&&) = delete;
-        ShaderProgram& operator= (ShaderProgram&&) = delete;
-        
-        virtual ~ShaderProgram(void) = default;
-        
-        /**
-        * @brief                Attaches a shader to the shader program.
-        * @param[in] shader     shader to attach
-        */
-        void attach(Shader& shader);
-        
-        /** @brief Cleares the shader program. No shaders are attached anymore after clear. */
-        void clear(void) noexcept;
-        
-        /** @return amount of shaders attached to the shader program */
-        uint32_t count(void) const noexcept;
-        
-        /** 
-         * @return  array of VkPipelineShaderStageCreateInfo structs for the rendering pipeline 
-         *          The returned create info structs are in the same order as the shaders were attached.
-         */
-        const VkPipelineShaderStageCreateInfo* get_stages(void) const noexcept;
-    };
-
-    class Shader2
-    {
-    private:
         static constexpr const char FILE_OPEN_FAILED[] = "[vka::Shader::create]: Failed to open shader file.";
         static constexpr const char SHADER_CREATE_FAILED[] = "[vka::Shader::create]: Failed to create shader module.";
 
@@ -136,11 +38,11 @@ namespace vka
         * All other handles are initialized to a VK_NULL_HANDLE and every other member variable
         * contains its default initialization.
         */
-        explicit Shader2(VkDevice device = VK_NULL_HANDLE);
+        explicit Shader(VkDevice device = VK_NULL_HANDLE);
 
         // There is no need for a shader to be copyable.
-        Shader2(const Shader2&) = delete;
-        Shader2& operator= (const Shader2&) = delete;
+        Shader(const Shader&) = delete;
+        Shader& operator= (const Shader&) = delete;
 
         /*
         * Moves another object of Shader into 'this'. 'This' now holds the ownership of all the
@@ -149,11 +51,11 @@ namespace vka
         * in the moved object. If 'this' was created and is a valid object, 'this' is destroyed and
         * replaced by the handles of the moved object.
         */
-        Shader2(Shader2&& src) noexcept;
-        Shader2& operator= (Shader2&& src) noexcept;
+        Shader(Shader&& src) noexcept;
+        Shader& operator= (Shader&& src) noexcept;
 
         // The destructor destroys all the vulkan handles.
-        virtual ~Shader2(void);
+        virtual ~Shader(void);
 
         /*
         * Initializes 'this' with a device. The device does not have to be valid at initialization.
@@ -185,11 +87,26 @@ namespace vka
 
         // Returns true, if the Shader is a valid object and false otherwise.
         inline bool is_valid(void) const noexcept;
+
+        /*
+        * Generates a pipeline shader stage from this shader. 'stage' specifies the stage that is used
+        * for this shader. 'flags' specifies the used flags for this shader stage which are 0 by
+        * default. 'entry' specifies the entry point (name of the main function) of the shader which
+        * is "main" by default. 'specialization' specifies additional specialization info used for the
+        * shader stage which is 'nullptr' (unused) by default. A Vulkan VkPipelineShaderStageCreateInfo
+        * structure is returned.
+        * NOTE: For more information also see the vulkan documentation of VkPipelineShaderStageCreateInfo.
+        */
+        inline VkPipelineShaderStageCreateInfo make_stage(
+            VkShaderStageFlagBits stage,
+            VkPipelineShaderStageCreateFlags flags = 0, 
+            const char* entry_point = "main", 
+            const VkSpecializationInfo* specialization = nullptr
+        ) const noexcept;
     };
 }
 
 #ifdef VKA_IMPLEMENTATION
     #include "vka_shader_impl.inl"
-    #include "vka_shader_program_impl.inl"
 #endif
 #include "vka_shader_inline_impl.inl"

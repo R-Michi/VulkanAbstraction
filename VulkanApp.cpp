@@ -101,7 +101,8 @@ void VulkanApp::vulkan_destroy(void)
 	vkDestroyPipelineLayout(this->device, this->pipeline_layout, nullptr);
 	vkDestroyPipeline(this->device, this->pipeline, nullptr);
 
-	this->main_shader.clear();
+	this->shaders[0].destroy();
+	this->shaders[1].destroy();
 	this->descriptor_manager.clear();
 
 	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
@@ -446,12 +447,10 @@ void VulkanApp::create_render_pass(void)
 
 void VulkanApp::create_shaders(void)
 {
-	vka::Shader main_vert(this->device), main_frag(this->device);
-	main_vert.load("../../../assets/shaders/bin/main.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-	main_frag.load("../../../assets/shaders/bin/main.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-
-	this->main_shader.attach(main_vert);
-	this->main_shader.attach(main_frag);
+	this->shaders[0].init(this->device);
+	this->shaders[1].init(this->device);
+	shaders[0].create("../../../assets/shaders/bin/main.vert.spv");
+	shaders[1].create("../../../assets/shaders/bin/main.frag.spv");
 }
 
 void VulkanApp::create_pipeline(void)
@@ -601,12 +600,17 @@ void VulkanApp::create_pipeline(void)
 	VkResult result = vkCreatePipelineLayout(this->device, &layout_create_info, nullptr, &this->pipeline_layout);
 	VULKAN_ASSERT(result);
 
+	const VkPipelineShaderStageCreateInfo shader_stages[2] = {
+		this->shaders[0].make_stage(VK_SHADER_STAGE_VERTEX_BIT),
+		this->shaders[1].make_stage(VK_SHADER_STAGE_FRAGMENT_BIT)
+	};
+
 	VkGraphicsPipelineCreateInfo pipeline_create_info;
 	pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipeline_create_info.pNext = nullptr;
 	pipeline_create_info.flags = 0;
 	pipeline_create_info.stageCount = 2;
-	pipeline_create_info.pStages = this->main_shader.get_stages();
+	pipeline_create_info.pStages = shader_stages;
 	pipeline_create_info.pVertexInputState = &vertex_input_create_info;
 	pipeline_create_info.pInputAssemblyState = &input_assambly_create_info;
 	pipeline_create_info.pTessellationState = nullptr;

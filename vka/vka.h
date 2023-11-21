@@ -11,7 +11,6 @@
 
 /*
 * Checklist:
-*   - shader
 *   - descriptor
 *   - NEW: push constants
 *   - model

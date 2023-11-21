@@ -59,7 +59,7 @@ private:
 	std::vector<VkFramebuffer> swapchain_framebuffers;
 
 	VkRenderPass render_pass;
-	vka::ShaderProgram main_shader;
+	vka::Shader shaders[2];
 	VkPipelineLayout pipeline_layout;
 	VkPipeline pipeline;
 
