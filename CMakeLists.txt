@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.8)
 # current project
 project("VulkanAbstraction")
 
-set(COMPILE_OPTIONS -mf16c -mfma -mavx2)
+set(COMPILE_OPTIONS -mf16c -mfma -mavx2 -save-temps -masm=intel)
 set(COMPILE_WARNINGS -Walloca -Wall)
 
 # use C++ 20
@@ -35,11 +35,15 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/tiny_obj_loader"
 )
 
-# testing library
-add_library(vka_test "test/vka_test.cpp")
+# test soruces
+set(TEST_SOURCES
+        test/unique_handle_asm_test.cpp
+)
 
 # compile and link executable
-add_executable(vka "main.cpp" "VulkanApp.cpp"
+add_executable(vka
+        main.cpp
+        VulkanApp.cpp
         vka/core/common/vka_common.h
         vka/core/common/vka_common_impl.inl
         vka/core/common/vka_common_inline_impl.inl
@@ -49,8 +53,9 @@ add_executable(vka "main.cpp" "VulkanApp.cpp"
         vka/detail/common/vka_common.h
         vka/detail/common/vka_common_impl.inl
         vka/detail/common/vka_common_inline_impl.inl
+        ${TEST_SOURCES}
 )
-target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY} vka_test)
+target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
 
 # custom command to compile shaders while compiling the program
 #add_custom_command(

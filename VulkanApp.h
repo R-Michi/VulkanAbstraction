@@ -14,6 +14,7 @@
 #ifdef __clang__
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wempty-body"
+    #pragma clang diagnostic ignored "-Wparentheses-equality"
 		#include <stb/stb_image.h>
 	#pragma clang diagnostic pop
 #else
