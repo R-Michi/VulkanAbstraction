@@ -16,5 +16,4 @@
 
 namespace vka::test
 {
-    inline void unique_handle_asm(void) noexcept;
 }

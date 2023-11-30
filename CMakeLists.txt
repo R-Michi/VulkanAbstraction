@@ -37,7 +37,6 @@ include_directories(
 
 # test soruces
 set(TEST_SOURCES
-        test/unique_handle_asm_test.cpp
 )
 
 # compile and link executable

@@ -15,37 +15,6 @@
 
 namespace vka
 {
-    template<typename T>
-    using is_handle = detail::common::is_handle<T>;
-    template<typename T>
-    using is_handle_v = detail::common::is_handle<T>::value;
-
-    template<typename T>
-    using is_deletable = detail::common::is_deletable<T>;
-    template<typename T>
-    using is_deletable_v = detail::common::is_deletable<T>::value;
-
-    template<typename T>
-    using is_array_deletable = detail::common::is_array_deletable<T>;
-    template<typename T>
-    using is_array_deletable_v = detail::common::is_array_deletable<T>::value;
-
-    template<typename T>
-    using is_owner = detail::common::is_owner<T>;
-    template<typename T>
-    using is_owner_v = detail::common::is_owner<T>::value;
-
-    template<typename T>
-    using is_secondary_owner = detail::common::is_secondary_owner<T>;
-    template<typename T>
-    using is_secondary_owner_v = detail::common::is_secondary_owner<T>::value;
-
-    template<typename T>
-    using unique_handle = detail::common::unique_handle<T, detail::common::HandleDeleter<T>::deleter, typename detail::common::get_owner<T>::Owner, typename detail::common::get_secondary_owner<T>::Owner>;
-
-    template<typename T, size_t N>
-    using unique_handle_array = detail::common::unique_handle_array<T, N, detail::common::HandleDeleter<T>::deleter, typename detail::common::get_owner<T>::Owner, typename detail::common::get_secondary_owner<T>::Owner>;
-
     /*
      * This class implements a one-time submit command buffer which is used to record buffer copy
      * and texture create commands. The destructor of this class does free the command buffer
