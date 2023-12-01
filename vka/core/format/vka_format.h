@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include "../../detail/format/vka_format.h"
+
 namespace vka::format
 {
     /*
@@ -71,6 +73,15 @@ namespace vka::format
     * To speed up the querying, memory can be reserved by the vector to minimize reallocation's.
     */
     void get_supported(VkPhysicalDevice physical_device, VkImageTiling tiling, VkFormatFeatureFlags format_feature, std::vector<VkFormat>& formats);
+}
+
+namespace vka
+{
+    /*
+    * Converts a vulkan format to a size in bytes. The format to convert is specified by 'format'.
+     * The size in bytes is returned.
+    */
+    constexpr size_t format_sizeof(VkFormat format) noexcept;
 }
 
 #ifdef VKA_IMPLEMENTATION

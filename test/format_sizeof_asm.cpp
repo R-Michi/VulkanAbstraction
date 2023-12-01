@@ -1,6 +1,6 @@
 /**
 * @file     vka_test.h
-* @brief    Main include file of the test bench.
+* @brief    Testing assembly code of format_sizeof function.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -9,7 +9,9 @@
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-#pragma once
+#include "vka_test.h"
 
-#include <vulkan/vulkan.h>
-#include "../vka/vka.h"
+size_t foo(VkFormat format)
+{
+    return vka::format_sizeof(VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK);
+}

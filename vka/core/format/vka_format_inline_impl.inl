@@ -42,3 +42,7 @@ constexpr void vka::format::get_depth_stencil(VkFormat* formats) noexcept
     formats[2] = VK_FORMAT_D32_SFLOAT_S8_UINT;
 }
 
+constexpr size_t vka::format_sizeof(VkFormat format) noexcept
+{
+    return detail::format::SIZE_LOOKUP[static_cast<size_t>(format) - detail::format::get_format_size_offset(format)];
+}

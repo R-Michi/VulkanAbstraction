@@ -118,12 +118,6 @@ namespace vka
         * NOTE: The function name stands for "convert std::string to const char pointer vector"
         */
         void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;
-
-        /*
-        * Converts a vulkan format to a size in bytes. The format to convert is specified by
-        * 'format'. The size in bytes is returned.
-        */
-        inline size_t format_sizeof(VkFormat format);
     }
 }
 

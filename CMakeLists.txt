@@ -37,6 +37,7 @@ include_directories(
 
 # test soruces
 set(TEST_SOURCES
+        test/format_sizeof_asm.cpp
 )
 
 # compile and link executable
@@ -50,8 +51,9 @@ add_executable(vka
         vka/core/format/vka_format_inline_impl.inl
         vka/core/format/vka_format_impl.inl
         vka/detail/common/vka_common.h
-        vka/detail/common/vka_common_impl.inl
         vka/detail/common/vka_common_inline_impl.inl
+        vka/detail/format/vka_format.h
+        vka/detail/format/vka_format_inline_impl.inl
         ${TEST_SOURCES}
 )
 target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})

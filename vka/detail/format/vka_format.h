@@ -1,6 +1,6 @@
 /**
-* @file     vka_test.h
-* @brief    Main include file of the test bench.
+* @file     vka_utility.h
+* @brief    Detailed declaration of format functionality.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -11,5 +11,9 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
-#include "../vka/vka.h"
+namespace vka::detail::format
+{
+    constexpr size_t get_format_size_offset(VkFormat format);
+}
+
+#include "vka_format_inline_impl.inl"

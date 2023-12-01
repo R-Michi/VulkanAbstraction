@@ -85,15 +85,3 @@ constexpr VkFormatFeatureFlags vka::common::cvt_iu2ff(VkImageUsageFlags image_us
         flags |= detail::common::iu2ff_bit(static_cast<VkImageUsageFlagBits>(image_usage & (1 << i)));
     return flags;
 }
-
-/*
- * Initialize the map only once at the first call to that function. Every subsequent call just
- * returns the size of the given format.
- */
-inline size_t vka::common::format_sizeof(VkFormat format)
-{
-    static std::unordered_map<VkFormat, size_t> f2s;    // creates an empty map
-    if (f2s.empty()) [[unlikely]]   // this is only called once
-        detail::common::init_format_sizeof(f2s);
-    return f2s.at(format);
-}
