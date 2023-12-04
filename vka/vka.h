@@ -99,10 +99,10 @@
 #include "core/surface/vka_surface.h"
 #include "core/swapchain/vka_swapchain.h"
 #include "core/shader/vka_shader.h"
-#include "core/descriptor/vka_descriptor.h"
 #include "core/buffer/vka_buffer.h"
-#include "core/attachment/vka_attachment.h"
 #include "core/texture/vka_texture.h"
+#include "core/attachment/vka_attachment.h"
+#include "core/descriptor/vka_descriptor.h"
 
 #ifdef VKA_MODEL_LOADING_ENABLE
     #include "core/model/vka_model.h"

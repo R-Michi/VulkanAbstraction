@@ -149,7 +149,7 @@ namespace vka
         // Returns the size in bytes of the buffer.
         inline VkDeviceSize size(void) const noexcept;
 
-        // Returns the vulkan buffer handle.
+        // Returns the vulkan VkBuffer handle.
         inline VkBuffer handle(void) const noexcept;
 
         // Returns true, if the Buffer is a valid object and false otherwise.
