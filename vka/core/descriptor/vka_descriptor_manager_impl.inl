@@ -1,6 +1,6 @@
 /**
-* @file     vka_descriptor_manager_impl.inl
-* @brief    Descriptor manager implementation file.
+* @file     vka_descriptor_impl.inl
+* @brief    Descriptor implementation file.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -326,4 +326,25 @@ const std::vector<VkDescriptorSetLayout>& vka::DescriptorManager::layouts(void) 
 const std::vector<VkDescriptorSet>& vka::DescriptorManager::descriptor_sets(void) const noexcept
 {
     return this->sets;
+}
+
+
+
+/********************************************** DescriptorSetBindingList *********************************************/
+
+void vka::DescriptorSetBindingList::push(uint32_t set, VkShaderStageFlags stages, VkDescriptorType type, uint32_t count, const VkSampler* immutable_samplers)
+{
+    // the highest index must be the highest set number.
+    // -> size = max_index + 1 = max_set_number + 1
+    if (set >= this->m_bindings.size())
+        this->m_bindings.resize(set + 1);
+
+    const VkDescriptorSetLayoutBinding binding = {
+        .binding = (uint32_t)this->m_bindings[set].size(),
+        .descriptorType = type,
+        .descriptorCount = count,
+        .stageFlags = stages,
+        .pImmutableSamplers = immutable_samplers
+    };
+    this->m_bindings[set].push_back(binding);
 }

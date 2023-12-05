@@ -1,6 +1,6 @@
 /**
 * @file     vka_descriptor.h
-* @brief    Descriptor manager definition file.
+* @brief    Descriptor definition file.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
 *
@@ -10,6 +10,8 @@
 */
 
 #pragma once
+
+#include "../../detail/descriptor/vka_descriptor.h"
 
 namespace vka
 {
@@ -213,58 +215,13 @@ namespace vka
         inline uint32_t count(void) const noexcept;
     };
 
-    // TODO: move this info ::detail::descriptor
-    /*
-     * This is the base class for every kind descriptor info list. 'Info' specifies the descriptor
-     * info type and 'S' the maximum number of descriptor infos.
-     */
-    template<typename Info, uint32_t S>
-    class DescriptorInfoList
-    {
-    protected:
-        Info m_infos[S];
-        uint32_t idx;
-
-    public:
-        constexpr DescriptorInfoList(void) noexcept;
-        ~DescriptorInfoList(void) = default;
-
-        // Returns the number of descriptor infos which is specified by the template argument 'S'.
-        // TODO: make consteval for >= C++20
-        constexpr uint32_t size(void) const noexcept;
-
-        // Returns the written number of descriptor infos.
-        inline uint32_t count(void) const noexcept;
-
-        // Returns the raw info list.
-        inline const Info* data(void) const noexcept;
-    };
-
-    // TODO: move this info ::detail::descriptor
-    template<typename Info>
-    class DescriptorInfoList<Info, 0>
-    {
-    protected:
-        std::vector<Info> m_infos;
-
-    public:
-        DescriptorInfoList(void) = default;
-        ~DescriptorInfoList(void) = default;
-
-        // Returns the written number of descriptor infos.
-        inline uint32_t count(void) const noexcept;
-
-        // Returns the raw info list.
-        inline const Info* data(void) const noexcept;
-    };
-
     /*
      * This is a helper class to specify descriptor buffer infos. The number of buffer infos must be
      * known at compile-time and is specified by the template argument 'S'. 'S' is also the referred
      * to "the push limit" in function descriptions.
      */
     template<uint32_t S>
-    class BufferInfoList : public DescriptorInfoList<VkDescriptorBufferInfo, S>
+    class BufferInfoList : public detail::descriptor::DescriptorInfoList<VkDescriptorBufferInfo, S>
     {
     public:
         BufferInfoList(void) = default; // calls the default constructor of DescriptorInfoList
@@ -304,7 +261,7 @@ namespace vka
      * NOTE: The template argument 'S = 0' is chosen because it would be an invalid input for 'S'.
      */
     template<>
-    class BufferInfoList<0> : public DescriptorInfoList<VkDescriptorBufferInfo, 0>
+    class BufferInfoList<0> : public detail::descriptor::DescriptorInfoList<VkDescriptorBufferInfo, 0>
     {
     public:
         BufferInfoList(void) = default;
@@ -335,10 +292,10 @@ namespace vka
      * to "the push limit" in function descriptions.
      */
     template<uint32_t S>
-    class ImageInfoList : public DescriptorInfoList<VkDescriptorImageInfo, S>
+    class ImageInfoList : public detail::descriptor::DescriptorInfoList<VkDescriptorImageInfo, S>
     {
     public:
-        ImageInfoList(void) = default;
+        ImageInfoList(void) = default; // calls the default constructor of DescriptorInfoList
         ~ImageInfoList(void) = default;
 
         /*
@@ -351,19 +308,23 @@ namespace vka
         inline void push(VkImageView view, VkImageLayout layout, VkSampler sampler = VK_NULL_HANDLE);
 
         /*
-         * Adds a vka::Texture object to the list. The image info is implicitly specifies by the
-         * texture object. Therefore, the image view, layout and sampler are evaluated automatically.
-         * If the push limit has been exceeded, a std::out_of_range exception is thrown.
+         * Adds a vka::Texture object to the list. The image info is implicitly specified by the
+         * texture object. As the texture can contain multiple image views, the index of the used
+         * image view is specified by 'view_index'. Therefore, the sampler, layout and the actual
+         * image view handle are evaluated automatically. If the view index is invalid a
+         * std::out_of_range exception is thrown.
          */
-        inline void push(const Texture& texture);
+        inline void push(const Texture& texture, uint32_t view_index);
 
         /*
-         * These functions have the same functionality as 'push'. However, they no not throw an
+         * These functions have the same functionality as 'push'. However, they do not throw an
          * exception, if the push limit has been exceeded. Instead, those functions do nothing in
          * that particular case.
          */
         inline void push2(VkImageView view, VkImageLayout layout, VkSampler sampler = VK_NULL_HANDLE) noexcept;
-        inline void push2(const Texture& texture) noexcept;
+
+        // This function does also not throw an exception, if the view index is invalid.
+        inline void push2(const Texture& texture, uint32_t view_index) noexcept;
     };
 
     /*
@@ -372,7 +333,7 @@ namespace vka
      * NOTE: The template argument 'S = 0' is chosen because it would be an invalid input for 'S'.
      */
     template<>
-    class ImageInfoList<0> : public DescriptorInfoList<VkDescriptorImageInfo, 0>
+    class ImageInfoList<0> : public detail::descriptor::DescriptorInfoList<VkDescriptorImageInfo, 0>
     {
     public:
         ImageInfoList(void) = default;
@@ -387,10 +348,123 @@ namespace vka
         inline void push(VkImageView view, VkImageLayout layout, VkSampler sampler = VK_NULL_HANDLE);
 
         /*
-         * Adds a vka::Texture object to the list. The image info is implicitly specifies by the
-         * texture object. Therefore, the image view, layout and sampler are evaluated automatically.
+         * Adds a vka::Texture object to the list. The image info is implicitly specified by the
+         * texture object. As the texture can contain multiple image views, the index of the used
+         * image view is specified by 'view_index'. Therefore, the sampler, layout and the actual
+         * image view handle are evaluated automatically. If the view index is invalid a
+         * std::out_of_range exception is thrown.
          */
-        inline void push(const Texture& texture);
+        inline void push(const Texture& texture, uint32_t view_index);
+    };
+
+    /*
+     * This is a helper class to specify descriptor acceleration structure (NV) infos. It also contains
+     * the extension structure to the VkWriteDescriptorSet structure. The number of image infos must be
+     * known at compile-time and is specified by the template argument 'S'. 'S' is also the referred to
+     * "the push limit" in function descriptions.
+     */
+    template<uint32_t S>
+    class AccelerationStructureInfoListNV : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureNV, S>
+    {
+    private:
+        VkWriteDescriptorSetAccelerationStructureNV m_write;    // extension to VkWriteDescriptorSet
+
+    public:
+        constexpr AccelerationStructureInfoListNV(void) noexcept;
+        ~AccelerationStructureInfoListNV(void) = default;
+
+        /*
+         * Adds an acceleration structure (NV) to the list. 'as' specifies the acceleration structure.
+         * If the push limit has been exceeded, a std::out_of_range exception is thrown.
+         */
+        inline void push(VkAccelerationStructureNV as);
+
+        /*
+         * This function has the same functionality as 'push'. However, it does not throw an exception,
+         * if the push limit has been exceeded. Instead, this function does nothing in that particular
+         * case.
+         */
+        inline void push2(VkAccelerationStructureNV as) noexcept;
+
+        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
+        const VkWriteDescriptorSetAccelerationStructureNV* extension(void) const noexcept;
+    };
+
+    /*
+     * This is a special implementation of AccelerationStructureInfoListNV which uses a dynamic number
+     * of acceleration structures (NV). The list has no fixed size and can grow at runtime.
+     * NOTE: The template argument 'S = 0' is chosen because it would be an invalid input for 'S'.
+     */
+    template<>
+    class AccelerationStructureInfoListNV<0> : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureNV, 0>
+    {
+    private:
+        VkWriteDescriptorSetAccelerationStructureNV m_write; // extension to VkWriteDescriptorSet
+
+    public:
+        constexpr AccelerationStructureInfoListNV(void) noexcept;
+        ~AccelerationStructureInfoListNV(void) = default;
+
+        // Adds an acceleration structure (NV) to the list. 'as' specifies the acceleration structure.
+        inline void push(VkAccelerationStructureNV as);
+
+        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
+        const VkWriteDescriptorSetAccelerationStructureNV* extension(void) const noexcept;
+    };
+
+    /*
+     * This is a helper class to specify descriptor acceleration structure (KHR) infos. It also contains
+     * the extension structure to the VkWriteDescriptorSet structure. The number of image infos must be
+     * known at compile-time and is specified by the template argument 'S'. 'S' is also the referred to
+     * "the push limit" in function descriptions.
+     */
+    template<uint32_t S>
+    class AccelerationStructureInfoListKHR : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureKHR, S>
+    {
+    private:
+        VkWriteDescriptorSetAccelerationStructureKHR m_write; // extension to VkWriteDescriptorSet
+
+    public:
+        constexpr AccelerationStructureInfoListKHR(void) noexcept;
+        ~AccelerationStructureInfoListKHR(void) = default;
+
+        /*
+         * Adds an acceleration structure (KHR) to the list. 'as' specifies the acceleration structure.
+         * If the push limit has been exceeded, a std::out_of_range exception is thrown.
+         */
+        inline void push(VkAccelerationStructureKHR as);
+
+        /*
+         * This function has the same functionality as 'push'. However, it does not throw an exception,
+         * if the push limit has been exceeded. Instead, this function does nothing in that particular
+         * case.
+         */
+        inline void push2(VkAccelerationStructureKHR as) noexcept;
+
+        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
+        const VkWriteDescriptorSetAccelerationStructureKHR* extension(void) const noexcept;
+    };
+
+    /*
+     * This is a special implementation of AccelerationStructureInfoListKHR which uses a dynamic number
+     * of acceleration structures (KHR). The list has no fixed size and can grow at runtime.
+     * NOTE: The template argument 'S = 0' is chosen because it would be an invalid input for 'S'.
+     */
+    template<>
+    class AccelerationStructureInfoListKHR<0> : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureKHR, 0>
+    {
+    private:
+        VkWriteDescriptorSetAccelerationStructureKHR m_write; // extension to VkWriteDescriptorSet
+
+    public:
+        constexpr AccelerationStructureInfoListKHR(void) noexcept;
+        ~AccelerationStructureInfoListKHR(void) = default;
+
+        // Adds an acceleration structure (KHR) to the list. 'as' specifies the acceleration structure.
+        inline void push(VkAccelerationStructureKHR as);
+
+        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
+        const VkWriteDescriptorSetAccelerationStructureKHR* extension(void) const noexcept;
     };
 
     /*
@@ -401,6 +475,9 @@ namespace vka
     template<uint32_t S>
     class DescriptorWriteList
     {
+        template<typename Info, uint32_t S2>
+        using DescriptorInfoList = detail::descriptor::DescriptorInfoList<Info, S2>;
+
     private:
         VkWriteDescriptorSet m_writes[S];
         uint32_t m_idx;
@@ -499,7 +576,7 @@ namespace vka
         inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list) noexcept;
 
         template<typename Info, uint32_t S2>
-        inline void write2_const(VkDescriptorSet set, uint32_t binding, uint32_t doffset, const DescriptorInfoList<Info, S2>& list) noexcept;
+        inline void write2_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list) noexcept;
 
     };
 
@@ -511,6 +588,9 @@ namespace vka
     template<>
     class DescriptorWriteList<0>
     {
+        template<typename Info, uint32_t S2>
+        using DescriptorInfoList = detail::descriptor::DescriptorInfoList<Info, S2>;
+
     private:
         std::vector<VkWriteDescriptorSet> m_writes;
 
@@ -664,6 +744,7 @@ namespace vka
     {
     private:
         VkDevice m_device;
+        VkDescriptorPool m_pool;
         std::vector<VkDescriptorSet> m_sets;
 
     public:
@@ -673,12 +754,12 @@ namespace vka
         /*
          * This constructor creates the descriptor manager and the internal handles are now valid, if
          * no error occured. If an error occured while creating, a std::runtime_error exception is
-         * thrown with an appropriate message about the error. The descriptor manager is created with
-         * a vulkan device handle which is specified by 'device' and a descriptor-manager-layout which
-         * is specified by 'layout'. This constructor has the same functionality as the function
-         * 'create()'.
+         * thrown with an appropriate message about the error. The descriptor manager requires a device
+         * and a descriptor pool to be created which are specifies by 'device' and 'pool' respectively.
+         * 'layout' specifies the layouts that are used to create the descriptor sets with.
+         *  This constructor has the same functionality as the function 'create()'.
          */
-        explicit DescriptorManager2(VkDevice device, const DescriptorManagerLayout& layout);
+        explicit DescriptorManager2(VkDevice device, VkDescriptorPool pool, const DescriptorManagerLayout& layout);
 
         // The DescriptorManager must be unique.
         DescriptorManager2(const DescriptorManager2&) = delete;
@@ -698,13 +779,13 @@ namespace vka
         virtual ~DescriptorManager2(void);
 
         /*
-         * This function creates the descriptor manager and the internal handles are now valid, if no
-         * error occured. If an error occured while creating, a std::runtime_error exception is thrown
-         * with an appropriate message about the error. The descriptor manager is created with a vulkan
-         * device handle which is specified by 'device' and a descriptor-manager-layout which is
-         * specified by 'layout'.
+         * This constructor creates the descriptor manager and the internal handles are now valid, if
+         * no error occured. If an error occured while creating, a std::runtime_error exception is
+         * thrown with an appropriate message about the error. The descriptor manager requires a device
+         * and a descriptor pool to be created which are specifies by 'device' and 'pool' respectively.
+         * 'layout' specifies the layouts that are used to create the descriptor sets with.
          */
-        void create(VkDevice device, const DescriptorManagerLayout& layout);
+        void create(VkDevice device, VkDescriptorPool pool, const DescriptorManagerLayout& layout);
 
         /*
          * Destroys all the internal vulkan handles and sets them to VK_NULL_HANDLE except for parent
@@ -753,3 +834,4 @@ namespace vka
 #ifdef VKA_IMPLEMENTATION
     #include "vka_descriptor_manager_impl.inl"
 #endif
+#include "vka_descriptor_inline_impl.inl"

@@ -1,5 +1,5 @@
 /**
-* @file     vka_utility.h
+* @file     vka_format_inline_impl.inl
 * @brief    Detailed implementation of format functionality.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi

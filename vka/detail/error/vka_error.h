@@ -20,6 +20,9 @@ namespace vka::detail::error
     // Throws a std::runtime_error exception with a message.
     void throw_runtime_error(const char* msg);
 
+    // Throws a std::out_of_range exception with a message.
+    void throw_out_of_range(const char* msg);
+
     // Throws a std::bad_alloc exception with a message.
     void throw_bad_alloc(void);
 

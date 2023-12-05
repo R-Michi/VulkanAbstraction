@@ -38,6 +38,9 @@ include_directories(
 # test soruces
 set(TEST_SOURCES
         test/format_sizeof_asm.cpp
+        vka/detail/descriptor/vka_descriptor.h
+        vka/detail/descriptor/vka_descriptor_inline_impl.inl
+        vka/core/descriptor/vka_descriptor_inline_impl.inl
 )
 
 # compile and link executable
