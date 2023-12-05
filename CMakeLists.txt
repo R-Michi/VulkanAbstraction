@@ -38,25 +38,25 @@ include_directories(
 # test soruces
 set(TEST_SOURCES
         test/format_sizeof_asm.cpp
-        vka/detail/descriptor/vka_descriptor.h
-        vka/detail/descriptor/vka_descriptor_inline_impl.inl
-        vka/core/descriptor/vka_descriptor_inline_impl.inl
+        #vka/detail/descriptor/vka_descriptor.h
+        #vka/detail/descriptor/vka_descriptor_inline_impl.inl
+        #vka/core/descriptor/vka_descriptor_inline_impl.inl
 )
 
 # compile and link executable
 add_executable(vka
         main.cpp
         VulkanApp.cpp
-        vka/core/common/vka_common.h
-        vka/core/common/vka_common_impl.inl
-        vka/core/common/vka_common_inline_impl.inl
-        vka/core/format/vka_format.h
-        vka/core/format/vka_format_inline_impl.inl
-        vka/core/format/vka_format_impl.inl
-        vka/detail/common/vka_common.h
-        vka/detail/common/vka_common_inline_impl.inl
-        vka/detail/format/vka_format.h
-        vka/detail/format/vka_format_inline_impl.inl
+        #vka/core/common/vka_common.h
+        #vka/core/common/vka_common_impl.inl
+        #vka/core/common/vka_common_inline_impl.inl
+        #vka/core/format/vka_format.h
+        #vka/core/format/vka_format_inline_impl.inl
+        #vka/core/format/vka_format_impl.inl
+        #vka/detail/common/vka_common.h
+        #vka/detail/common/vka_common_inline_impl.inl
+        #vka/detail/format/vka_format.h
+        #vka/detail/format/vka_format_inline_impl.inl
         ${TEST_SOURCES}
 )
 target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})

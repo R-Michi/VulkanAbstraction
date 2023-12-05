@@ -75,8 +75,6 @@ VkResult vka::CommandBufferOTS::end_wait(VkQueue queue, VkFence fence, uint64_t 
     return res;
 }
 
-
-
 void vka::common::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept
 {
     for (size_t i = 0; i < std_in.size(); i++)

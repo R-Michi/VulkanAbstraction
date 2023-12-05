@@ -366,11 +366,8 @@ namespace vka
     template<uint32_t S>
     class AccelerationStructureInfoListNV : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureNV, S>
     {
-    private:
-        VkWriteDescriptorSetAccelerationStructureNV m_write;    // extension to VkWriteDescriptorSet
-
     public:
-        constexpr AccelerationStructureInfoListNV(void) noexcept;
+        AccelerationStructureInfoListNV(void) = default;
         ~AccelerationStructureInfoListNV(void) = default;
 
         /*
@@ -385,9 +382,6 @@ namespace vka
          * case.
          */
         inline void push2(VkAccelerationStructureNV as) noexcept;
-
-        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
-        const VkWriteDescriptorSetAccelerationStructureNV* extension(void) const noexcept;
     };
 
     /*
@@ -398,18 +392,12 @@ namespace vka
     template<>
     class AccelerationStructureInfoListNV<0> : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureNV, 0>
     {
-    private:
-        VkWriteDescriptorSetAccelerationStructureNV m_write; // extension to VkWriteDescriptorSet
-
     public:
-        constexpr AccelerationStructureInfoListNV(void) noexcept;
+        AccelerationStructureInfoListNV(void) = default;
         ~AccelerationStructureInfoListNV(void) = default;
 
         // Adds an acceleration structure (NV) to the list. 'as' specifies the acceleration structure.
         inline void push(VkAccelerationStructureNV as);
-
-        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
-        const VkWriteDescriptorSetAccelerationStructureNV* extension(void) const noexcept;
     };
 
     /*
@@ -425,7 +413,7 @@ namespace vka
         VkWriteDescriptorSetAccelerationStructureKHR m_write; // extension to VkWriteDescriptorSet
 
     public:
-        constexpr AccelerationStructureInfoListKHR(void) noexcept;
+        AccelerationStructureInfoListKHR(void) = default;
         ~AccelerationStructureInfoListKHR(void) = default;
 
         /*
@@ -440,9 +428,6 @@ namespace vka
          * case.
          */
         inline void push2(VkAccelerationStructureKHR as) noexcept;
-
-        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
-        const VkWriteDescriptorSetAccelerationStructureKHR* extension(void) const noexcept;
     };
 
     /*
@@ -453,18 +438,22 @@ namespace vka
     template<>
     class AccelerationStructureInfoListKHR<0> : public detail::descriptor::DescriptorInfoList<VkAccelerationStructureKHR, 0>
     {
-    private:
-        VkWriteDescriptorSetAccelerationStructureKHR m_write; // extension to VkWriteDescriptorSet
-
     public:
-        constexpr AccelerationStructureInfoListKHR(void) noexcept;
+        AccelerationStructureInfoListKHR(void) = default;
         ~AccelerationStructureInfoListKHR(void) = default;
 
         // Adds an acceleration structure (KHR) to the list. 'as' specifies the acceleration structure.
         inline void push(VkAccelerationStructureKHR as);
+    };
 
-        // Returns a pointer to the extension structure for VkWriteDescriptorSet.
-        const VkWriteDescriptorSetAccelerationStructureKHR* extension(void) const noexcept;
+    class InlineUniformBlockInfo : public detail::descriptor::DescriptorInfoList<const void*, 0>
+    {
+    public:
+        InlineUniformBlockInfo(void) = default;
+        ~InlineUniformBlockInfo(void) = default;
+
+        // Sets the inline uniform block data.
+        inline void set(const void* data) noexcept;
     };
 
     /*
@@ -477,69 +466,26 @@ namespace vka
     {
         template<typename Info, uint32_t S2>
         using DescriptorInfoList = detail::descriptor::DescriptorInfoList<Info, S2>;
+        using ExtendedWriteSet = detail::descriptor::ExtendedWriteSet;
 
     private:
         VkWriteDescriptorSet m_writes[S];
+        ExtendedWriteSet m_writes_ext[S];
         uint32_t m_idx;
+
+        template<typename Info, uint32_t S2>
+        inline void init_write(
+            VkDescriptorSet                     set,
+            uint32_t                            binding,
+            uint32_t                            offset,
+            uint32_t                            count,
+            VkDescriptorType                    type,
+            const DescriptorInfoList<Info, S2>& list
+        );
 
     public:
         constexpr DescriptorWriteList(void) noexcept;
         ~DescriptorWriteList(void) = default;
-
-        /*
-         * Adds a list of VkDescriptorBufferInfo to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkDescriptorBufferInfo
-         * structures which contain the source data for the descriptor write operation. If the write
-         * limit has been exceeded, a std::out_of_range exception is thrown.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkDescriptorBufferInfo* list);
-
-        /*
-         * Adds a list of VkDescriptorImageInfo to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkDescriptorImageInfo
-         * structures which contain the source data for the descriptor write operation. If the write
-         * limit has been exceeded, a std::out_of_range exception is thrown.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkDescriptorImageInfo* list);
-
-        /*
-         * Adds a list of VkAccelerationStructureNV to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkAccelerationStructureNV
-         * handles which are the source data for the descriptor write operation. If the write limit has
-         * been exceeded, a std::out_of_range exception is thrown.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkAccelerationStructureNV* list);
-
-        /*
-         * Adds a list of VkAccelerationStructureKHR to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkAccelerationStructureKHR
-         * handles which are the source data for the descriptor write operation. If the write limit has
-         * been exceeded, a std::out_of_range exception is thrown.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkAccelerationStructureKHR* list);
-
-        /*
-         * Adds an inline uniform block to the descriptor-write-list. 'set' specifies the target
-         * descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected
-         * by the write operation. 'count' specifies the number of descriptors that are affected
-         * by the write operation starting at 'offset'. 'data' specifies the data of an inline
-         * uniform block. If the write limit has been exceeded, a std::out_of_range exception is
-         * thrown.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const void* data);
 
         /*
          * Adds any available descriptor-info-list to the descriptor-write-list. 'set' specifies the
@@ -551,7 +497,7 @@ namespace vka
          * If the write limit has been exceeded, a std::out_of_range exception is thrown.
          */
         template<typename Info, uint32_t S2>
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list);
+        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list);
 
         /*
          * This function has the same functionality as 'write()'. However, the number of affected
@@ -559,24 +505,18 @@ namespace vka
          * 'DescriptorInfoList::size()'.
          */
         template<typename Info, uint32_t S2>
-        inline void write_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list);
+        inline void write_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list);
 
         /*
          * These functions have the same functionality as 'write' or 'write_const' respectively.
          * However, they do not throw an exception, if the write limit has been exceeded. Instead,
          * those functions do nothing in that particular case.
          */
-        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkDescriptorBufferInfo* list) noexcept;
-        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkDescriptorImageInfo* list) noexcept;
-        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkAccelerationStructureNV* list) noexcept;
-        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkAccelerationStructureKHR* list) noexcept;
-        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const void* list) noexcept;
+        template<typename Info, uint32_t S2>
+        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list) noexcept;
 
         template<typename Info, uint32_t S2>
-        inline void write2(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list) noexcept;
-
-        template<typename Info, uint32_t S2>
-        inline void write2_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list) noexcept;
+        inline void write2_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list) noexcept;
 
     };
 
@@ -590,63 +530,15 @@ namespace vka
     {
         template<typename Info, uint32_t S2>
         using DescriptorInfoList = detail::descriptor::DescriptorInfoList<Info, S2>;
+        using ExtendedWriteSet = detail::descriptor::ExtendedWriteSet;
 
     private:
         std::vector<VkWriteDescriptorSet> m_writes;
+        std::vector<ExtendedWriteSet> m_writes_ext;
 
     public:
         DescriptorWriteList(void) = default;
         ~DescriptorWriteList(void) = default;
-
-        /*
-         * Adds a list of VkDescriptorBufferInfo to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkDescriptorBufferInfo
-         * structures which contain the source data for the descriptor write operation.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkDescriptorBufferInfo* list);
-
-        /*
-         * Adds a list of VkDescriptorImageInfo to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkDescriptorImageInfo
-         * structures which contain the source data for the descriptor write operation.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkDescriptorImageInfo* list);
-
-        /*
-         * Adds a list of VkAccelerationStructureNV to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkAccelerationStructureNV
-         * handles which are the source data for the descriptor write operation.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkAccelerationStructureNV* list);
-
-        /*
-         * Adds a list of VkAccelerationStructureKHR to the descriptor-write-list. 'set' specifies the
-         * target descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
-         * the write operation. 'count' specifies the number of descriptors that are affected by the
-         * write operation starting at 'offset'. 'list' specifies an array of VkAccelerationStructureKHR
-         * handles which are the source data for the descriptor write operation.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const VkAccelerationStructureKHR* list);
-
-        /*
-         * Adds an inline uniform block to the descriptor-write-list. 'set' specifies the target
-         * descriptor set of the write operation. 'binding' specifies the binding of the target
-         * descriptor set. 'offset' specifies the index of the first descriptor that is affected
-         * by the write operation. 'count' specifies the number of descriptors that are affected
-         * by the write operation starting at 'offset'. 'data' specifies the data of an inline
-         * uniform block.
-         */
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, const void* data);
 
         /*
          * Adds any available descriptor-info-list to the descriptor-write-list. 'set' specifies the
@@ -657,7 +549,7 @@ namespace vka
          * written descriptor infos and corresponds to the function 'DescriptorInfoList::count()'.
          */
         template<typename Info, uint32_t S2>
-        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list);
+        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list);
 
         /*
          * This function has the same functionality as 'write()'. However, the number of affected
@@ -665,7 +557,7 @@ namespace vka
          * 'DescriptorInfoList::size()'.
          */
         template<typename Info, uint32_t S2>
-        inline void write_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, const DescriptorInfoList<Info, S2>& list);
+        inline void write_const(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list);
     };
 
     class DescriptorManagerLayout

@@ -34,6 +34,8 @@ inline const Info* vka::detail::descriptor::DescriptorInfoList<Info, S>::data(vo
     return this->m_infos;
 }
 
+
+
 template<typename Info>
 inline uint32_t vka::detail::descriptor::DescriptorInfoList<Info, 0>::count(void) const noexcept
 {
@@ -44,4 +46,21 @@ template<typename Info>
 inline const Info* vka::detail::descriptor::DescriptorInfoList<Info, 0>::data(void) const noexcept
 {
     return this->m_infos.data();
+}
+
+
+
+constexpr uint32_t vka::detail::descriptor::DescriptorInfoList<const void*, 0>::size(void) const noexcept
+{
+    return 0;
+}
+
+constexpr uint32_t vka::detail::descriptor::DescriptorInfoList<const void*, 0>::count(void) const noexcept
+{
+    return 0;
+}
+
+inline const void* vka::detail::descriptor::DescriptorInfoList<const void*, 0>::data(void) const noexcept
+{
+    return this->m_data;
 }
