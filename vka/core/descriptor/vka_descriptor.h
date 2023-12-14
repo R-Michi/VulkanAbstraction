@@ -215,6 +215,290 @@ namespace vka
         inline uint32_t count(void) const noexcept;
     };
 
+    template<typename Info, uint32_t S>
+    class DescriptorInfoList
+    {
+    private:
+        Info m_infos[S];
+        uint32_t m_idx;
+
+    public:
+        inline DescriptorInfoList(void) noexcept;
+        ~DescriptorInfoList(void) = default;
+
+        inline void push(Info info) noexcept;
+
+        // Returns the number of buffer infos.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the array of Info handles.
+        inline const Info* data(void) const noexcept;
+    };
+
+    template<typename Info>
+    class DescriptorInfoList<Info, 0>
+    {
+    private:
+        std::vector<Info> m_infos;
+
+    public:
+        DescriptorInfoList(void) = default;
+        ~DescriptorInfoList(void) = default;
+
+        inline void push(Info info);
+
+        // Returns the number of buffer infos.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the array of Info handles.
+        inline const Info* data(void) const noexcept;
+    };
+
+    template<uint32_t S>
+    class DescriptorInfoList<VkDescriptorBufferInfo, S>
+    {
+    private:
+        VkDescriptorBufferInfo m_infos[S];
+        uint32_t m_idx;
+
+    public:
+        inline DescriptorInfoList(void) noexcept;
+        ~DescriptorInfoList(void) = default;
+
+        /*
+         * Adds a buffer info to the list. 'buffer' specifies a vulkan buffer handle. 'offset' specifies
+         * an offset in bytes in the buffer that is referenced by the descriptor. 'range' specifies the
+         * memory size in bytes that is referenced by the descriptor.  By default, 'offset' is 0 and
+         * 'range' is VK_WHOLE_SIZE. This implies that the whole buffer is referenced by the descriptor
+         * by default. If the push limit has been exceeded, a std::out_of_range exception is thrown.
+         * NOTE: See the documentation of VkDescriptorBufferInfo for more information.
+         */
+        inline void push(VkBuffer buffer, VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE) noexcept;
+
+        /*
+         * Adds a vka::Buffer object to the list. The VkBuffer handle is implicitly specified by the
+         * buffer object. 'offset' specifies an offset in bytes in the buffer that is referenced by
+         * the descriptor. 'range' specifies the memory size in bytes that is referenced by the
+         * descriptor.  By default, 'offset' is 0 and 'range' is VK_WHOLE_SIZE. If the push limit has
+         * been exceeded, a std::out_of_range exception is thrown.
+         */
+        inline void push(const Buffer& buffer, VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE) noexcept;
+
+        // Returns the number of buffer infos.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the array of VkDescriptorBufferInfo structures.
+        inline const VkDescriptorBufferInfo* data(void) const noexcept;
+    };
+
+    template<>
+    class DescriptorInfoList<VkDescriptorBufferInfo, 0>
+    {
+    private:
+        std::vector<VkDescriptorBufferInfo> m_infos;
+
+    public:
+        DescriptorInfoList(void) = default;
+        ~DescriptorInfoList(void) = default;
+
+        /*
+         * Adds a buffer info to the list. 'buffer' specifies a vulkan buffer handle. 'offset' specifies
+         * an offset in bytes in the buffer that is referenced by the descriptor. 'range' specifies the
+         * memory size in bytes that is referenced by the descriptor.  By default, 'offset' is 0 and
+         * 'range' is VK_WHOLE_SIZE. This implies that the whole buffer is referenced by the descriptor
+         * by default.
+         * NOTE: See the documentation of VkDescriptorBufferInfo for more information.
+         */
+        inline void push(VkBuffer buffer, VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE);
+
+        /*
+         * Adds a vka::Buffer object to the list. The VkBuffer handle is implicitly specified by the
+         * buffer object. 'offset' specifies an offset in bytes in the buffer that is referenced by
+         * the descriptor. 'range' specifies the memory size in bytes that is referenced by the
+         * descriptor.  By default, 'offset' is 0 and 'range' is VK_WHOLE_SIZE.
+         */
+        inline void push(const Buffer& buffer, VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE);
+
+        // Returns the number of buffer infos.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the array of VkDescriptorBufferInfo structures.
+        inline const VkDescriptorBufferInfo* data(void) const noexcept;
+    };
+
+    template<uint32_t S>
+    class DescriptorInfoList<VkDescriptorImageInfo, S>
+    {
+    private:
+        VkDescriptorImageInfo m_infos[S];
+        uint32_t m_idx;
+
+    public:
+        inline DescriptorInfoList(void) noexcept;
+        ~DescriptorInfoList(void) = default;
+
+        /*
+         * Adds an image info to the list. 'view' specifies the vulkan image view handle. 'layout'
+         * specifies the layout for the image. 'sampler' specifies a sampler handle associated with
+         * the image view. By default, 'sampler' is set to VK_NULL_HANDLE. If the push limit has been
+         * exceeded, a std::out_of_range exception is thrown.
+         * NOTE: See the documentation of VkDescriptorImageInfo for more information.
+         */
+        inline void push(VkImageView view, VkImageLayout layout, VkSampler sampler = VK_NULL_HANDLE) noexcept;
+
+        /*
+         * Adds a vka::Texture object to the list. The image info is implicitly specified by the
+         * texture object. As the texture can contain multiple image views, the index of the used
+         * image view is specified by 'view_index'. Therefore, the sampler, layout and the actual
+         * image view handle are evaluated automatically. If the view index is invalid a
+         * std::out_of_range exception is thrown.
+         */
+        inline void push(const Texture& texture, uint32_t view_index);
+
+        // Returns the number of buffer infos.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the array of VkDescriptorBufferInfo structures.
+        inline const VkDescriptorImageInfo* data(void) const noexcept;
+    };
+
+    template<>
+    class DescriptorInfoList<VkDescriptorImageInfo, 0>
+    {
+    private:
+        std::vector<VkDescriptorImageInfo> m_infos;
+
+    public:
+        DescriptorInfoList(void) = default;
+        ~DescriptorInfoList(void) = default;
+
+        /*
+         * Adds a buffer info to the list. 'buffer' specifies a vulkan buffer handle. 'offset' specifies
+         * an offset in bytes in the buffer that is referenced by the descriptor. 'range' specifies the
+         * memory size in bytes that is referenced by the descriptor.  By default, 'offset' is 0 and
+         * 'range' is VK_WHOLE_SIZE. This implies that the whole buffer is referenced by the descriptor
+         * by default.
+         * NOTE: See the documentation of VkDescriptorBufferInfo for more information.
+         */
+        inline void push(VkImageView view, VkImageLayout layout, VkSampler sampler = VK_NULL_HANDLE);
+
+        /*
+         * Adds a vka::Buffer object to the list. The VkBuffer handle is implicitly specified by the
+         * buffer object. 'offset' specifies an offset in bytes in the buffer that is referenced by
+         * the descriptor. 'range' specifies the memory size in bytes that is referenced by the
+         * descriptor.  By default, 'offset' is 0 and 'range' is VK_WHOLE_SIZE.
+         */
+        inline void push(const Texture& texture, uint32_t view_index);
+
+        // Returns the number of buffer infos.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the array of VkDescriptorBufferInfo structures.
+        inline const VkDescriptorImageInfo* data(void) const noexcept;
+    };
+
+    template<>
+    class DescriptorInfoList<const void*, 0>
+    {
+    private:
+        const void* m_data;
+        uint32_t m_size;
+
+    public:
+        inline explicit DescriptorInfoList(const void* data = nullptr, uint32_t size = 0) noexcept;
+        ~DescriptorInfoList(void) = default;
+
+        inline void set(const void* data, uint32_t size) noexcept;
+
+        // Returns the size of the inline uniform block.
+        inline uint32_t count(void) const noexcept;
+
+        // Returns the data of the inline uniform block.
+        inline const void* data(void) const noexcept;
+    };
+
+    template<uint32_t S>
+    class DescriptorWriteList
+    {
+        template<typename Info, uint32_t S2>
+        using DescriptorInfoList = DescriptorInfoList<Info, S2>;
+        using ExtendedWriteSet = detail::descriptor::ExtendedWriteSet;
+
+        enum class InfoID
+        {
+            NONE,
+            BUFFER,
+            IMAGE,
+            BUFFER_VIEW,
+            ASNV,
+            ASKHR,
+            INLINE_UB
+        };
+
+        template<typename Info>
+        struct infoID_of { static_assert("[DescriptorWriteList::infoID_of]: Invalid info-type."); };
+        template<> struct infoID_of<VkDescriptorBufferInfo>                         { constexpr static InfoID ID = InfoID::BUFFER;      };
+        template<> struct infoID_of<VkDescriptorImageInfo>                          { constexpr static InfoID ID = InfoID::IMAGE;       };
+        template<> struct infoID_of<VkBufferView>                                   { constexpr static InfoID ID = InfoID::BUFFER_VIEW; };
+        template<> struct infoID_of<VkWriteDescriptorSetAccelerationStructureNV>    { constexpr static InfoID ID = InfoID::ASNV;        };
+        template<> struct infoID_of<VkWriteDescriptorSetAccelerationStructureKHR>   { constexpr static InfoID ID = InfoID::ASKHR;       };
+        template<> struct infoID_of<const void*>                                    { constexpr static InfoID ID = InfoID::INLINE_UB;   };
+
+    private:
+        VkWriteDescriptorSet m_writes[S];
+        ExtendedWriteSet m_writes_ext[S];
+        uint32_t m_idx;
+
+    public:
+        inline DescriptorWriteList(void) noexcept;
+        ~DescriptorWriteList(void) = default;
+
+        /*
+         * Adds any available descriptor-info-list to the descriptor-write-list. 'set' specifies the
+         * target descriptor set of the write operation. 'binding' specifies the binding of the target
+         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
+         * the write operation. 'list' specifies the descriptor-info-list that should be added to the
+         * write-list. 'list' also specifies the number of affected descriptors which is the number of
+         * written descriptor infos and corresponds to the function 'DescriptorInfoList::count()'.
+         * If the write limit has been exceeded, a std::out_of_range exception is thrown.
+         */
+        template<typename Info, uint32_t S2>
+        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list) noexcept;
+    };
+
+    /*
+     * This is a special implementation of DescriptorWriteList which uses a dynamic number of
+     * descriptor writes. The list has no fixed size and can grow at runtime.
+     * NOTE: The template argument 'S = 0' is chosen because it would be an invalid input for 'S'.
+     */
+    template<>
+    class DescriptorWriteList<0>
+    {
+        template<typename Info, uint32_t S2>
+        using DescriptorInfoList = DescriptorInfoList<Info, S2>;
+        using ExtendedWriteSet = detail::descriptor::ExtendedWriteSet;
+
+    private:
+        std::vector<VkWriteDescriptorSet> m_writes;
+        std::vector<ExtendedWriteSet> m_writes_ext;
+
+    public:
+        DescriptorWriteList(void) = default;
+        ~DescriptorWriteList(void) = default;
+
+        /*
+         * Adds any available descriptor-info-list to the descriptor-write-list. 'set' specifies the
+         * target descriptor set of the write operation. 'binding' specifies the binding of the target
+         * descriptor set. 'offset' specifies the index of the first descriptor that is affected by
+         * the write operation. 'list' specifies the descriptor-info-list that should be added to the
+         * write-list. 'list' also specifies the number of affected descriptors which is the number of
+         * written descriptor infos and corresponds to the function 'DescriptorInfoList::count()'.
+         */
+        template<typename Info, uint32_t S2>
+        inline void write(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, const DescriptorInfoList<Info, S2>& list);
+    };
+
+#if 0
     /*
      * This is a helper class to specify descriptor buffer infos. The number of buffer infos must be
      * known at compile-time and is specified by the template argument 'S'. 'S' is also the referred
@@ -721,6 +1005,7 @@ namespace vka
         // Returns true, if the DescriptorManager is a valid object and false otherwise.
         inline bool is_valid(void) const noexcept;
     };
+#endif
 }
 
 #ifdef VKA_IMPLEMENTATION

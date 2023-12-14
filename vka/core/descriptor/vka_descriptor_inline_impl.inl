@@ -23,6 +23,8 @@ inline uint32_t vka::DescriptorSetBindingList::count(void) const noexcept
     return this->m_bindings.size();
 }
 
+#if 0
+
 /*************************************************** BufferInfoList ***************************************************/
 
 template<uint32_t S>
@@ -248,4 +250,174 @@ inline void vka::DescriptorWriteList<S>::write2_const(
 {
 
 }
+#endif
 
+/********************************************* DescriptorInfoList<Info, S> ********************************************/
+
+// The m_info-types of the fallback implementation are basic vulkan handles.
+template<typename Info, uint32_t S>
+inline vka::DescriptorInfoList<Info, S>::DescriptorInfoList(void) noexcept : m_infos{VK_NULL_HANDLE}, m_idx(0)
+{}
+
+template<typename Info, uint32_t S>
+inline void vka::DescriptorInfoList<Info, S>::push(Info info) noexcept
+{
+    this->m_infos[this->m_idx++] = info;
+}
+
+template<typename Info, uint32_t S>
+inline uint32_t vka::DescriptorInfoList<Info, S>::count(void) const noexcept
+{
+    return this->m_idx;
+}
+
+template<typename Info, uint32_t S>
+inline const Info* vka::DescriptorInfoList<Info, S>::data(void) const noexcept
+{
+    return this->m_infos;
+}
+
+/********************************************* DescriptorInfoList<Info, 0> ********************************************/
+
+template<typename Info>
+inline void vka::DescriptorInfoList<Info, 0>::push(Info info)
+{
+    this->m_infos.push_back(info);
+}
+
+template<typename Info>
+inline uint32_t vka::DescriptorInfoList<Info, 0>::count(void) const noexcept
+{
+    return this->m_infos.size();
+}
+
+template<typename Info>
+inline const Info* vka::DescriptorInfoList<Info, 0>::data(void) const noexcept
+{
+    return this->m_infos.data();
+}
+
+/************************************ DescriptorInfoList<VkDescriptorBufferInfo, S> ***********************************/
+
+template<uint32_t S>
+inline vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::DescriptorInfoList(void) noexcept : m_infos{}, m_idx(0)
+{}
+
+template<uint32_t S>
+inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::push(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
+{
+    this->m_infos[this->m_idx++] = { buffer, offset, range };
+}
+
+template<uint32_t S>
+inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::push(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
+{
+    this->m_infos[this->m_idx++] = { buffer.handle(), offset, range };
+}
+
+template<uint32_t S>
+inline uint32_t vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::count(void) const noexcept
+{
+    return this->m_idx;
+}
+
+template<uint32_t S>
+inline const VkDescriptorBufferInfo* vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::data(void) const noexcept
+{
+    return this->m_infos;
+}
+
+/************************************ DescriptorInfoList<VkDescriptorBufferInfo, 0> ***********************************/
+
+inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::push(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+{
+    this->m_infos.push_back({ buffer, offset, range });
+}
+
+inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::push(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range)
+{
+    this->m_infos.push_back({ buffer.handle(), offset, range });
+}
+
+inline uint32_t vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::count(void) const noexcept
+{
+    return this->m_infos.size();
+}
+
+inline const VkDescriptorBufferInfo* vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::data(void) const noexcept
+{
+    return this->m_infos.data();
+}
+
+/************************************ DescriptorInfoList<VkDescriptorImageInfo, S> ************************************/
+
+template<uint32_t S>
+inline vka::DescriptorInfoList<VkDescriptorImageInfo, S>::DescriptorInfoList(void) noexcept : m_infos{}, m_idx(0)
+{}
+
+template<uint32_t S>
+inline void vka::DescriptorInfoList<VkDescriptorImageInfo, S>::push(VkImageView view, VkImageLayout layout, VkSampler sampler) noexcept
+{
+    this->m_infos[this->m_idx++] = { sampler, view, layout };
+}
+
+template<uint32_t S>
+inline void vka::DescriptorInfoList<VkDescriptorImageInfo, S>::push(const Texture& texture, uint32_t view_index)
+{
+    this->m_infos[this->m_idx++] = { texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+}
+
+template<uint32_t S>
+inline uint32_t vka::DescriptorInfoList<VkDescriptorImageInfo, S>::count(void) const noexcept
+{
+    return this->m_idx;
+}
+
+template<uint32_t S>
+inline const VkDescriptorImageInfo* vka::DescriptorInfoList<VkDescriptorImageInfo, S>::data(void) const noexcept
+{
+    return this->m_infos;
+}
+
+/************************************ DescriptorInfoList<VkDescriptorImageInfo, 0> ************************************/
+
+inline void vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::push(VkImageView view, VkImageLayout layout, VkSampler sampler)
+{
+    this->m_infos.push_back({ sampler, view, layout });
+}
+
+inline void vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::push(const Texture& texture, uint32_t view_index)
+{
+    this->m_infos.push_back({ texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
+}
+
+inline uint32_t vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::count(void) const noexcept
+{
+    return this->m_infos.size();
+}
+
+inline const VkDescriptorImageInfo* vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::data(void) const noexcept
+{
+    return this->m_infos.data();
+}
+
+/********************************************* DescriptorInfoList<void, 0> ********************************************/
+
+inline vka::DescriptorInfoList<const void*, 0>::DescriptorInfoList(const void* data, uint32_t size) noexcept : m_data(data), m_size(size)
+{}
+
+inline void vka::DescriptorInfoList<const void*, 0>::set(const void* data, uint32_t size) noexcept
+{
+    this->m_data = data;
+    this->m_size = size;
+}
+
+inline uint32_t vka::DescriptorInfoList<const void*, 0>::count(void) const noexcept
+{
+    return this->m_size;
+}
+
+inline const void* vka::DescriptorInfoList<const void*, 0>::data(void) const noexcept
+{
+    return this->m_data;
+}
