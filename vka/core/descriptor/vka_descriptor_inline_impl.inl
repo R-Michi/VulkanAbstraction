@@ -13,411 +13,409 @@
 
 /********************************************** DescriptorSetBindingList **********************************************/
 
-inline uint32_t vka::DescriptorSetBindingList::binding_count(uint32_t set) const noexcept
-{
-    return set >= this->m_bindings.size() ? NSIZE32 : this->m_bindings[set].size();
-}
-
-inline uint32_t vka::DescriptorSetBindingList::count(void) const noexcept
-{
-    return this->m_bindings.size();
-}
-
-#if 0
-
-/*************************************************** BufferInfoList ***************************************************/
-
 template<uint32_t S>
-inline void vka::BufferInfoList<S>::push(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+inline uint32_t vka::DescriptorSetBindingList<S>::binding_count(uint32_t set) const noexcept
 {
-    if (this->m_idx >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::BufferInfoList]: Out of memory.");
-    this->push2(buffer, offset, range);
+    return set >= S ? NSIZE32 : this->m_bindings[set].size();
 }
 
 template<uint32_t S>
-inline void vka::BufferInfoList<S>::push(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range)
+constexpr uint32_t vka::DescriptorSetBindingList<S>::count(void) const noexcept
 {
-    if (this->m_idx >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::BufferInfoList]: Out of memory.");
-    this->push2(buffer, offset, range);
+    return S;
 }
 
 template<uint32_t S>
-inline void vka::BufferInfoList<S>::push2(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
+inline const VkDescriptorSetLayoutBinding* vka::DescriptorSetBindingList<S>::bindings(uint32_t set) const noexcept
 {
-    this->m_infos[this->m_idx++] = { buffer, offset, range };
+    return set >= S ? nullptr : this->m_bindings[set].data();
 }
 
 template<uint32_t S>
-inline void vka::BufferInfoList<S>::push2(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
+void vka::DescriptorSetBindingList<S>::push(uint32_t set, VkDescriptorType type, VkShaderStageFlags stages, uint32_t count, const VkSampler* immutable_samplers)
 {
-    this->m_infos[this->m_idx++] = { buffer.handle(), offset, range };
+    if (set >= S) [[unlikely]]
+        detail::error::throw_out_of_range("[vka::DescriptorSetBindingList::push]: Invalid descriptor set index.");
+
+    const VkDescriptorSetLayoutBinding binding = {
+        .binding = (uint32_t)this->m_bindings[set].size(),
+        .descriptorType = type,
+        .descriptorCount = count,
+        .stageFlags = stages,
+        .pImmutableSamplers = immutable_samplers
+    };
+    this->m_bindings[set].push_back(binding);
 }
 
-inline void vka::BufferInfoList<0>::push(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+/**************************************************** make helpers ****************************************************/
+
+inline VkDescriptorBufferInfo vka::descriptor::make_buffer_info(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
 {
-    this->m_infos.push_back({ buffer, offset, range });
+    return { buffer, offset, range };
 }
 
-inline void vka::BufferInfoList<0>::push(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range)
+inline VkDescriptorBufferInfo vka::descriptor::make_buffer_info(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
 {
-    this->m_infos.push_back({ buffer.handle(), offset, range });
+    return { buffer.handle(), offset, range };
 }
 
-/**************************************************** ImageInfoList ***************************************************/
+inline VkDescriptorImageInfo vka::descriptor::make_image_info(VkImageView view, VkImageLayout layout, VkSampler sampler) noexcept
+{
+    return { sampler, view, layout };
+}
+
+inline VkDescriptorImageInfo vka::descriptor::make_image_info(const Texture& texture, uint32_t view_index)
+{
+    return { texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+}
+
+inline VkWriteDescriptorSetAccelerationStructureNV vka::descriptor::make_write_asnv(const VkAccelerationStructureNV* as, uint32_t count) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV,
+        .pNext = nullptr,
+        .accelerationStructureCount = count,
+        .pAccelerationStructures = as
+    };
+}
+
+inline VkWriteDescriptorSetAccelerationStructureKHR vka::descriptor::make_write_askhr(const VkAccelerationStructureKHR* as, uint32_t count) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+        .pNext = nullptr,
+        .accelerationStructureCount = count,
+        .pAccelerationStructures = as
+    };
+}
+
+inline VkWriteDescriptorSetInlineUniformBlock vka::descriptor::make_inline_uniform_block(const void* data, uint32_t size) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK,
+        .pNext = nullptr,
+        .dataSize = size,
+        .pData = data
+    };
+}
+
+inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorBufferInfo* infos) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = count,
+        .descriptorType = type,
+        .pImageInfo = nullptr,
+        .pBufferInfo = infos,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorImageInfo* infos) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = count,
+        .descriptorType = type,
+        .pImageInfo = infos,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkBufferView* views) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = count,
+        .descriptorType = type,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = views
+    };
+}
+
+inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureNV& as_write) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &as_write,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = as_write.accelerationStructureCount,
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureKHR& as_write) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &as_write,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = as_write.accelerationStructureCount,
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetInlineUniformBlock& iub_write) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &iub_write,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = iub_write.dataSize,
+        .descriptorType = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+/*********************************************** DescriptorManagerLayout **********************************************/
 
 template<uint32_t S>
-inline void vka::ImageInfoList<S>::push(VkImageView view, VkImageLayout layout, VkSampler sampler)
-{
-    if (this->m_idx >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::ImageInfoList]: Out of memory.");
-    this->push2(view, layout, sampler);
-}
-
-template<uint32_t S>
-inline void vka::ImageInfoList<S>::push(const Texture& texture, uint32_t view_index)
-{
-    if (this->m_idx >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::ImageInfoList]: Out of memory.");
-    this->m_infos[this->m_idx++] = { texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
-}
-
-template<uint32_t S>
-inline void vka::ImageInfoList<S>::push2(VkImageView view, VkImageLayout layout, VkSampler sampler) noexcept
-{
-    this->m_infos[this->m_idx++] = { sampler, view, layout };
-}
-
-template<uint32_t S>
-inline void vka::ImageInfoList<S>::push2(const Texture& texture, uint32_t view_index) noexcept
-{
-    this->m_infos[this->m_idx++] = { texture.sampler(), texture.viewu(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
-}
-
-inline void vka::ImageInfoList<0>::push(VkImageView view, VkImageLayout layout, VkSampler sampler)
-{
-    this->m_infos.push_back({ sampler, view, layout });
-}
-
-inline void vka::ImageInfoList<0>::push(const Texture& texture, uint32_t view_index)
-{
-    this->m_infos.push_back({ texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
-}
-
-/******************************************* AccelerationStructureInfoListNV ******************************************/
-
-template<uint32_t S>
-inline void vka::AccelerationStructureInfoListNV<S>::push(VkAccelerationStructureNV as)
-{
-    if (this->m_idx >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::AccelerationStructureInfoListNV]: Out of memory.");
-    this->push2(as);
-}
-
-template<uint32_t S>
-inline void vka::AccelerationStructureInfoListNV<S>::push2(VkAccelerationStructureNV as) noexcept
-{
-    this->m_infos[this->m_idx++] = as;
-}
-
-inline void vka::AccelerationStructureInfoListNV<0>::push(VkAccelerationStructureNV as)
-{
-    this->m_infos.push_back(as);
-}
-
-/******************************************* AccelerationStructureInfoListKHR *****************************************/
-
-template<uint32_t S>
-inline void vka::AccelerationStructureInfoListKHR<S>::push(VkAccelerationStructureKHR as)
-{
-    if (this->m_idx >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::AccelerationStructureInfoListKHR]: Out of memory.");
-    this->push2(as);
-}
-
-template<uint32_t S>
-inline void vka::AccelerationStructureInfoListKHR<S>::push2(VkAccelerationStructureKHR as) noexcept
-{
-    this->m_infos[this->m_idx++] = as;
-}
-
-inline void vka::AccelerationStructureInfoListKHR<0>::push(VkAccelerationStructureKHR as)
-{
-    this->m_infos.push_back(as);
-}
-
-/************************************************ InlineUniformBlockInfo **********************************************/
-
-inline void vka::InlineUniformBlockInfo::set(const void* data) noexcept
-{
-    this->m_data = data;
-}
-
-/************************************************* DescriptorWriteList ************************************************/
-
-template<uint32_t S>
-constexpr vka::DescriptorWriteList<S>::DescriptorWriteList(void) noexcept :
-    m_writes{ .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET },
-    m_writes_ext{},
-    m_idx(0)
+inline vka::DescriptorManagerLayout<S>::DescriptorManagerLayout(void) noexcept
+    : m_device(VK_NULL_HANDLE), m_layouts{VK_NULL_HANDLE}
 {}
 
 template<uint32_t S>
-template<typename Info, uint32_t S2>
-inline void vka::DescriptorWriteList<S>::init_write(
-    VkDescriptorSet                     set,
-    uint32_t                            binding,
-    uint32_t                            offset,
-    uint32_t                            count,
-    VkDescriptorType                    type,
-    const DescriptorInfoList<Info, S2>& list
-)
+inline vka::DescriptorManagerLayout<S>::DescriptorManagerLayout(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags)
+    : m_device(device), m_layouts{VK_NULL_HANDLE}
 {
-    using detail::descriptor::DescriptorInfoType;
-    using detail::descriptor::get_descriptor_info_type;
+    this->create(device, set_bindings, flags);
+}
 
-    this->m_writes[this->m_idx].dstSet = set;
-    this->m_writes[this->m_idx].dstBinding = binding;
-    this->m_writes[this->m_idx].dstArrayElement = offset;
-    this->m_writes[this->m_idx].descriptorCount = count;
-    this->m_writes[this->m_idx].descriptorType = type;
+template<uint32_t S>
+inline vka::DescriptorManagerLayout<S>::DescriptorManagerLayout(DescriptorManagerLayout&& src) noexcept
+    : m_device(src.m_device), m_layouts(src.m_layouts)
+{
+    src.m_layouts.fill(VK_NULL_HANDLE);
+}
 
-    if constexpr (get_descriptor_info_type<Info>::type == DescriptorInfoType::BUFFER_INFO)
-        this->m_writes[this->m_idx].pBufferInfo = list.data();
-    if constexpr (get_descriptor_info_type<Info>::type == DescriptorInfoType::IMAGE_INFO)
-        this->m_writes[this->m_idx].pImageInfo = list.data();
-    if constexpr (get_descriptor_info_type<Info>::type == DescriptorInfoType::ACCELERATION_STRUCTURE_NV)
+template<uint32_t S>
+inline vka::DescriptorManagerLayout<S>& vka::DescriptorManagerLayout<S>::operator= (DescriptorManagerLayout&& src) noexcept
+{
+    // destroy_handles does nothing, if the layouts have not been created
+    this->destroy_handles();
+    this->m_device = src.m_device;
+    this->m_layouts = src.m_layouts;
+    src.m_layouts.fill(VK_NULL_HANDLE);
+    return *this;
+}
+
+template<uint32_t S>
+inline vka::DescriptorManagerLayout<S>::~DescriptorManagerLayout(void)
+{
+    this->destroy_handles();
+}
+
+template<uint32_t S>
+void vka::DescriptorManagerLayout<S>::create(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags)
+{
+    if (!this->is_valid())
     {
-        this->m_writes_ext[this->m_idx].asNV = {
-            sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV,
-            pNext = nullptr,
-            accelerationStructureCount = count,
-            pAccelerationStructures = list.data()
-        };
-        this->m_writes[this->m_idx].pNext = this->m_writes_ext + this->m_idx;
+        this->m_device = device;
+        for (uint32_t i = 0; i < S; i++)    // number of sets must match the number of layouts, otherwise compiler error
+        {
+            const VkDescriptorSetLayoutCreateInfo ci = {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = flags,
+                .bindingCount = set_bindings.binding_count(i),
+                .pBindings = set_bindings.bindings(i)
+            };
+            detail::error::check_result(vkCreateDescriptorSetLayout(device, &ci, nullptr, &this->m_layouts[i]),
+                                        "[vka::DescriptorManagerLayout::create]: Failed to create descriptor set layout.");
+        }
     }
 }
 
 template<uint32_t S>
-template<typename Info, uint32_t S2>
-inline void vka::DescriptorWriteList<S>::write(
-    VkDescriptorSet                     set,
-    uint32_t                            binding,
-    uint32_t                            offset,
-    VkDescriptorType                    type,
-    const DescriptorInfoList<Info, S2>& list
-)
+VKA_NOINLINE void vka::DescriptorManagerLayout<S>::destroy_handles(void) noexcept
 {
-
+    for (uint32_t i = 0; i < S; i++)
+    {
+        if (this->m_layouts[i] != VK_NULL_HANDLE)
+            vkDestroyDescriptorSetLayout(this->m_device, this->m_layouts[i], nullptr);
+    }
 }
 
 template<uint32_t S>
-template<typename Info, uint32_t S2>
-inline void vka::DescriptorWriteList<S>::write_const(
-    VkDescriptorSet                     set,
-    uint32_t                            binding,
-    uint32_t                            offset,
-    VkDescriptorType                    type,
-    const DescriptorInfoList<Info, S2>& list
-)
+inline void vka::DescriptorManagerLayout<S>::destroy(void) noexcept
 {
-
+    this->destroy_handles();
+    this->m_layouts.fill(VK_NULL_HANDLE);
 }
 
 template<uint32_t S>
-template<typename Info, uint32_t S2>
-inline void vka::DescriptorWriteList<S>::write2(
-    VkDescriptorSet                     set,
-    uint32_t                            binding,
-    uint32_t                            offset,
-    VkDescriptorType                    type,
-    const DescriptorInfoList<Info, S2>& list
-) noexcept
+constexpr uint32_t vka::DescriptorManagerLayout<S>::count(void) const noexcept
 {
-
+    return S;
 }
 
 template<uint32_t S>
-template<typename Info, uint32_t S2>
-inline void vka::DescriptorWriteList<S>::write2_const(
-    VkDescriptorSet set,
-    uint32_t binding,
-    uint32_t offset,
-    VkDescriptorType type,
-    const DescriptorInfoList<Info, S2>& list
-) noexcept
+inline VkDescriptorSetLayout vka::DescriptorManagerLayout<S>::handle(size_t idx) const
 {
-
+    return this->m_layouts.at(idx);
 }
-#endif
-
-/********************************************* DescriptorInfoList<Info, S> ********************************************/
-
-// The m_info-types of the fallback implementation are basic vulkan handles.
-template<typename Info, uint32_t S>
-inline vka::DescriptorInfoList<Info, S>::DescriptorInfoList(void) noexcept : m_infos{VK_NULL_HANDLE}, m_idx(0)
-{}
-
-template<typename Info, uint32_t S>
-inline void vka::DescriptorInfoList<Info, S>::push(Info info) noexcept
-{
-    this->m_infos[this->m_idx++] = info;
-}
-
-template<typename Info, uint32_t S>
-inline uint32_t vka::DescriptorInfoList<Info, S>::count(void) const noexcept
-{
-    return this->m_idx;
-}
-
-template<typename Info, uint32_t S>
-inline const Info* vka::DescriptorInfoList<Info, S>::data(void) const noexcept
-{
-    return this->m_infos;
-}
-
-/********************************************* DescriptorInfoList<Info, 0> ********************************************/
-
-template<typename Info>
-inline void vka::DescriptorInfoList<Info, 0>::push(Info info)
-{
-    this->m_infos.push_back(info);
-}
-
-template<typename Info>
-inline uint32_t vka::DescriptorInfoList<Info, 0>::count(void) const noexcept
-{
-    return this->m_infos.size();
-}
-
-template<typename Info>
-inline const Info* vka::DescriptorInfoList<Info, 0>::data(void) const noexcept
-{
-    return this->m_infos.data();
-}
-
-/************************************ DescriptorInfoList<VkDescriptorBufferInfo, S> ***********************************/
 
 template<uint32_t S>
-inline vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::DescriptorInfoList(void) noexcept : m_infos{}, m_idx(0)
+inline VkDescriptorSetLayout vka::DescriptorManagerLayout<S>::operator[] (size_t idx) const noexcept
+{
+    return this->m_layouts[idx];
+}
+
+template<uint32_t S>
+inline const VkDescriptorSetLayout* vka::DescriptorManagerLayout<S>::layouts(void) const noexcept
+{
+    return this->m_layouts.data();
+}
+
+template<uint32_t S>
+inline bool vka::DescriptorManagerLayout<S>::is_valid(void) const noexcept
+{
+    // if the last one is valid -> all are valid
+    return (this->m_layouts[S-1] != VK_NULL_HANDLE);
+}
+
+/************************************************** DescriptorManager *************************************************/
+
+template<uint32_t S>
+inline vka::DescriptorManager<S>::DescriptorManager(void) noexcept
+    : m_device(VK_NULL_HANDLE), m_pool(VK_NULL_HANDLE), m_sets{VK_NULL_HANDLE}
 {}
 
 template<uint32_t S>
-inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::push(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
+inline vka::DescriptorManager<S>::DescriptorManager(VkDevice device, VkDescriptorPool pool, const DescriptorManagerLayout<S>& layout)
+    : m_device(device), m_pool(pool), m_sets{VK_NULL_HANDLE}
 {
-    this->m_infos[this->m_idx++] = { buffer, offset, range };
+    this->create(device, pool, layout);
 }
 
 template<uint32_t S>
-inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::push(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
+inline vka::DescriptorManager<S>::DescriptorManager(DescriptorManager&& src) noexcept
+    : m_device(src.m_device), m_pool(src.m_pool), m_sets(src.m_sets)
 {
-    this->m_infos[this->m_idx++] = { buffer.handle(), offset, range };
+    src.m_sets.fill(VK_NULL_HANDLE);
 }
 
 template<uint32_t S>
-inline uint32_t vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::count(void) const noexcept
+inline vka::DescriptorManager<S>& vka::DescriptorManager<S>::operator= (DescriptorManager&& src) noexcept
 {
-    return this->m_idx;
+    // destroy_handles does nothing, if the sets have not been allocated
+    this->destroy_handles();
+    this->m_device = src.m_device;
+    this->m_pool = src.m_pool;
+    this->m_sets = src.m_sets;
+    src.m_sets.fill(VK_NULL_HANDLE);
+    return *this;
 }
 
 template<uint32_t S>
-inline const VkDescriptorBufferInfo* vka::DescriptorInfoList<VkDescriptorBufferInfo, S>::data(void) const noexcept
+inline vka::DescriptorManager<S>::~DescriptorManager(void)
 {
-    return this->m_infos;
-}
-
-/************************************ DescriptorInfoList<VkDescriptorBufferInfo, 0> ***********************************/
-
-inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::push(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
-{
-    this->m_infos.push_back({ buffer, offset, range });
-}
-
-inline void vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::push(const Buffer& buffer, VkDeviceSize offset, VkDeviceSize range)
-{
-    this->m_infos.push_back({ buffer.handle(), offset, range });
-}
-
-inline uint32_t vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::count(void) const noexcept
-{
-    return this->m_infos.size();
-}
-
-inline const VkDescriptorBufferInfo* vka::DescriptorInfoList<VkDescriptorBufferInfo, 0>::data(void) const noexcept
-{
-    return this->m_infos.data();
-}
-
-/************************************ DescriptorInfoList<VkDescriptorImageInfo, S> ************************************/
-
-template<uint32_t S>
-inline vka::DescriptorInfoList<VkDescriptorImageInfo, S>::DescriptorInfoList(void) noexcept : m_infos{}, m_idx(0)
-{}
-
-template<uint32_t S>
-inline void vka::DescriptorInfoList<VkDescriptorImageInfo, S>::push(VkImageView view, VkImageLayout layout, VkSampler sampler) noexcept
-{
-    this->m_infos[this->m_idx++] = { sampler, view, layout };
+    this->destroy_handles();
 }
 
 template<uint32_t S>
-inline void vka::DescriptorInfoList<VkDescriptorImageInfo, S>::push(const Texture& texture, uint32_t view_index)
+void vka::DescriptorManager<S>::create(VkDevice device, VkDescriptorPool pool, const DescriptorManagerLayout<S>& layout)
 {
-    this->m_infos[this->m_idx++] = { texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+    if (!this->is_valid())
+    {
+        this->m_device = device;
+        this->m_pool = pool;
+
+        const VkDescriptorSetAllocateInfo ai = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .descriptorPool = pool,
+            .descriptorSetCount = S,
+            .pSetLayouts = layout.layouts()
+        };
+        detail::error::check_result(vkAllocateDescriptorSets(device, &ai, this->m_sets.data()),
+                                    "[vka::DescriptorManager::create]: Failed to allocate descriptor sets.");
+    }
 }
 
 template<uint32_t S>
-inline uint32_t vka::DescriptorInfoList<VkDescriptorImageInfo, S>::count(void) const noexcept
+VKA_NOINLINE void vka::DescriptorManager<S>::destroy_handles(void) noexcept
 {
-    return this->m_idx;
+    if (this->is_valid())
+        vkFreeDescriptorSets(this->m_device, this->m_pool, S, this->m_sets.data());
 }
 
 template<uint32_t S>
-inline const VkDescriptorImageInfo* vka::DescriptorInfoList<VkDescriptorImageInfo, S>::data(void) const noexcept
+inline void vka::DescriptorManager<S>::destroy(void) noexcept
 {
-    return this->m_infos;
+    this->destroy_handles();
+    this->m_sets.fill(VK_NULL_HANDLE);
 }
 
-/************************************ DescriptorInfoList<VkDescriptorImageInfo, 0> ************************************/
-
-inline void vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::push(VkImageView view, VkImageLayout layout, VkSampler sampler)
+template<uint32_t S>
+inline void vka::DescriptorManager<S>::update(const VkWriteDescriptorSet* writes, uint32_t count) noexcept
 {
-    this->m_infos.push_back({ sampler, view, layout });
+    if (this->is_valid())
+        vkUpdateDescriptorSets(this->m_device, count, writes, 0, nullptr);
 }
 
-inline void vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::push(const Texture& texture, uint32_t view_index)
+template<uint32_t S>
+inline void vka::DescriptorManager<S>::bind(VkCommandBuffer cbo, VkPipelineBindPoint bind_point, VkPipelineLayout pipe_layout) const noexcept
 {
-    this->m_infos.push_back({ texture.sampler(), texture.view(view_index), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
+    if (this->is_valid())
+        vkCmdBindDescriptorSets(cbo, bind_point, pipe_layout, 0, S, this->m_sets.data(), 0, nullptr);
 }
 
-inline uint32_t vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::count(void) const noexcept
+template<uint32_t S>
+constexpr uint32_t vka::DescriptorManager<S>::count(void) const noexcept
 {
-    return this->m_infos.size();
+    return S;
 }
 
-inline const VkDescriptorImageInfo* vka::DescriptorInfoList<VkDescriptorImageInfo, 0>::data(void) const noexcept
+template<uint32_t S>
+inline VkDescriptorSet vka::DescriptorManager<S>::handle(size_t idx) const
 {
-    return this->m_infos.data();
+    return this->m_sets.at(idx);
 }
 
-/********************************************* DescriptorInfoList<void, 0> ********************************************/
-
-inline vka::DescriptorInfoList<const void*, 0>::DescriptorInfoList(const void* data, uint32_t size) noexcept : m_data(data), m_size(size)
-{}
-
-inline void vka::DescriptorInfoList<const void*, 0>::set(const void* data, uint32_t size) noexcept
+template<uint32_t S>
+inline VkDescriptorSet vka::DescriptorManager<S>::operator[] (size_t idx) const noexcept
 {
-    this->m_data = data;
-    this->m_size = size;
+    return this->m_sets[idx];
 }
 
-inline uint32_t vka::DescriptorInfoList<const void*, 0>::count(void) const noexcept
+template<uint32_t S>
+inline const VkDescriptorSet* vka::DescriptorManager<S>::descriptor_sets(void) const noexcept
 {
-    return this->m_size;
+    return this->m_sets.data();
 }
 
-inline const void* vka::DescriptorInfoList<const void*, 0>::data(void) const noexcept
+template<uint32_t S>
+inline bool vka::DescriptorManager<S>::is_valid(void) const noexcept
 {
-    return this->m_data;
+    // either all are valid or none is valid
+    return (this->m_sets[S-1] != VK_NULL_HANDLE);
 }

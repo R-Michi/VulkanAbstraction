@@ -103,7 +103,9 @@ void VulkanApp::vulkan_destroy(void)
 
 	this->shaders[0].destroy();
 	this->shaders[1].destroy();
-	this->descriptor_manager.clear();
+	this->descriptors.destroy();
+    this->descriptor_layouts.destroy();
+    vkDestroyDescriptorPool(this->device, this->dpool, nullptr);
 
 	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
 
@@ -592,8 +594,8 @@ void VulkanApp::create_pipeline(void)
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layout_create_info.pNext = nullptr;
 	layout_create_info.flags = 0;
-	layout_create_info.setLayoutCount = this->descriptor_manager.descriptor_set_count();
-	layout_create_info.pSetLayouts = this->descriptor_manager.layouts().data();
+	layout_create_info.setLayoutCount = this->descriptor_layouts.count(),
+	layout_create_info.pSetLayouts = this->descriptor_layouts.layouts(),
 	layout_create_info.pushConstantRangeCount = 0;
 	layout_create_info.pPushConstantRanges = nullptr;
 
@@ -827,29 +829,36 @@ void VulkanApp::create_textures(void)
 
 void VulkanApp::create_descriptors(void)
 {
-	VkDescriptorImageInfo descr_image_info;
-	descr_image_info.sampler = this->texture.sampler();
-	descr_image_info.imageView = this->texture.view(1);
-	descr_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    const VkDescriptorPoolSize sizes[2] = {
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
+    };
 
-	VkDescriptorBufferInfo descr_uniform_buffer_info;
-	descr_uniform_buffer_info.buffer = this->uniform_buffer.handle();
-	descr_uniform_buffer_info.offset = 0;
-	descr_uniform_buffer_info.range = this->uniform_buffer.size();
+    const VkDescriptorPoolCreateInfo ci = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = vka::DescriptorManager<1>::POOL_FLAGS,
+        .maxSets = 1,
+        .poolSizeCount = 2,
+        .pPoolSizes = sizes
+    };
+    VkResult result = vkCreateDescriptorPool(this->device, &ci, nullptr, &this->dpool);
+    VULKAN_ASSERT(result);
 
-	// set properties
-	this->descriptor_manager.set_device(this->device);
-	this->descriptor_manager.set_descriptor_set_count(1);
-	
-	// add bindings and init
-	this->descriptor_manager.add_binding(0, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-	this->descriptor_manager.add_binding(0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-	this->descriptor_manager.init();
+    vka::DescriptorSetBindingList<1> bindings;
+    bindings.push(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+    bindings.push(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 
-	// set and update descriptors
-	this->descriptor_manager.write_image_info(0, 0, 0, 1, &descr_image_info);
-	this->descriptor_manager.write_buffer_info(0, 1, 0, 1, &descr_uniform_buffer_info);
-	this->descriptor_manager.update();
+    this->descriptor_layouts.create(this->device, bindings, 0);
+    this->descriptors.create(this->device, this->dpool, this->descriptor_layouts);
+
+    const VkDescriptorBufferInfo buffer_info = vka::descriptor::make_buffer_info(this->uniform_buffer);
+    const VkDescriptorImageInfo image_info = vka::descriptor::make_image_info(this->texture, 1);
+    const VkWriteDescriptorSet writes[2] = {
+        vka::descriptor::make_write(this->descriptors[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &image_info),
+        vka::descriptor::make_write(this->descriptors[0], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &buffer_info)
+    };
+    this->descriptors.update(writes, 2);
 }
 
 void VulkanApp::create_semaphores(void)
@@ -921,7 +930,7 @@ void VulkanApp::record_command_buffers(void)
 		vkCmdBindIndexBuffer(this->swapchain_command_buffers.at(i), index_buffer_handle, offset, VK_INDEX_TYPE_UINT32);
 
 		// bind descriptor sets
-		vkCmdBindDescriptorSets(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout, 0, this->descriptor_manager.descriptor_set_count(), this->descriptor_manager.descriptor_sets().data(), 0, nullptr);
+        this->descriptors.bind(this->swapchain_command_buffers.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline_layout);
 
 		vkCmdDrawIndexed(this->swapchain_command_buffers.at(i), this->index_count, 1, 0, 0, 0);
 

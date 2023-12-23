@@ -75,7 +75,10 @@ private:
 	vka::Buffer uniform_buffer;
 
 	vka::Texture texture;
-	vka::DescriptorManager descriptor_manager;
+
+    VkDescriptorPool dpool;
+    vka::DescriptorManagerLayout<1> descriptor_layouts;
+	vka::DescriptorManager<1> descriptors;
 
 	VkSemaphore sem_img_aviable;
 	VkSemaphore sem_rendering_done;

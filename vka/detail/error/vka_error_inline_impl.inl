@@ -16,8 +16,20 @@ inline bool vka::detail::error::is_error(VkResult res) noexcept
     return static_cast<int32_t>(res) < 0;
 }
 
-inline void vka::detail::error::check_result(VkResult res, const char* msg) noexcept
+inline void vka::detail::error::check_result(VkResult res, const char* msg)
 {
     if (is_error(res)) [[unlikely]]
         throw_runtime_error(msg);
+}
+
+inline void vka::detail::error::check_memory(const void* mem)
+{
+    if (mem == nullptr) [[unlikely]]
+        throw_bad_alloc();
+}
+
+inline void vka::detail::error::check_range(uint32_t roffset, uint32_t rsize, uint32_t size, const char* msg)
+{
+    if ((roffset + rsize) > size) [[unlikely]]
+        throw_out_of_range(msg);
 }

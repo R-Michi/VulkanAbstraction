@@ -11,7 +11,6 @@
 
 /*
 * Checklist:
-*   - descriptor
 *   - NEW: push constants
 *   - model
 */
@@ -34,6 +33,14 @@
 // VKA_MODEL_USE_DOUBLE forces tiny-object to use double as data type instead of float. Can only be
 // activated, if the tiny-object-loader library is included and model loading is activated.
 //
+
+#if defined(__GNUC__) || defined(__clang__)
+    #define VKA_NOINLINE __attribute__((noinline))
+#elif defined(_MSC_VER)
+    #define VKA_NOINLINE __declspec(noinline)
+#else
+    #define VKA_NOINLINE
+#endif
 
 #ifdef VKA_DEBUG
     #ifdef _MSVC_VER
@@ -74,7 +81,8 @@
         #include <stb/stb_image.h>
     #endif
 #endif
- 
+
+#include <array>
 #include <vector>
 #include <string>
 #include <map>
@@ -103,6 +111,7 @@
 #include "core/texture/vka_texture.h"
 #include "core/attachment/vka_attachment.h"
 #include "core/descriptor/vka_descriptor.h"
+#include "core/push_constant/vka_push_constant.h"
 
 #ifdef VKA_MODEL_LOADING_ENABLE
     #include "core/model/vka_model.h"

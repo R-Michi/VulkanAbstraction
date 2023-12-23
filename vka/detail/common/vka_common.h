@@ -17,6 +17,6 @@ namespace vka::detail::common
 {
     constexpr VkImageUsageFlagBits ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept;
     constexpr VkFormatFeatureFlagBits iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept;
-    void init_format_sizeof(std::unordered_map<VkFormat, size_t>& f2s);
+    inline void* add_vp(void* p, uintptr_t x) noexcept;
 } // namespace vka::detail::common
 #include "vka_common_inline_impl.inl"

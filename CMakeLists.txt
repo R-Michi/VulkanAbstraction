@@ -47,6 +47,7 @@ set(TEST_SOURCES
 add_executable(vka
         main.cpp
         VulkanApp.cpp
+        vka/core/push_constant/vka_push_constant.h
         #vka/core/common/vka_common.h
         #vka/core/common/vka_common_impl.inl
         #vka/core/common/vka_common_inline_impl.inl
@@ -58,6 +59,11 @@ add_executable(vka
         #vka/detail/format/vka_format.h
         #vka/detail/format/vka_format_inline_impl.inl
         ${TEST_SOURCES}
+        vka/detail/descriptor/vka_descriptor.h
+        vka/core/push_constant/vka_push_constant_inline_impl.inl
+        vka/detail/push_constant/vka_push_constant.h
+        vka/detail/push_constant/vka_push_constant_impl.inl
+        vka/detail/push_constant/vka_push_constant_inline_impl.inl
 )
 target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
 

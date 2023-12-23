@@ -13,32 +13,7 @@
 
 namespace vka::detail::descriptor
 {
-    union ExtendedWriteSet
-    {
-        VkWriteDescriptorSetAccelerationStructureNV asNV;
-        VkWriteDescriptorSetAccelerationStructureKHR asKHR;
-        VkWriteDescriptorSetInlineUniformBlock iub;
-    };
 
-    enum class DescriptorInfoType
-    {
-        BUFFER_INFO,
-        IMAGE_INFO,
-        ACCELERATION_STRUCTURE_NV,
-        ACCELERATION_STRUCTURE_KHR,
-        INLINE_UNIFORM_BLOCK
-    };
-
-    template<typename T>
-    struct get_descriptor_info_type
-    {
-        static_assert("[vka::detail::descriptor::get_descriptor_info_type]: Invalid info type.");
-    };
-    template<> struct get_descriptor_info_type<VkDescriptorBufferInfo>      { constexpr static DescriptorInfoType type = DescriptorInfoType::BUFFER_INFO; };
-    template<> struct get_descriptor_info_type<VkDescriptorImageInfo>       { constexpr static DescriptorInfoType type = DescriptorInfoType::IMAGE_INFO; };
-    template<> struct get_descriptor_info_type<VkAccelerationStructureNV>   { constexpr static DescriptorInfoType type = DescriptorInfoType::ACCELERATION_STRUCTURE_NV; };
-    template<> struct get_descriptor_info_type<VkAccelerationStructureKHR>  { constexpr static DescriptorInfoType type = DescriptorInfoType::ACCELERATION_STRUCTURE_KHR; };
-    template<> struct get_descriptor_info_type<const void*>                 { constexpr static DescriptorInfoType type = DescriptorInfoType::INLINE_UNIFORM_BLOCK; };
 }
 
 #include "vka_descriptor_inline_impl.inl"

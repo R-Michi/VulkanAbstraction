@@ -64,3 +64,9 @@ constexpr VkFormatFeatureFlagBits vka::detail::common::iu2ff_bit(VkImageUsageFla
     };
     return static_cast<VkFormatFeatureFlagBits>(0);
 }
+
+inline void* vka::detail::common::add_vp(void* p, uintptr_t x) noexcept
+{
+    uintptr_t y = reinterpret_cast<uintptr_t>(p);
+    return reinterpret_cast<void*>(y + x);
+}

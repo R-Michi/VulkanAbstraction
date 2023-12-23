@@ -11,7 +11,12 @@
 
 #include "vka_test.h"
 
-size_t foo(VkFormat format)
+__attribute__((noinline)) void foo(VkFormat format)
 {
-    return vka::format_sizeof(VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK);
+
+}
+
+__declspec(noinline) void foo2(VkFormat format)
+{
+
 }
