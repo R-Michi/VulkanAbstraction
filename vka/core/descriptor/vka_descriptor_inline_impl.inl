@@ -35,7 +35,7 @@ template<uint32_t S>
 void vka::DescriptorSetBindingList<S>::push(uint32_t set, VkDescriptorType type, VkShaderStageFlags stages, uint32_t count, const VkSampler* immutable_samplers)
 {
     if (set >= S) [[unlikely]]
-        detail::error::throw_out_of_range("[vka::DescriptorSetBindingList::push]: Invalid descriptor set index.");
+        detail::error::throw_out_of_range(MSG_INVALID_INDEX);
 
     const VkDescriptorSetLayoutBinding binding = {
         .binding = (uint32_t)this->m_bindings[set].size(),
@@ -99,125 +99,29 @@ inline VkWriteDescriptorSetInlineUniformBlock vka::descriptor::make_inline_unifo
     };
 }
 
-inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorBufferInfo* infos) noexcept
-{
-    return {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = set,
-        .dstBinding = binding,
-        .dstArrayElement = offset,
-        .descriptorCount = count,
-        .descriptorType = type,
-        .pImageInfo = nullptr,
-        .pBufferInfo = infos,
-        .pTexelBufferView = nullptr
-    };
-}
-
-inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorImageInfo* infos) noexcept
-{
-    return {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = set,
-        .dstBinding = binding,
-        .dstArrayElement = offset,
-        .descriptorCount = count,
-        .descriptorType = type,
-        .pImageInfo = infos,
-        .pBufferInfo = nullptr,
-        .pTexelBufferView = nullptr
-    };
-}
-
-inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkBufferView* views) noexcept
-{
-    return {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = set,
-        .dstBinding = binding,
-        .dstArrayElement = offset,
-        .descriptorCount = count,
-        .descriptorType = type,
-        .pImageInfo = nullptr,
-        .pBufferInfo = nullptr,
-        .pTexelBufferView = views
-    };
-}
-
-inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureNV& as_write) noexcept
-{
-    return {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = &as_write,
-        .dstSet = set,
-        .dstBinding = binding,
-        .dstArrayElement = offset,
-        .descriptorCount = as_write.accelerationStructureCount,
-        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV,
-        .pImageInfo = nullptr,
-        .pBufferInfo = nullptr,
-        .pTexelBufferView = nullptr
-    };
-}
-
-inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureKHR& as_write) noexcept
-{
-    return {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = &as_write,
-        .dstSet = set,
-        .dstBinding = binding,
-        .dstArrayElement = offset,
-        .descriptorCount = as_write.accelerationStructureCount,
-        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
-        .pImageInfo = nullptr,
-        .pBufferInfo = nullptr,
-        .pTexelBufferView = nullptr
-    };
-}
-
-inline VkWriteDescriptorSet vka::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetInlineUniformBlock& iub_write) noexcept
-{
-    return {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = &iub_write,
-        .dstSet = set,
-        .dstBinding = binding,
-        .dstArrayElement = offset,
-        .descriptorCount = iub_write.dataSize,
-        .descriptorType = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
-        .pImageInfo = nullptr,
-        .pBufferInfo = nullptr,
-        .pTexelBufferView = nullptr
-    };
-}
-
-/*********************************************** DescriptorManagerLayout **********************************************/
+/************************************************ DescriptorLayoutArray ***********************************************/
 
 template<uint32_t S>
-inline vka::DescriptorManagerLayout<S>::DescriptorManagerLayout(void) noexcept
-    : m_device(VK_NULL_HANDLE), m_layouts{VK_NULL_HANDLE}
+inline vka::DescriptorLayoutArray<S>::DescriptorLayoutArray(void) noexcept :
+    m_device(VK_NULL_HANDLE), m_layouts{VK_NULL_HANDLE}
 {}
 
 template<uint32_t S>
-inline vka::DescriptorManagerLayout<S>::DescriptorManagerLayout(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags)
-    : m_device(device), m_layouts{VK_NULL_HANDLE}
+inline vka::DescriptorLayoutArray<S>::DescriptorLayoutArray(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags) :
+    m_device(device), m_layouts{VK_NULL_HANDLE}
 {
-    this->create(device, set_bindings, flags);
+    this->internal_create(device, set_bindings, flags);
 }
 
 template<uint32_t S>
-inline vka::DescriptorManagerLayout<S>::DescriptorManagerLayout(DescriptorManagerLayout&& src) noexcept
-    : m_device(src.m_device), m_layouts(src.m_layouts)
+inline vka::DescriptorLayoutArray<S>::DescriptorLayoutArray(DescriptorLayoutArray&& src) noexcept :
+    m_device(src.m_device), m_layouts(src.m_layouts)
 {
     src.m_layouts.fill(VK_NULL_HANDLE);
 }
 
 template<uint32_t S>
-inline vka::DescriptorManagerLayout<S>& vka::DescriptorManagerLayout<S>::operator= (DescriptorManagerLayout&& src) noexcept
+inline vka::DescriptorLayoutArray<S>& vka::DescriptorLayoutArray<S>::operator= (DescriptorLayoutArray&& src) noexcept
 {
     // destroy_handles does nothing, if the layouts have not been created
     this->destroy_handles();
@@ -228,34 +132,39 @@ inline vka::DescriptorManagerLayout<S>& vka::DescriptorManagerLayout<S>::operato
 }
 
 template<uint32_t S>
-inline vka::DescriptorManagerLayout<S>::~DescriptorManagerLayout(void)
+inline vka::DescriptorLayoutArray<S>::~DescriptorLayoutArray(void)
 {
     this->destroy_handles();
 }
 
 template<uint32_t S>
-void vka::DescriptorManagerLayout<S>::create(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags)
+void vka::DescriptorLayoutArray<S>::internal_create(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags)
 {
-    if (!this->is_valid())
+    for (uint32_t i = 0; i < S; i++)    // number of sets must match the number of layouts, otherwise compiler error
     {
-        this->m_device = device;
-        for (uint32_t i = 0; i < S; i++)    // number of sets must match the number of layouts, otherwise compiler error
-        {
-            const VkDescriptorSetLayoutCreateInfo ci = {
-                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = flags,
-                .bindingCount = set_bindings.binding_count(i),
-                .pBindings = set_bindings.bindings(i)
-            };
-            detail::error::check_result(vkCreateDescriptorSetLayout(device, &ci, nullptr, &this->m_layouts[i]),
-                                        "[vka::DescriptorManagerLayout::create]: Failed to create descriptor set layout.");
-        }
+        const VkDescriptorSetLayoutCreateInfo ci = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = flags,
+            .bindingCount = set_bindings.binding_count(i),
+            .pBindings = set_bindings.bindings(i)
+        };
+        detail::error::check_result(vkCreateDescriptorSetLayout(device, &ci, nullptr, this->m_layouts.data() + i), MSG_CREATE_FAILED);
     }
 }
 
 template<uint32_t S>
-VKA_NOINLINE void vka::DescriptorManagerLayout<S>::destroy_handles(void) noexcept
+inline void vka::DescriptorLayoutArray<S>::create(VkDevice device, const DescriptorSetBindingList<S>& set_bindings, VkDescriptorSetLayoutCreateFlags flags)
+{
+    if (!this->is_valid())
+    {
+        this->m_device = device;
+        this->internal_create(device, set_bindings, flags);
+    }
+}
+
+template<uint32_t S>
+VKA_NOINLINE void vka::DescriptorLayoutArray<S>::destroy_handles(void) noexcept
 {
     for (uint32_t i = 0; i < S; i++)
     {
@@ -265,66 +174,85 @@ VKA_NOINLINE void vka::DescriptorManagerLayout<S>::destroy_handles(void) noexcep
 }
 
 template<uint32_t S>
-inline void vka::DescriptorManagerLayout<S>::destroy(void) noexcept
+inline void vka::DescriptorLayoutArray<S>::destroy(void) noexcept
 {
     this->destroy_handles();
+    this->m_device = VK_NULL_HANDLE;
     this->m_layouts.fill(VK_NULL_HANDLE);
 }
 
 template<uint32_t S>
-constexpr uint32_t vka::DescriptorManagerLayout<S>::count(void) const noexcept
+inline vka::DescriptorSetArray<S> vka::DescriptorLayoutArray<S>::create_sets(VkDescriptorPool pool)
+{
+    return DescriptorSetArray<S>(pool, *this);
+}
+
+template<uint32_t S>
+constexpr uint32_t vka::DescriptorLayoutArray<S>::count(void) const noexcept
 {
     return S;
 }
 
 template<uint32_t S>
-inline VkDescriptorSetLayout vka::DescriptorManagerLayout<S>::handle(size_t idx) const
+inline VkDescriptorSetLayout vka::DescriptorLayoutArray<S>::handle(size_t idx) const
 {
     return this->m_layouts.at(idx);
 }
 
 template<uint32_t S>
-inline VkDescriptorSetLayout vka::DescriptorManagerLayout<S>::operator[] (size_t idx) const noexcept
+inline VkDescriptorSetLayout vka::DescriptorLayoutArray<S>::handle_u(uint32_t idx) const noexcept
 {
     return this->m_layouts[idx];
 }
 
 template<uint32_t S>
-inline const VkDescriptorSetLayout* vka::DescriptorManagerLayout<S>::layouts(void) const noexcept
+inline VkDescriptorSetLayout vka::DescriptorLayoutArray<S>::operator[] (size_t idx) const noexcept
+{
+    return this->m_layouts[idx];
+}
+
+template<uint32_t S>
+inline const VkDescriptorSetLayout* vka::DescriptorLayoutArray<S>::layouts(void) const noexcept
 {
     return this->m_layouts.data();
 }
 
 template<uint32_t S>
-inline bool vka::DescriptorManagerLayout<S>::is_valid(void) const noexcept
+inline VkDevice vka::DescriptorLayoutArray<S>::device(void) const noexcept
+{
+    return this->m_device;
+}
+
+template<uint32_t S>
+inline bool vka::DescriptorLayoutArray<S>::is_valid(void) const noexcept
 {
     // if the last one is valid -> all are valid
     return (this->m_layouts[S-1] != VK_NULL_HANDLE);
 }
 
-/************************************************** DescriptorManager *************************************************/
+/************************************************** DescriptorSetArray ************************************************/
 
 template<uint32_t S>
-inline vka::DescriptorManager<S>::DescriptorManager(void) noexcept
+inline vka::DescriptorSetArray<S>::DescriptorSetArray(void) noexcept
     : m_device(VK_NULL_HANDLE), m_pool(VK_NULL_HANDLE), m_sets{VK_NULL_HANDLE}
 {}
 
 template<uint32_t S>
-inline vka::DescriptorManager<S>::DescriptorManager(VkDevice device, VkDescriptorPool pool, const DescriptorManagerLayout<S>& layout)
-    : m_device(device), m_pool(pool), m_sets{VK_NULL_HANDLE}
+inline vka::DescriptorSetArray<S>::DescriptorSetArray(VkDescriptorPool pool, const DescriptorLayoutArray<S>& layout)
+    : m_device(layout.device()), m_pool(pool), m_sets{VK_NULL_HANDLE}
 {
-    this->create(device, pool, layout);
+    this->internal_create(pool, layout);
 }
 
 template<uint32_t S>
-inline vka::DescriptorManager<S>::DescriptorManager(DescriptorManager&& src) noexcept
+inline vka::DescriptorSetArray<S>::DescriptorSetArray(DescriptorSetArray&& src) noexcept
     : m_device(src.m_device), m_pool(src.m_pool), m_sets(src.m_sets)
 {
     src.m_sets.fill(VK_NULL_HANDLE);
 }
 
 template<uint32_t S>
-inline vka::DescriptorManager<S>& vka::DescriptorManager<S>::operator= (DescriptorManager&& src) noexcept
+inline vka::DescriptorSetArray<S>& vka::DescriptorSetArray<S>::operator= (DescriptorSetArray&& src) noexcept
 {
     // destroy_handles does nothing, if the sets have not been allocated
     this->destroy_handles();
@@ -336,86 +264,254 @@ inline vka::DescriptorManager<S>& vka::DescriptorManager<S>::operator= (Descript
 }
 
 template<uint32_t S>
-inline vka::DescriptorManager<S>::~DescriptorManager(void)
+inline vka::DescriptorSetArray<S>::~DescriptorSetArray(void)
 {
     this->destroy_handles();
 }
 
 template<uint32_t S>
-void vka::DescriptorManager<S>::create(VkDevice device, VkDescriptorPool pool, const DescriptorManagerLayout<S>& layout)
+void vka::DescriptorSetArray<S>::internal_create(VkDescriptorPool pool, const DescriptorLayoutArray<S>& layout)
+{
+    const VkDescriptorSetAllocateInfo ai = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .descriptorPool = pool,
+        .descriptorSetCount = S,
+        .pSetLayouts = layout.layouts()
+    };
+    detail::error::check_result(vkAllocateDescriptorSets(layout.device(), &ai, this->m_sets.data()), MSG_CREATE_FAILED);
+}
+
+template<uint32_t S>
+inline void vka::DescriptorSetArray<S>::create(VkDescriptorPool pool, const DescriptorLayoutArray<S>& layout)
 {
     if (!this->is_valid())
     {
-        this->m_device = device;
+        this->m_device = layout.device();
         this->m_pool = pool;
-
-        const VkDescriptorSetAllocateInfo ai = {
-            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-            .pNext = nullptr,
-            .descriptorPool = pool,
-            .descriptorSetCount = S,
-            .pSetLayouts = layout.layouts()
-        };
-        detail::error::check_result(vkAllocateDescriptorSets(device, &ai, this->m_sets.data()),
-                                    "[vka::DescriptorManager::create]: Failed to allocate descriptor sets.");
+        this->internal_create(pool, layout);
     }
 }
 
 template<uint32_t S>
-VKA_NOINLINE void vka::DescriptorManager<S>::destroy_handles(void) noexcept
+VKA_NOINLINE void vka::DescriptorSetArray<S>::destroy_handles(void) noexcept
 {
     if (this->is_valid())
         vkFreeDescriptorSets(this->m_device, this->m_pool, S, this->m_sets.data());
 }
 
 template<uint32_t S>
-inline void vka::DescriptorManager<S>::destroy(void) noexcept
+inline void vka::DescriptorSetArray<S>::destroy(void) noexcept
 {
     this->destroy_handles();
+    this->m_device = VK_NULL_HANDLE;
+    this->m_pool = VK_NULL_HANDLE;
     this->m_sets.fill(VK_NULL_HANDLE);
 }
 
 template<uint32_t S>
-inline void vka::DescriptorManager<S>::update(const VkWriteDescriptorSet* writes, uint32_t count) noexcept
+template<uint32_t N>
+inline vka::DescriptorSetArray<S>::UpdateOperation<N> vka::DescriptorSetArray<S>::op_update(void)
 {
-    if (this->is_valid())
-        vkUpdateDescriptorSets(this->m_device, count, writes, 0, nullptr);
+    if (!this->is_valid()) [[unlikely]]
+        detail::error::throw_runtime_error(MSG_UPDATE_OP);
+    return UpdateOperation<N>(*this);
 }
 
 template<uint32_t S>
-inline void vka::DescriptorManager<S>::bind(VkCommandBuffer cbo, VkPipelineBindPoint bind_point, VkPipelineLayout pipe_layout) const noexcept
+inline void vka::DescriptorSetArray<S>::bind(VkCommandBuffer cbo, VkPipelineBindPoint bind_point, VkPipelineLayout pipe_layout) const
 {
     if (this->is_valid())
         vkCmdBindDescriptorSets(cbo, bind_point, pipe_layout, 0, S, this->m_sets.data(), 0, nullptr);
 }
 
 template<uint32_t S>
-constexpr uint32_t vka::DescriptorManager<S>::count(void) const noexcept
+constexpr uint32_t vka::DescriptorSetArray<S>::count(void) const noexcept
 {
     return S;
 }
 
 template<uint32_t S>
-inline VkDescriptorSet vka::DescriptorManager<S>::handle(size_t idx) const
+inline VkDescriptorSet vka::DescriptorSetArray<S>::handle(size_t idx) const
 {
     return this->m_sets.at(idx);
 }
 
 template<uint32_t S>
-inline VkDescriptorSet vka::DescriptorManager<S>::operator[] (size_t idx) const noexcept
+inline VkDescriptorSet vka::DescriptorSetArray<S>::handle_u(size_t idx) const
 {
     return this->m_sets[idx];
 }
 
 template<uint32_t S>
-inline const VkDescriptorSet* vka::DescriptorManager<S>::descriptor_sets(void) const noexcept
+inline VkDescriptorSet vka::DescriptorSetArray<S>::operator[] (size_t idx) const noexcept
+{
+    return this->m_sets[idx];
+}
+
+template<uint32_t S>
+inline const VkDescriptorSet* vka::DescriptorSetArray<S>::sets(void) const noexcept
 {
     return this->m_sets.data();
 }
 
 template<uint32_t S>
-inline bool vka::DescriptorManager<S>::is_valid(void) const noexcept
+inline VkDevice vka::DescriptorSetArray<S>::device(void) const noexcept
+{
+    return this->m_device;
+}
+
+template<uint32_t S>
+inline VkDescriptorPool vka::DescriptorSetArray<S>::pool(void) const noexcept
+{
+    return this->m_pool;
+}
+
+template<uint32_t S>
+inline bool vka::DescriptorSetArray<S>::is_valid(void) const noexcept
 {
     // either all are valid or none is valid
     return (this->m_sets[S-1] != VK_NULL_HANDLE);
 }
+
+#if 0
+/*********************************** DescriptorInfoArray<VkDescriptorBufferInfo, N> ***********************************/
+
+template<uint32_t N>
+inline VkWriteDescriptorSet vka::DescriptorInfoArray<VkDescriptorBufferInfo, N>::make_set(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, uint32_t count) const noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = detail::descriptor::min<N>(count, this->size()),
+        .descriptorType = type,
+        .pImageInfo = nullptr,
+        .pBufferInfo = this->data(),
+        .pTexelBufferView = nullptr
+    };
+}
+
+/************************************ DescriptorInfoArray<VkDescriptorImageInfo, N> ***********************************/
+
+template<uint32_t N>
+inline VkWriteDescriptorSet vka::DescriptorInfoArray<VkDescriptorImageInfo, N>::make_set(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, uint32_t count) const noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = detail::descriptor::min<N>(count, this->size()),
+        .descriptorType = type,
+        .pImageInfo = this->data(),
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+/**************************************** DescriptorInfoArray<VkBufferView, N> ****************************************/
+
+template<uint32_t N>
+inline VkWriteDescriptorSet vka::DescriptorInfoArray<VkBufferView, N>::make_set(VkDescriptorSet set, uint32_t binding, uint32_t offset, VkDescriptorType type, uint32_t count) const noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = detail::descriptor::min<N>(count, this->size()),
+        .descriptorType = type,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = this->data()
+    };
+}
+
+/********************************** DescriptorInfoArray<VkAccelerationStructureNV, N> *********************************/
+
+template<uint32_t N>
+vka::DescriptorInfoArray<VkAccelerationStructureNV, N>::DescriptorInfoArray(void) :
+    m_extension({ .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV, .pNext = nullptr })
+{}
+
+template<uint32_t N>
+inline VkWriteDescriptorSet vka::DescriptorInfoArray<VkAccelerationStructureNV, N>::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count)
+{
+    this->m_extension.accelerationStructureCount = detail::descriptor::min<N>(count, this->size());
+    this->m_extension.pAccelerationStructures = this->data();
+
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &this->m_extension,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = detail::descriptor::min<N>(count, this->size()), // must also be set according to vulkan standard
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+/********************************* DescriptorInfoArray<VkAccelerationStructureKHR, N> *********************************/
+
+template<uint32_t N>
+vka::DescriptorInfoArray<VkAccelerationStructureKHR, N>::DescriptorInfoArray(void) :
+    m_extension({ .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR, .pNext = nullptr })
+{}
+
+template<uint32_t N>
+inline VkWriteDescriptorSet vka::DescriptorInfoArray<VkAccelerationStructureKHR, N>::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count)
+{
+    this->m_extension.accelerationStructureCount = detail::descriptor::min<N>(count, this->size());
+    this->m_extension.pAccelerationStructures = this->data();
+
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &this->m_extension,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = detail::descriptor::min<N>(count, this->size()), // must also be set according to vulkan standard
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+/***************************************** DescriptorInfoArray<const void*, 0> ****************************************/
+
+vka::DescriptorInfoArray<const void*, 0>::DescriptorInfoArray(void) :
+    m_extension({ .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK, .pNext = nullptr })
+{}
+
+vka::DescriptorInfoArray<const void*, 0>::DescriptorInfoArray(const void* data, uint32_t size) :
+    detail::descriptor::DescriptorInfoArray<const void *, 0>(data, size), m_extension({})
+{}
+
+inline VkWriteDescriptorSet vka::DescriptorInfoArray<const void*, 0>::make_write(VkDescriptorSet set, uint32_t binding)
+{
+    this->m_extension.dataSize = this->size();
+    this->m_extension.pData = this->data();
+
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &this->m_extension,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = 0,   // TODO: define byte offset
+        .descriptorCount = this->size(),
+        .descriptorType = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+#endif

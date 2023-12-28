@@ -33,3 +33,10 @@ inline void vka::detail::error::check_range(uint32_t roffset, uint32_t rsize, ui
     if ((roffset + rsize) > size) [[unlikely]]
         throw_out_of_range(msg);
 }
+
+template<uint32_t N>
+inline void vka::detail::error::check_idx(uint32_t idx, const char* msg)
+{
+    if (idx >= N)
+        throw_out_of_range(msg);
+}

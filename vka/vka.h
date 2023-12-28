@@ -11,7 +11,6 @@
 
 /*
 * Checklist:
-*   - NEW: push constants
 *   - model
 */
 

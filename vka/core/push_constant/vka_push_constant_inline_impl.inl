@@ -115,6 +115,12 @@ constexpr void vka::PushConstantLayout<N>::add(uint32_t size, VkShaderStageFlags
 }
 
 template<uint32_t N>
+inline vka::PushConstants<N> vka::PushConstantLayout<N>::create_push_constants(void)
+{
+    return PushConstants<N>(*this);
+}
+
+template<uint32_t N>
 constexpr uint32_t vka::PushConstantLayout<N>::count(void) const noexcept
 {
     return N;

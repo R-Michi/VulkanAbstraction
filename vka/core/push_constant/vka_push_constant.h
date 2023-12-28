@@ -15,6 +15,10 @@
 
 namespace vka
 {
+    // forward declaration
+    template<uint32_t N>
+    class PushConstants;
+
     class PushConstantView
     {
     private:
@@ -50,14 +54,14 @@ namespace vka
         constexpr void* data(void) noexcept;
 
         /**
-         * @brief Writes data to a push constant range.
+         * @brief Writes sets to a push constant range.
          * @details Let 'b' be the begin address of this push constant range. Data is written in the
          * following interval: [b + offset, b + size - 1]. More informally, the first byte gets written
          * at the position which is specified by 'offset' and the last byte gets written at the position
          * 'size - 1', assuming the first byte of this push constant range has position 0.
          * @param offset Specifies the byte offset in the push constant range memory.
          * @param size Specifies the number of bytes that should be written to the push constant range.
-         * @param data Specifies the data that should be written to the push constant range. The data
+         * @param data Specifies the data that should be written to the push constant range. The sets
          * must be at least 'size' bytes in length.
          */
         inline void write(uint32_t offset, uint32_t size, const void* data);
@@ -149,6 +153,12 @@ namespace vka
          * @note The push constant buffer can contain multiple ranges.
          */
         constexpr void add(uint32_t size, VkShaderStageFlags stages);
+
+        /**
+         * @brief Creates a PushConstant object with 'this' layout.
+         * @return Returns a valid push constant object.
+         */
+        inline PushConstants<N> create_push_constants(void);
 
         /// @return Returns the number of push constant ranges.
         constexpr uint32_t count(void) const noexcept;

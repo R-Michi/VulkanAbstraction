@@ -55,7 +55,7 @@ namespace vka
 
         /**
          * @brief                   Merges multiple vertex attributes together.
-         * @param[out] data         output vertex attribute data
+         * @param[out] data         output vertex attribute sets
          * @param[in] attributes    the vertex attributes to merge together
          * @note                    The vertex attributes can be in any order and be multiple times
          *                          contained in the vertex attribute vector. The total amount of

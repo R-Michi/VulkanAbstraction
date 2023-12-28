@@ -10,3 +10,101 @@
 */
 
 #pragma once
+
+/**************************************************** make helpers ****************************************************/
+
+inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorBufferInfo* infos) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = count,
+        .descriptorType = type,
+        .pImageInfo = nullptr,
+        .pBufferInfo = infos,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorImageInfo* infos) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = count,
+        .descriptorType = type,
+        .pImageInfo = infos,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkBufferView* views) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = count,
+        .descriptorType = type,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = views
+    };
+}
+
+inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureNV& as_write) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &as_write,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = as_write.accelerationStructureCount,
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureKHR& as_write) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &as_write,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = as_write.accelerationStructureCount,
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}
+
+inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetInlineUniformBlock& iub_write) noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &iub_write,
+        .dstSet = set,
+        .dstBinding = binding,
+        .dstArrayElement = offset,
+        .descriptorCount = iub_write.dataSize,
+        .descriptorType = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
+        .pImageInfo = nullptr,
+        .pBufferInfo = nullptr,
+        .pTexelBufferView = nullptr
+    };
+}

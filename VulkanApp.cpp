@@ -837,7 +837,7 @@ void VulkanApp::create_descriptors(void)
     const VkDescriptorPoolCreateInfo ci = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
-        .flags = vka::DescriptorManager<1>::POOL_FLAGS,
+        .flags = vka::DescriptorSetArray<1>::POOL_FLAGS,
         .maxSets = 1,
         .poolSizeCount = 2,
         .pPoolSizes = sizes
@@ -850,15 +850,14 @@ void VulkanApp::create_descriptors(void)
     bindings.push(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 
     this->descriptor_layouts.create(this->device, bindings, 0);
-    this->descriptors.create(this->device, this->dpool, this->descriptor_layouts);
+    this->descriptors.create(this->dpool, this->descriptor_layouts);
 
     const VkDescriptorBufferInfo buffer_info = vka::descriptor::make_buffer_info(this->uniform_buffer);
     const VkDescriptorImageInfo image_info = vka::descriptor::make_image_info(this->texture, 1);
-    const VkWriteDescriptorSet writes[2] = {
-        vka::descriptor::make_write(this->descriptors[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &image_info),
-        vka::descriptor::make_write(this->descriptors[0], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &buffer_info)
-    };
-    this->descriptors.update(writes, 2);
+    vka::DescriptorSetArray<1>::UpdateOperation<2> update = this->descriptors.op_update<2>();
+    update.write(0, 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &image_info);
+    update.write(0, 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &buffer_info);
+    update.execute();
 }
 
 void VulkanApp::create_semaphores(void)

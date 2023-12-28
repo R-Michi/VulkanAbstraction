@@ -37,6 +37,10 @@ namespace vka::detail::error
 
     // Checks, if a range is valid. If not a std::out_of_range exception is thrown.
     inline void check_range(uint32_t roffset, uint32_t rsize, uint32_t size, const char* msg);
+
+    // Checks, if an index exceeds a maximum size.
+    template<uint32_t N>
+    inline void check_idx(uint32_t idx, const char* msg);
 }
 
 #ifdef VKA_IMPLEMENTATION
