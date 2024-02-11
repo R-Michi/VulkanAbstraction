@@ -10,9 +10,12 @@
 */
 
 /*
-* Checklist:
-*   - model
-*/
+ * Checklist:
+ *   - model
+ *   - constructor Attachment
+ *   - constructor Shader
+ *   - constructor Texture
+ */
 
 #pragma once
 

@@ -701,8 +701,7 @@ void VulkanApp::create_vertex_buffers(void)
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 
-	vka::Buffer staging_buffer(this->device);
-	staging_buffer.create(this->memory_properties, create_info);
+    vka::Buffer staging_buffer(this->device, this->memory_properties, create_info);
 
 	void* buff = staging_buffer.map(0, size);
 	memcpy(buff, this->vertices.data(), size);
@@ -712,8 +711,7 @@ void VulkanApp::create_vertex_buffers(void)
 
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	this->vertex_buffer.init(this->device);
-	this->vertex_buffer.create(this->memory_properties, create_info);
+	this->vertex_buffer.create(this->device, this->memory_properties, create_info);
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->vertex_buffer.copy(cbo.handle(), staging_buffer);
@@ -733,8 +731,7 @@ void VulkanApp::create_index_buffers(void)
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 	
-	vka::Buffer staging_buffer(this->device);
-	staging_buffer.create(this->memory_properties, create_info);
+	vka::Buffer staging_buffer(this->device, this->memory_properties, create_info);
 
 	void* buff = staging_buffer.map(0, size);
 	memcpy(buff, this->indices.data(), size);
@@ -745,8 +742,7 @@ void VulkanApp::create_index_buffers(void)
 
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	this->index_buffer.init(this->device);
-	this->index_buffer.create(this->memory_properties, create_info);
+	this->index_buffer.create(this->device, this->memory_properties, create_info);
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->index_buffer.copy(cbo.handle(), staging_buffer);
@@ -764,8 +760,7 @@ void VulkanApp::create_uniform_buffers(void)
 		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
 	};
-	this->uniform_buffer.init(this->device);
-	this->uniform_buffer.create(this->memory_properties, create_info);
+	this->uniform_buffer.create(this->device, this->memory_properties, create_info);
 }
 
 void VulkanApp::create_textures(void)

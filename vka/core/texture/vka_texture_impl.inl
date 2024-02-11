@@ -313,8 +313,7 @@ void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, co
         };
 
         // create staging buffer
-        vka::Buffer staging(this->m_device);
-        staging.create(properties, create_info);
+        vka::Buffer staging(this->m_device, properties, create_info);
 
         // load data into staging buffer
         void* map = staging.map(0, create_info.bufferSize);

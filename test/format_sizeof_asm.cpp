@@ -11,12 +11,19 @@
 
 #include "vka_test.h"
 
-__attribute__((noinline)) void foo(VkFormat format)
+float d, c;
+__attribute__((noinline)) float foo(VkFormat format)
 {
-
+    return d * c;
 }
 
-__declspec(noinline) void foo2(VkFormat format)
+float a, b, x, y;
+void foo2(VkFormat format)
 {
-
+    a = a * b;
+    float z = foo(format);
+    foo(format);
+    a = a + b + z;
+    z = foo(format);
+    x = a * y * z;
 }

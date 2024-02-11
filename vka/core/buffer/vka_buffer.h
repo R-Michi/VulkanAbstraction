@@ -27,12 +27,9 @@ namespace vka
         VkDeviceSize m_size;
         bool m_mapped;
 
-        /*
-        * Checks if everything is correct at creation. Throws exceptions if anything was wrong
-        * initialized, or was not initialized.
-        */
-        inline void validate(void);
-        inline void destroy_handles(void) noexcept;
+        void destroy_handles(void) noexcept;
+
+        void internal_create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
     public:
         /*
@@ -43,7 +40,10 @@ namespace vka
         * All other handles are initialized to a VK_NULL_HANDLE and every other member variable
         * contains its default initialization.
         */
-        explicit Buffer(VkDevice device = VK_NULL_HANDLE) noexcept;
+
+        inline Buffer(void) noexcept;
+
+        explicit inline Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
         /*
         * In order to copy a buffer the function .copy() must be used. For more information see the
@@ -59,18 +59,11 @@ namespace vka
         * in the moved object. If 'this' was created and is a valid object, 'this' is destroyed and
         * replaced by the handles of the moved object.
         */
-        Buffer(Buffer&& src) noexcept;
-        Buffer& operator= (Buffer&& src) noexcept;
+        inline Buffer(Buffer&& src) noexcept;
+        inline Buffer& operator= (Buffer&& src) noexcept;
 
         // The destructor destroys all the vulkan handles.
-        virtual ~Buffer(void);
-
-        /*
-        * Initializes 'this' with a device. The device does not have to be valid at initialization.
-        * However, it must be valid at creation. The initialization cannot be changed, if the
-        * Buffer is a valid object.
-        */
-        void init(VkDevice device) noexcept;
+        virtual inline ~Buffer(void);
 
         /*
         * This function creates the Buffer and the internal handles are now valid, if no error
@@ -81,14 +74,14 @@ namespace vka
         * are required and specified by 'properties'. A std::invalid_argument exception is thrown,
         * if 'this' has not been initialized.
         */
-        void create(const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
+        inline void create(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
         /*
         * Destroys the Buffer object. After destroying, 'this' holds its default initialization
         * except for the device. The device will be preserved after destroying and 'this' does not
         * need to be reinitialized. This is also done by the destructor.
         */
-        void destroy(void) noexcept;
+        inline void destroy(void) noexcept;
 
         /*
         * This function maps the buffer's memory and returns a pointer to the mapped buffer.
