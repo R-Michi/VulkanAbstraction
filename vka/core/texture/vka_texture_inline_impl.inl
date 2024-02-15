@@ -132,12 +132,6 @@ inline uint32_t vka::Texture::max_log2i(VkExtent3D extent) noexcept
     return log2i(m); // a > b -> log(a) > log(b)
 }
 
-inline void* vka::Texture::addvp(void* vp, intptr_t offset) noexcept
-{
-    const intptr_t vp_u64 = reinterpret_cast<intptr_t>(vp);
-    return reinterpret_cast<void*>(vp_u64 + offset);
-}
-
 inline void vka::Texture::change_layout_C2L(VkCommandBuffer cbo) noexcept
 {
     const VkImageMemoryBarrier barrier = {

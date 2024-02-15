@@ -11,8 +11,6 @@
 
 #pragma once
 
-#define VKA_CONVERT_EXPLICIT explicit
-
 namespace vka::detail::common
 {
     constexpr VkImageUsageFlagBits ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept;

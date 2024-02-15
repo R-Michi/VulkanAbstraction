@@ -99,9 +99,6 @@ namespace vka
         // returns the maximum integer logarithm of the 3 components
         static inline uint32_t max_log2i(VkExtent3D extent) noexcept;
 
-        // adds an offset to a void pointer
-        static inline void* addvp(void* vp, intptr_t offset) noexcept;
-
         /*
         * This is a wrapper function for stbi_load, stbi_load_16 and stbi_loadf. It decides at
         * compile-time which function is called depending on the template argument.

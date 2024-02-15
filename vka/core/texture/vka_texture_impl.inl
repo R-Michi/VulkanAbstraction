@@ -236,7 +236,7 @@ void vka::Texture::load_staging(const void* const* data, vka::Buffer& buffer, co
         void* map = staging.map(0, create_info.bufferSize);
 
         for (uint32_t i = 0; i < layer_count; i++)
-            memcpy(addvp(map, i * layer_size), data[i], layer_size);
+            memcpy(detail::common::add_vp(map, i * layer_size), data[i], layer_size);
 
         staging.unmap();
         buffer = std::move(staging);
