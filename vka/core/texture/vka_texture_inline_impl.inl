@@ -11,22 +11,111 @@
 
 #pragma once
 
-inline void vka::Texture::validate(void)
+inline vka::Texture::Texture(void) noexcept :
+    m_device(VK_NULL_HANDLE),
+    m_image(VK_NULL_HANDLE),
+    m_memory(VK_NULL_HANDLE),
+    m_sampler(VK_NULL_HANDLE),
+    m_extent({0, 0, 0}),
+    m_level_count(0),
+    m_layer_count(0),
+    m_format(VK_FORMAT_MAX_ENUM),
+    m_state(STATE_INVALID)
+{}
+
+inline vka::Texture::Texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info) :
+   m_device(device),
+   m_image(VK_NULL_HANDLE),
+   m_memory(VK_NULL_HANDLE),
+   m_sampler(VK_NULL_HANDLE),
+   m_extent(create_info.imageExtent),
+   m_level_count(create_info.generateMipMap ? level_count(create_info.imageExtent) : 1),
+   m_layer_count(create_info.imageArrayLayers),
+   m_format(create_info.imageFormat),
+   m_state(STATE_INVALID)
 {
-    if (this->m_device == VK_NULL_HANDLE) [[unlikely]]
-        detail::error::throw_invalid_argument("[vka::Texture::create]: Device is a VK_NULL_HANDLE.");
+    this->internal_create(properties, create_info);
 }
 
-inline void vka::Texture::destroy_handles(void) noexcept
+inline vka::Texture::Texture(Texture&& src) noexcept :
+    m_device(src.m_device),
+    m_image(src.m_image),
+    m_memory(src.m_memory),
+    m_sampler(src.m_sampler),
+    m_views(std::move(src.m_views)),
+    m_extent(src.m_extent),
+    m_level_count(src.m_level_count),
+    m_layer_count(src.m_layer_count),
+    m_format(src.m_format),
+    m_state(src.m_state)
 {
-    for (VkImageView view : m_views)  // VK_NULL_HANDLE views are not added
-        vkDestroyImageView(this->m_device, view, nullptr);
-    if (this->m_sampler != VK_NULL_HANDLE)
-        vkDestroySampler(this->m_device, this->m_sampler, nullptr);
-    if (this->m_memory != VK_NULL_HANDLE)
-        vkFreeMemory(this->m_device, this->m_memory, nullptr);
-    if (this->m_image != VK_NULL_HANDLE)
-        vkDestroyImage(this->m_device, this->m_image, nullptr);
+    src.m_image = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
+    src.m_sampler = VK_NULL_HANDLE;
+    src.m_extent = { 0, 0, 0 };
+    src.m_level_count = 0;
+    src.m_layer_count = 0;
+    src.m_format = VK_FORMAT_MAX_ENUM;
+    src.m_state = STATE_INVALID;
+}
+
+inline vka::Texture& vka::Texture::operator= (Texture&& src) noexcept
+{
+    // destroys the texture, if it has been created, otherwise this function does nothing
+    this->destroy_handles();
+    this->m_device = src.m_device;
+    this->m_image = src.m_image;
+    this->m_memory = src.m_memory;
+    this->m_sampler = src.m_sampler;
+    this->m_views = std::move(src.m_views);
+    this->m_extent = src.m_extent;
+    this->m_level_count = src.m_level_count;
+    this->m_layer_count = src.m_layer_count;
+    this->m_format = src.m_format;
+    this->m_state = src.m_state;
+    src.m_image = VK_NULL_HANDLE;
+    src.m_memory = VK_NULL_HANDLE;
+    src.m_sampler = VK_NULL_HANDLE;
+    src.m_extent = { 0, 0, 0 };
+    src.m_level_count = 0;
+    src.m_layer_count = 0;
+    src.m_format = VK_FORMAT_MAX_ENUM;
+    src.m_state = STATE_INVALID;
+    return *this;
+}
+
+inline vka::Texture::~Texture(void)
+{
+    this->destroy_handles();
+}
+
+
+inline void vka::Texture::create(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info)
+{
+    if (!this->is_valid())
+    {
+        this->m_device = device;
+        this->m_extent = create_info.imageExtent;
+        this->m_level_count = create_info.generateMipMap ? level_count(create_info.imageExtent) : 1;
+        this->m_layer_count = create_info.imageArrayLayers;
+        this->m_format = create_info.imageFormat;
+
+        this->internal_create(properties, create_info);
+    }
+}
+
+inline void vka::Texture::destroy(void) noexcept
+{
+    this->destroy_handles();
+    this->m_image = VK_NULL_HANDLE;
+    this->m_memory = VK_NULL_HANDLE;
+    this->m_sampler = VK_NULL_HANDLE;
+    this->m_views.clear();
+    this->m_extent = { 0, 0, 0 };
+    this->m_level_count = 0;
+    this->m_layer_count = 0;
+    this->m_format = VK_FORMAT_MAX_ENUM;
+    this->m_state = STATE_INVALID;
 }
 
 inline uint32_t vka::Texture::log2i(uint32_t x) noexcept
@@ -43,9 +132,9 @@ inline uint32_t vka::Texture::max_log2i(VkExtent3D extent) noexcept
     return log2i(m); // a > b -> log(a) > log(b)
 }
 
-inline void* vka::Texture::addvp(void* vp, uint64_t offset) noexcept
+inline void* vka::Texture::addvp(void* vp, intptr_t offset) noexcept
 {
-    const uint64_t vp_u64 = reinterpret_cast<uint64_t>(vp);
+    const intptr_t vp_u64 = reinterpret_cast<intptr_t>(vp);
     return reinterpret_cast<void*>(vp_u64 + offset);
 }
 

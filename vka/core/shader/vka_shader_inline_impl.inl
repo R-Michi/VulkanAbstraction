@@ -11,6 +11,55 @@
 
 #pragma once
 
+inline vka::Shader::Shader(void) noexcept :
+    m_device(VK_NULL_HANDLE),
+    m_module(VK_NULL_HANDLE)
+{}
+
+inline vka::Shader::Shader(VkDevice device, const std::string& path) :
+    m_device(device),
+    m_module(VK_NULL_HANDLE)
+{
+    this->internal_create(path);
+}
+
+inline vka::Shader::Shader(Shader&& src) noexcept :
+    m_device(src.m_device),
+    m_module(src.m_module)
+{
+    src.m_module = VK_NULL_HANDLE;
+}
+
+inline vka::Shader& vka::Shader::operator= (Shader&& src) noexcept
+{
+    // destroy 'this' shader, if it has been created, otherwise this function does nothing
+    this->destroy_handles();
+    this->m_device = src.m_device;
+    this->m_module = src.m_module;
+    src.m_module = VK_NULL_HANDLE;
+    return *this;
+}
+
+inline vka::Shader::~Shader(void)
+{
+    this->destroy_handles();
+}
+
+inline void vka::Shader::create(VkDevice device, const std::string& path)
+{
+    if (!this->is_valid())
+    {
+        this->m_device = device;
+        this->internal_create(path);
+    }
+}
+
+inline void vka::Shader::destroy(void) noexcept
+{
+    this->destroy_handles();
+    this->m_module = VK_NULL_HANDLE;
+}
+
 inline VkShaderModule vka::Shader::handle(void) const noexcept
 {
     return this->m_module;
@@ -19,18 +68,6 @@ inline VkShaderModule vka::Shader::handle(void) const noexcept
 inline bool vka::Shader::is_valid(void) const noexcept
 {
     return (this->m_module != VK_NULL_HANDLE);
-}
-
-inline void vka::Shader::validate(void)
-{
-    if (this->m_device == VK_NULL_HANDLE) [[unlikely]]
-        detail::error::throw_invalid_argument("[vka::Shader::create]: Device is a VK_NULL_HANDLE.");
-}
-
-inline void vka::Shader::destroy_handles(void) noexcept
-{
-    if (this->m_module != VK_NULL_HANDLE)
-        vkDestroyShaderModule(this->m_device, this->m_module, nullptr);
 }
 
 inline VkPipelineShaderStageCreateInfo vka::Shader::make_stage(

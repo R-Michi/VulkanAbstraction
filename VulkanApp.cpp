@@ -371,8 +371,7 @@ void VulkanApp::create_depth_attachment(void)
 		.viewComponentMapping = component_mapping,
 		.viewAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
 	};
-	this->depth_attachment.init(this->device);
-	this->depth_attachment.create(this->physical_device, this->memory_properties, ci);
+	this->depth_attachment.create(this->device, this->physical_device, this->memory_properties, ci);
 }
 
 void VulkanApp::create_render_pass(void)
@@ -449,10 +448,8 @@ void VulkanApp::create_render_pass(void)
 
 void VulkanApp::create_shaders(void)
 {
-	this->shaders[0].init(this->device);
-	this->shaders[1].init(this->device);
-	shaders[0].create("../../../assets/shaders/bin/main.vert.spv");
-	shaders[1].create("../../../assets/shaders/bin/main.frag.spv");
+	shaders[0].create(this->device, "../../../assets/shaders/bin/main.vert.spv");
+	shaders[1].create(this->device, "../../../assets/shaders/bin/main.frag.spv");
 }
 
 void VulkanApp::create_pipeline(void)
@@ -806,8 +803,7 @@ void VulkanApp::create_textures(void)
 		.layerCount = 1
 	};
 
-	this->texture.init(this->device);
-	this->texture.create(this->memory_properties, create_info);
+	this->texture.create(this->device, this->memory_properties, create_info);
 
 	this->texture.create_view(view);
 	view.baseArrayLayer = 1;

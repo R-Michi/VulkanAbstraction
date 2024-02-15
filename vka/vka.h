@@ -12,9 +12,7 @@
 /*
  * Checklist:
  *   - model
- *   - constructor Attachment
- *   - constructor Shader
- *   - constructor Texture
+ *   - comments
  */
 
 #pragma once

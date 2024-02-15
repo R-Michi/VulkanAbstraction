@@ -35,7 +35,7 @@ size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_famili
         {
             if (priority == VKA_QUEUE_FAMILY_PRIORITY_FIRST)
                 return i;
-            else if(priority == VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL)
+            else if (priority == VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL)
             {
                 const VkQueueFlags cur_flags = queue_families[i].queueFlags ^ filter.queueFlags;
                 if (cur_flags < min_flags)

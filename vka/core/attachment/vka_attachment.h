@@ -27,12 +27,9 @@ namespace vka
         VkImageView m_view;
         VkExtent2D m_extent;
 
-        /*
-        * Checks if everything is correct at creation. Throws exceptions if anything was wrong
-        * initialized, or was not initialized.
-        */
-        inline void validate(VkPhysicalDevice pdevice, const AttachmentImageCreateInfo& create_info);
-        inline void destroy_handles(void) noexcept;
+        void destroy_handles(void) noexcept;
+
+        void internal_create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
     public:
         /*
@@ -43,7 +40,10 @@ namespace vka
         * All other handles are initialized to a VK_NULL_HANDLE and every other member variable
         * contains its default initialization.
         */
-        explicit AttachmentImage(VkDevice device = VK_NULL_HANDLE) noexcept;
+
+        inline AttachmentImage(void) noexcept;
+
+        explicit inline AttachmentImage(VkDevice device, VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
         // The AttachmentImage must not be copied.
         AttachmentImage(const AttachmentImage&) = delete;
@@ -56,18 +56,11 @@ namespace vka
         * is preserved in the moved object. If 'this' was created and is a valid object, 'this' is
         * destroyed and replaced by the handles of the moved object.
         */
-        AttachmentImage(AttachmentImage&& src) noexcept;
-        AttachmentImage& operator= (AttachmentImage&& src) noexcept;
+        inline AttachmentImage(AttachmentImage&& src) noexcept;
+        inline AttachmentImage& operator= (AttachmentImage&& src) noexcept;
 
         // The destructor destroys all the vulkan handles.
-        virtual ~AttachmentImage(void);
-
-        /*
-        * Initializes 'this' with a device. The device does not have to be valid at initialization.
-        * However, it must be valid at creation. The initialization cannot be changed, if the
-        * AttachmentImage is a valid object.
-        */
-        void init(VkDevice device) noexcept;
+        virtual inline ~AttachmentImage(void);
 
         /*
         * This function creates the AttachmentImage and the internal handles are now valid, if no
@@ -80,14 +73,14 @@ namespace vka
         * is thrown, if 'this' has not been initialized with a device or if the image format
         * specified in the create-info is not supported.
         */
-        void create(VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
+        inline void create(VkDevice device, VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
         /*
         * Destroys the AttachmentImage object. After destroying, 'this' holds its default
         * initialization except for the device. The device will be preserved after destroying and
         * 'this' does not need to be reinitialized. This is also done by the destructor.
         */
-        void destroy(void) noexcept;
+        inline void destroy(void) noexcept;
 
         // Returns the size/extent of the image.
         inline VkExtent2D size(void) const noexcept;

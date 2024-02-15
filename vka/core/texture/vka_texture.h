@@ -44,12 +44,9 @@ namespace vka
         VkFormat m_format;
         State m_state;
 
-        /*
-        * Checks if everything is correct at creation. Throws exceptions if anything was wrong
-        * initialized, or was not initialized.
-        */
-        inline void validate(void);
-        inline void destroy_handles(void) noexcept;
+        void destroy_handles(void) noexcept;
+
+        void internal_create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
         /*
         * Changes the image to the correct layout, before loading data into the image or before
@@ -103,7 +100,7 @@ namespace vka
         static inline uint32_t max_log2i(VkExtent3D extent) noexcept;
 
         // adds an offset to a void pointer
-        static inline void* addvp(void* vp, uint64_t offset) noexcept;
+        static inline void* addvp(void* vp, intptr_t offset) noexcept;
 
         /*
         * This is a wrapper function for stbi_load, stbi_load_16 and stbi_loadf. It decides at
@@ -125,7 +122,10 @@ namespace vka
         * All other handles are initialized to a VK_NULL_HANDLE and every other member variable
         * contains its default initialization.
         */
-        explicit Texture(VkDevice device = VK_NULL_HANDLE) noexcept;
+
+        inline Texture(void) noexcept;
+
+        explicit inline Texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
         // Texture is not copyable
         Texture(const Texture&) = delete;
@@ -138,18 +138,11 @@ namespace vka
         * in the moved object. If 'this' was created and is a valid object, 'this' is destroyed and
         * replaced by the handles of the moved object.
         */
-        Texture(Texture&& src) noexcept;
-        Texture& operator= (Texture&& src) noexcept;
+        inline Texture(Texture&& src) noexcept;
+        inline Texture& operator= (Texture&& src) noexcept;
 
         // The destructor destroys all the vulkan handles.
-        virtual ~Texture(void);
-
-        /*
-        * Initializes 'this' with a device. The device does not have to be valid at initialization.
-        * However, it must be valid at creation. The initialization cannot be changed, if the
-        * Texture is a valid object.
-        */
-        void init(VkDevice device) noexcept;
+        virtual inline ~Texture(void);
 
         /*
         * This function creates the Texture and the internal handles are now valid, if no error
@@ -160,7 +153,7 @@ namespace vka
         * physical device are required and specified by 'properties'. A std::invalid_argument
         * exception is thrown, if 'this' has not been initialized.
         */
-        void create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
+        inline void create(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
         /*
         * Creates and adds an image view to the texture image, if no error occured. If an error
@@ -176,7 +169,7 @@ namespace vka
         * except for the device. The device will be preserved after destroying and 'this' does not
         * need to be reinitialized. This is also done by the destructor.
         */
-        void destroy(void) noexcept;
+        inline void destroy(void) noexcept;
 
         /*
         * This function executes the commands to load data from a staging buffer (buffer in host

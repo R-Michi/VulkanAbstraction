@@ -21,6 +21,7 @@ namespace vka::device
     */
     void get(VkInstance instance, std::vector<VkPhysicalDevice>& devices);
 
+    //TODO: return physical device handle instead of index
     /*
     * Finds a physical device which matches the specifications specified by a filter and
     * returns the corresponding index within the 'devices'-vector. The filter is a

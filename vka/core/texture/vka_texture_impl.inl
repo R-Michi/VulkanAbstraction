@@ -11,146 +11,77 @@
 
 #pragma once
 
-vka::Texture::Texture(VkDevice device) noexcept :
-    m_device(device),
-    m_image(VK_NULL_HANDLE),
-    m_memory(VK_NULL_HANDLE),
-    m_sampler(VK_NULL_HANDLE),
-    m_extent({0, 0, 0}), 
-    m_level_count(0),
-    m_layer_count(0),
-    m_format(VK_FORMAT_MAX_ENUM),
-    m_state(STATE_INVALID)
-{}
-
-vka::Texture::Texture(Texture&& src) noexcept :
-    m_device(src.m_device),
-    m_image(src.m_image),
-    m_memory(src.m_memory),
-    m_sampler(src.m_sampler), 
-    m_views(std::move(src.m_views)),
-    m_extent(src.m_extent), 
-    m_level_count(src.m_level_count),
-    m_layer_count(src.m_layer_count),
-    m_format(src.m_format),
-    m_state(src.m_state)
+void vka::Texture::destroy_handles(void) noexcept
 {
-    src.m_image = VK_NULL_HANDLE;
-    src.m_memory = VK_NULL_HANDLE;
-    src.m_sampler = VK_NULL_HANDLE;
-    src.m_extent = { 0, 0, 0 };
-    src.m_level_count = 0;
-    src.m_layer_count = 0;
-    src.m_format = VK_FORMAT_MAX_ENUM;
-    src.m_state = STATE_INVALID;
+    for (VkImageView view : m_views)  // VK_NULL_HANDLE views are not added
+        vkDestroyImageView(this->m_device, view, nullptr);
+    if (this->m_sampler != VK_NULL_HANDLE)
+        vkDestroySampler(this->m_device, this->m_sampler, nullptr);
+    if (this->m_memory != VK_NULL_HANDLE)
+        vkFreeMemory(this->m_device, this->m_memory, nullptr);
+    if (this->m_image != VK_NULL_HANDLE)
+        vkDestroyImage(this->m_device, this->m_image, nullptr);
 }
 
-vka::Texture& vka::Texture::operator= (Texture&& src) noexcept
+void vka::Texture::internal_create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info)
 {
-    // destroys the texture, if it has been created, otherwise this function does nothing
-    this->destroy_handles();
-    this->m_device = src.m_device;
-    this->m_image = src.m_image;
-    this->m_memory = src.m_memory;
-    this->m_sampler = src.m_sampler;
-    this->m_views = std::move(src.m_views);
-    this->m_extent = src.m_extent;
-    this->m_level_count = src.m_level_count;
-    this->m_layer_count = src.m_layer_count;
-    this->m_format = src.m_format;
-    this->m_state = src.m_state;
-    src.m_image = VK_NULL_HANDLE;
-    src.m_memory = VK_NULL_HANDLE;
-    src.m_sampler = VK_NULL_HANDLE;
-    src.m_extent = { 0, 0, 0 };
-    src.m_level_count = 0;
-    src.m_layer_count = 0;
-    src.m_format = VK_FORMAT_MAX_ENUM;
-    src.m_state = STATE_INVALID;
-    return *this;
-}
+    // create image
+    const VkImageCreateInfo image_ci = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = create_info.imageFlags,
+        .imageType = create_info.imageType,
+        .format = create_info.imageFormat,
+        .extent = create_info.imageExtent,
+        .mipLevels = this->m_level_count,
+        .arrayLayers = create_info.imageArrayLayers,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+        .sharingMode = create_info.imageQueueFamilyIndexCount > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = create_info.imageQueueFamilyIndexCount,
+        .pQueueFamilyIndices = create_info.imageQueueFamilyIndices,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+    };
+    detail::error::check_result(vkCreateImage(this->m_device, &image_ci, nullptr, &this->m_image), IMAGE_CREATE_FAILED);
 
-vka::Texture::~Texture(void)
-{
-    this->destroy_handles();
-}
+    // query memory requirements
+    VkMemoryRequirements requirements;
+    vkGetImageMemoryRequirements(this->m_device, this->m_image, &requirements);
 
-void vka::Texture::init(VkDevice device) noexcept
-{
-    if (!this->is_valid())
-        this->m_device = device;
-}
+    // allocate memory
+    const VkMemoryAllocateInfo memory_ai = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .allocationSize = requirements.size,
+        .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+    };
+    detail::error::check_result(vkAllocateMemory(this->m_device, &memory_ai, nullptr, &this->m_memory), ALLOC_MEMORY_FAILED);
+    detail::error::check_result(vkBindImageMemory(this->m_device, this->m_image, this->m_memory, 0), BIND_MEMORY_FAILED);
 
-void vka::Texture::create(const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info)
-{
-    if (!this->is_valid())
-    {
-        this->validate();
-
-        // calculate number of mip map levels
-        this->m_extent = create_info.imageExtent;
-        this->m_level_count = create_info.generateMipMap ? level_count(create_info.imageExtent) : 1;
-        this->m_layer_count = create_info.imageArrayLayers;
-        this->m_format = create_info.imageFormat;
-
-        // create image
-        const VkImageCreateInfo image_ci = {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = create_info.imageFlags,
-            .imageType = create_info.imageType,
-            .format = create_info.imageFormat,
-            .extent = create_info.imageExtent,
-            .mipLevels = this->m_level_count,
-            .arrayLayers = create_info.imageArrayLayers,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
-            .tiling = VK_IMAGE_TILING_OPTIMAL,
-            .usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-            .sharingMode = create_info.imageQueueFamilyIndexCount > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE,
-            .queueFamilyIndexCount = create_info.imageQueueFamilyIndexCount,
-            .pQueueFamilyIndices = create_info.imageQueueFamilyIndices,
-            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-        };
-        detail::error::check_result(vkCreateImage(this->m_device, &image_ci, nullptr, &this->m_image), IMAGE_CREATE_FAILED);
-
-        // query memory requirements
-        VkMemoryRequirements requirements;
-        vkGetImageMemoryRequirements(this->m_device, this->m_image, &requirements);
-
-        // allocate memory
-        const VkMemoryAllocateInfo memory_ai = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-            .pNext = nullptr,
-            .allocationSize = requirements.size,
-            .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-        };
-        detail::error::check_result(vkAllocateMemory(this->m_device, &memory_ai, nullptr, &this->m_memory), ALLOC_MEMORY_FAILED);
-        detail::error::check_result(vkBindImageMemory(this->m_device, this->m_image, this->m_memory, 0), BIND_MEMORY_FAILED);
-
-        // create sampler
-        const VkSamplerCreateInfo sampler_ci = {
-            .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .magFilter = create_info.samplerMagFilter,
-            .minFilter = create_info.samplerMinFilter,
-            .mipmapMode = create_info.samplerMipmapMode,
-            .addressModeU = create_info.samplerAddressModeU,
-            .addressModeV = create_info.samplerAddressModeV,
-            .addressModeW = create_info.samplerAddressModeW,
-            .mipLodBias = create_info.samplerLodBias,
-            .anisotropyEnable = create_info.samplerAnisotropyEnable,
-            .maxAnisotropy = create_info.samplerMaxAnisotropy,
-            .compareEnable = create_info.samplerCompareEnable,
-            .compareOp = create_info.samplerCompareOp,
-            .minLod = create_info.samplerMinLod,
-            .maxLod = create_info.samplerMaxLod,
-            .borderColor = create_info.samplerBorderColor,
-            .unnormalizedCoordinates = create_info.samplerUnnormalizedCoordinates
-        };
-        detail::error::check_result(vkCreateSampler(this->m_device, &sampler_ci, nullptr, &this->m_sampler), SAMPLER_CREATE_FAILED);
-        this->m_state = STATE_CREATED;
-    }
+    // create sampler
+    const VkSamplerCreateInfo sampler_ci = {
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .magFilter = create_info.samplerMagFilter,
+        .minFilter = create_info.samplerMinFilter,
+        .mipmapMode = create_info.samplerMipmapMode,
+        .addressModeU = create_info.samplerAddressModeU,
+        .addressModeV = create_info.samplerAddressModeV,
+        .addressModeW = create_info.samplerAddressModeW,
+        .mipLodBias = create_info.samplerLodBias,
+        .anisotropyEnable = create_info.samplerAnisotropyEnable,
+        .maxAnisotropy = create_info.samplerMaxAnisotropy,
+        .compareEnable = create_info.samplerCompareEnable,
+        .compareOp = create_info.samplerCompareOp,
+        .minLod = create_info.samplerMinLod,
+        .maxLod = create_info.samplerMaxLod,
+        .borderColor = create_info.samplerBorderColor,
+        .unnormalizedCoordinates = create_info.samplerUnnormalizedCoordinates
+    };
+    detail::error::check_result(vkCreateSampler(this->m_device, &sampler_ci, nullptr, &this->m_sampler), SAMPLER_CREATE_FAILED);
+    this->m_state = STATE_CREATED;
 }
 
 void vka::Texture::create_view(const TextureViewCreateInfo& create_info)
@@ -177,20 +108,6 @@ void vka::Texture::create_view(const TextureViewCreateInfo& create_info)
         detail::error::check_result(vkCreateImageView(this->m_device, &ci, nullptr, &view), VIEW_CREATE_FAILED);
         this->m_views.push_back(view);
     }
-}
-
-void vka::Texture::destroy(void) noexcept
-{
-    this->destroy_handles();
-    this->m_image = VK_NULL_HANDLE;
-    this->m_memory = VK_NULL_HANDLE;
-    this->m_sampler = VK_NULL_HANDLE;
-    this->m_views.clear();
-    this->m_extent = { 0, 0, 0 };
-    this->m_level_count = 0;
-    this->m_layer_count = 0;
-    this->m_format = VK_FORMAT_MAX_ENUM;
-    this->m_state = STATE_INVALID;
 }
 
 void vka::Texture::create_mip_levels(VkCommandBuffer cbo) noexcept
