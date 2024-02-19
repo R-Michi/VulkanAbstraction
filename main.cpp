@@ -17,6 +17,7 @@
 #include "test/vka_test.h"
 #include <iostream>
 
+int x, y;
 int main()
 {
     VulkanApp app;

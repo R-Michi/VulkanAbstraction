@@ -23,13 +23,14 @@ namespace vka::device
     void get(VkInstance instance, std::vector<VkPhysicalDevice>& devices);
 
     /**
-     * @brief Searches for a valid physical device which supports the requirements for the program.
+     * @brief Searches for a physical device which supports the requirements for the program.
      * @param instance Specifies a valid vulkan instance.
      * @param devices Specifies all available physical devices.
-     * @param filter Specifies the requirements for the program to filter the devices.
+     * @param filter Specifies the requirements for the program.
      * @param prop Optionally returns the properties of the first found physical device.
      * @param mem_prop Optionally returns the memory properties of the first found physical device.
-     * @return Returns the first physical device which matches the requirements.
+     * @return Returns the first physical device which matches the requirements. If no physical device could be found,
+     * VK_NULL_HANDLE is returned.
      */
     VkPhysicalDevice find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter, VkPhysicalDeviceProperties* prop = nullptr, VkPhysicalDeviceMemoryProperties* mem_prop = nullptr);
 

@@ -23,6 +23,7 @@
 VulkanApp::~VulkanApp(void)
 {
 	double res = 0.0f;
+
 	for (double d : this->frame_times)
 		res += d;
 	res /= (double)this->frame_times.size();
@@ -232,11 +233,11 @@ void VulkanApp::create_physical_device(void)
 	filter.queueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
 	filter.surfaceSupport = true;
 
-	size_t idx = vka::device::find(this->instance, physical_devices, filter, &this->pdevice_properties, &this->memory_properties);
-	if (idx == vka::NPOS)
-		throw std::runtime_error("Failed to find physical device");
-
-	this->physical_device = physical_devices.at(idx);
+    this->physical_device = vka::device::find(this->instance, physical_devices, filter, &this->pdevice_properties, &this->memory_properties);
+    if (this->physical_device == VK_NULL_HANDLE)
+    {
+        throw std::runtime_error("Failed to find physical device");
+    }
 
 	VkPhysicalDeviceProperties properties;
 	vkGetPhysicalDeviceProperties(this->physical_device, &properties);

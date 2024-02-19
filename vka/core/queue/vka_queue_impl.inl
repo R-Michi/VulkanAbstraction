@@ -37,6 +37,9 @@ size_t vka::queue::find(const std::vector<VkQueueFamilyProperties>& queue_famili
                 return i;
             else if (priority == VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL)
             {
+                // If there are multiple options, searches for the queue family with the "least power".
+                // This means with the queue family which has the least amount of additional flags set as specified
+                // in the filter.
                 const VkQueueFlags cur_flags = queue_families[i].queueFlags ^ filter.queueFlags;
                 if (cur_flags < min_flags)
                 {

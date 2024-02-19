@@ -15,29 +15,37 @@
 
 namespace vka::queue
 {
-    /*
-    * Stores all queue family properties of a physical device in 'queue_families'.
-    * The physical device is specified by 'device'.
-    */
+    /**
+     * @brief Queries all queue families (actually their properties) from a physical device.
+     * @param device Specifies a valid physical device.
+     * @param queue_families Specifies a vector in which to store all queue family properties.
+     */
     void properties(const VkPhysicalDevice& device, std::vector<VkQueueFamilyProperties>& queue_families);
 
-    /*
-    * Searches for the best matching queue family with a given filter and priority. All the
-    * queue family properties used for the search operation is specified by 'queue_families'.
-    * The filter is specified by 'filter' and the priority by 'priority'. Returns the index of
-    * the best matching queue family in the 'queue_families' array.
-    */
+    /**
+     * @brief Searches for queue family which supports the requirements for the program.
+     * @param queue_families Specifies all available queue family properties.
+     * @param filter Specifies the requirements for the program.
+     * @param priority Specifies a priority for the search operation.\n
+     *  - VKA_QUEUE_FAMILY_PRIORITY_FIRST Chooses the first queue family that meets the requirements.\n
+     *  - VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL Chooses the queue family which has the least amount of additional queue\n
+     *  family flags to those specified in the filter, if multiple queue families meet the requirements. In other words,
+     *  if multiple queue families satisfy the requirements, the queue family with the "least power" is chosen.
+     * @return Returns the index of the found queue family or vka::NPOS, if no queue family could be found.
+     */
     size_t find(const std::vector<VkQueueFamilyProperties>& queue_families, const QueueFamilyFilter& filter, QueueFamilyPriority priority) noexcept;
 
-    /*
-    * This function validates a queue info structure. A queue info structure consists of a
-    * range of queues of a certain queue family. The range consists of an offset
-    * (QueueInfo::queueOffset) and an amount (QueueInfo::usedQueueCount). This function checks,
-    * if the range exceeds the maximum number of queues of the family specified in the
-    * QueueInfo structure (QueueInfo::queueFamilyIndex). Checks, if:
-    * 'offset' + 'amount' <= 'maximum queue count'. Returns true, if the validation was
-    * successful and false otherwise.
-    */
+    /**
+     * @brief This function validates a QueueInfo structure.
+     * @details A queue info structure specifies a range of queues of a queue family. Finding a queue family only
+     * guarantees that this family has the required number of queues. However, it does not guarantee that a range of
+     * queues is within the bounds of defined (valid) queue-indices. This function validates that the range of queue-
+     * indices specified in a QueueInfo is in the bounds of the defined queue-index range.
+     * @param queue_families Specifies all available queue family properties.
+     * @param info Specifies the QueueInfo structure to check.
+     * @return Returns 'true', if the validation was successful and 'false', if the QueueInfo structure contains any
+     * invalid queue-indices.
+     */
     inline bool validate(const std::vector<VkQueueFamilyProperties>& queue_families, const QueueInfo& info) noexcept;
 }
 
