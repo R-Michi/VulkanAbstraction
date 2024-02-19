@@ -120,8 +120,18 @@ inline void vka::Texture::destroy(void) noexcept
 
 inline uint32_t vka::Texture::log2i(uint32_t x) noexcept
 {
+#ifdef VKA_X86
     unsigned long y;    // BSF instruction finds last '1' bit and its position is the log2(x) of an integer value.
     return _BitScanReverse(&y, x) == 0 ? 0xFFFFFFFF : y;
+#else
+    uint32_t bit = 0xFFFFFFFF;
+    while (x > 0)
+    {
+        x >>= 1;    // logic right shift, shifts in zeros
+        ++bit;
+    }
+    return bit;
+#endif
 }
 
 inline uint32_t vka::Texture::max_log2i(VkExtent3D extent) noexcept

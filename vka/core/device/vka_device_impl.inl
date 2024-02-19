@@ -19,7 +19,7 @@ void vka::device::get(VkInstance instance, std::vector<VkPhysicalDevice>& physic
     vkEnumeratePhysicalDevices(instance, &count, physical_devices.data());
 }
 
-size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter, VkPhysicalDeviceProperties* prop, VkPhysicalDeviceMemoryProperties* mem_prop)
+VkPhysicalDevice vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter, VkPhysicalDeviceProperties* prop, VkPhysicalDeviceMemoryProperties* mem_prop)
 {
     VkPhysicalDeviceProperties properties[devices.size()];
     VkPhysicalDeviceMemoryProperties memory_properties;
@@ -55,15 +55,16 @@ size_t vka::device::find(VkInstance instance, const std::vector<VkPhysicalDevice
     {
         for (size_t cur_idx : candidates)
         {
+            VkPhysicalDevice cur_device = devices[cur_idx];
             if (properties[cur_idx].deviceType == type)
             {
                 if (prop != nullptr) *prop = properties[cur_idx];
-                if (mem_prop != nullptr) vkGetPhysicalDeviceMemoryProperties(devices[cur_idx], mem_prop);
-                return cur_idx;
+                if (mem_prop != nullptr) vkGetPhysicalDeviceMemoryProperties(cur_device, mem_prop);
+                return cur_device;
             }
         }
     }
-    return vka::NPOS;
+    return VK_NULL_HANDLE;
 }
 
 bool vka::device::supports_layer(VkPhysicalDevice device, std::string_view layer_name, VkLayerProperties* properties) noexcept

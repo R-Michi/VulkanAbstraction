@@ -34,6 +34,27 @@
 // activated, if the tiny-object-loader library is included and model loading is activated.
 //
 
+/// Vulkan must be included before vka.
+#ifndef VULKAN_H_
+    #error [VKA]: vulkan.h must be included before including vka.h.
+#endif
+
+/// detects X86 64-bit architecture
+#if defined(__x86_64) || defined(__x86_64__) || defined(_M_X64)
+    #define VKA_X86_64
+#endif
+
+/// detects X86 32-bit architecture
+#if defined(i386) || defined(__i386) || defined(__i386__) || defined(_M_IX86)
+    #define VKA_X86_32
+#endif
+
+/// detects X86 architecture (32-bit or 64-bit)
+#if defined(VKA_X86_32) || defined(VKA_X86_64)
+    #define VKA_X86
+#endif
+
+/// Defines 'noinline' which works for most compilers
 #if defined(__GNUC__) || defined(__clang__)
     #define VKA_NOINLINE __attribute__((noinline))
 #elif defined(_MSC_VER)
@@ -42,6 +63,7 @@
     #define VKA_NOINLINE
 #endif
 
+/// Defines a macro which causes a break in the program.
 #ifdef VKA_DEBUG
     #ifdef _MSVC_VER
         #define VULKAN_ASSERT(result)\
@@ -56,14 +78,12 @@
     #define VULKAN_ASSERT(result)
 #endif
 
-#ifndef VULKAN_H_
-    #error [VKA]: vulkan.h must be included before including vka.h.
-#endif
-
+/// GLFW include
 #if defined(VKA_GLFW_ENABLE) && defined(VKA_INCLUDE_GLFW)
     #include <GLFW/glfw3.h>
 #endif
 
+/// Model loading include
 #if defined(VKA_MODEL_LOADING_ENABLE) && defined(VKA_INCLUDE_TINYOBJ)
     #ifdef VKA_MODEL_USE_DOUBLE
         #define TINYOBJLOADER_USE_DOUBLE
@@ -71,6 +91,7 @@
     #include <tiny_obj_loader.h>
 #endif
 
+/// Image loading include
 #if defined(VKA_STB_IMAGE_LOAD_ENABLE) && defined(VKA_INCLUDE_STB_IMAGE)
     #ifdef __clang__
         #pragma clang diagnostic push

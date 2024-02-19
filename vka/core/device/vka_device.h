@@ -15,56 +15,60 @@
 
 namespace vka::device
 {
-    /*
-    * Returns all available physical devices of a given instance. The instance is specified by
-    * 'instance' and the returned physical devices are stored in 'devices'.
-    */
+    /**
+     * @brief Queries all available physical devices.
+     * @param instance Specifies a valid vulkan instance.
+     * @param devices Specifies a vector in which to store all physical devices.
+     */
     void get(VkInstance instance, std::vector<VkPhysicalDevice>& devices);
 
-    //TODO: return physical device handle instead of index
-    /*
-    * Finds a physical device which matches the specifications specified by a filter and
-    * returns the corresponding index within the 'devices'-vector. The filter is a
-    * PhysicalDeviceFilter structure and is given by 'filter'. Optionally, the physical device's
-    * properties and memory properties are returned and stored in 'prop' and 'mem_prop'.
-    */
-    size_t find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter, VkPhysicalDeviceProperties* prop = nullptr, VkPhysicalDeviceMemoryProperties* mem_prop = nullptr);
+    /**
+     * @brief Searches for a valid physical device which supports the requirements for the program.
+     * @param instance Specifies a valid vulkan instance.
+     * @param devices Specifies all available physical devices.
+     * @param filter Specifies the requirements for the program to filter the devices.
+     * @param prop Optionally returns the properties of the first found physical device.
+     * @param mem_prop Optionally returns the memory properties of the first found physical device.
+     * @return Returns the first physical device which matches the requirements.
+     */
+    VkPhysicalDevice find(VkInstance instance, const std::vector<VkPhysicalDevice>& devices, const PhysicalDeviceFilter& filter, VkPhysicalDeviceProperties* prop = nullptr, VkPhysicalDeviceMemoryProperties* mem_prop = nullptr);
 
-    /*
-    * Checks, if a layer at device level is supported by a given physical device. The physical
-    * device which should support the layer is specified by 'device' and the name of the layer
-    * is specified by 'layer_name'. Returns true, if the physical device supports the layer and
-    * false otherwise. Optionally, the layer's properties are stored in 'properties'.
-    */
+    /**
+     * @brief Checks, if a layer at device level is supported.
+     * @param device Specifies a valid physical device for which support should be checked.
+     * @param layer_name Specifies the name of the layer.
+     * @param properties Optionally returns the layer's properties.
+     * @return Returns 'true', if the layer is supported and 'false' otherwise.
+     */
     bool supports_layer(VkPhysicalDevice device, std::string_view layer_name, VkLayerProperties* properties = nullptr) noexcept;
 
-    /*
-    * Checks, if multiple layers at device level are supported by a given physical device.
-    * The physical device which should support those layers is specified by 'device' and the
-    * names of those layers are specified by 'layer_names'. If any layer is not supported, the
-    * index of the first not supported layer within the 'layer_names'-vector is returned.
-    * If all layers are supported, then vka::NPOS is returned. Optionally, the properties of
-    * the layers can be stored in the 'properties' array.
-    */
+    /**
+     * @brief Checks, if multiple layers at device level are supported.
+     * @param device Specifies a valid physical device for which support should be checked.
+     * @param layer_names Specifies the layer names.
+     * @param properties Optionally returns the properties of all layers.
+     * @return Returns vka::NPOS, if all layers are supported. If at least one layer is not supported, the index of the
+     * first not supported layer is returned.
+     */
     size_t supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, VkLayerProperties* properties = nullptr) noexcept;
 
-    /*
-    * Checks, if an extension at device level is supported by a given physical device.
-    * The physical device which should support the extension is specified by 'device' and the
-    * name of the extension is specified by 'extension_name'. Returns true, if the physical
-    * device supports the extension and false otherwise. Optionally, the extension's properties
-    * are stored in 'properties'.
-    */
+    /**
+     * @brief Checks, if an extension at device level is supported.
+     * @param device Specifies a valid physical device for which support should be checked.
+     * @param extension_name Specifies the name of the extension.
+     * @param properties Optionally returns the extension's properties.
+     * @return Returns 'true', if the extension is supported and 'false' otherwise.
+     */
     bool supports_extension(VkPhysicalDevice device, std::string_view extension_name, VkExtensionProperties* properties = nullptr) noexcept;
 
-    /*
-    * Checks, if multiple extensions at device level are supported by a given physical device.
-    * The physical device which should support those extensions is specified by 'device' and the
-    * names of those extensions are specified by 'extension_names'. If any extension is not
-    * supported, the index of the first not supported extension within the
-    * 'extension_names'-vector is returned. If all extensions are supported, then vka::NPOS is
-    * returned. Optionally, the properties of the extensions can be stored in the 'properties' array.
-    */
+    /**
+     * @brief Checks, if multiple extensions at device level are supported.
+     * @param device Specifies a valid physical device for which support should be checked.
+     * @param extension_names Specifies the extension names.
+     * @param properties Optionally returns the properties of all extensions.
+     * @return Returns vka::NPOS, if all extensions are supported. If at least one extension is not supported, the index
+     * of the first not supported extension is returned.
+     */
     size_t supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, VkExtensionProperties* properties = nullptr) noexcept;
 }
 

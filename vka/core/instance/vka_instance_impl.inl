@@ -73,7 +73,7 @@ size_t vka::instance::supports_extensions(const std::vector<std::string>& extens
     if (res != VK_SUCCESS) return false;
 
     VkExtensionProperties extension_properties[extension_count];
-    res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extension_properties);;
+    res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extension_properties);
     if (res != VK_SUCCESS) return false;
 
     for (size_t i = 0; i < extension_names.size(); i++)
@@ -93,14 +93,15 @@ void vka::instance::get_glfw_extensions(std::vector<std::string>& extensions)
     uint32_t count;
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&count);
     for (uint32_t i = 0; i < count; i++)
-        extensions.push_back(glfw_extensions[i]);
+        extensions.emplace_back(glfw_extensions[i]);
 }
 
-void vka::instance::get_glfw_extensions(const char** extensions) noexcept
+uint32_t vka::instance::get_glfw_extensions(const char** extensions) noexcept
 {
     uint32_t count;
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&count);
     for (uint32_t i = 0; i < count; i++)
         extensions[i] = glfw_extensions[i];
+    return count;
 }
 #endif
