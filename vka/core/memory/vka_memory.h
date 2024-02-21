@@ -13,17 +13,17 @@
 
 namespace vka::memory
 {
-    /*
-    * Searches for a supported memory type index for a given memoryTypeBits bit-mask in the
-    * physical device's memory types. The memory properties that contains all supported memory
-    * types of the physical device is specified by 'properties'. The memory specific memory
-    * types is given by a bit mask and specified by 'bits'. For every available memory type a
-    * bit is set in the mask at the corresponding index of the memory type. This mask can be
-    * queried from VkMemoryRequirements::memoryTypeBits. The memory type flags that are
-    * required are specified by 'req_flags'. If the required flags are supported by one memory
-    * type, the index of the memory type is returned. Otherwise, if the flags are not
-    * supported, vka::NPOS32 is returned.
-    */
+    /**
+     * @brief Searches for a supported memory-type index.
+     * @details For every supported memory-type of an object, a bit is set in a bit-mask. The index of a bit in the mask
+     * corresponds to a memory-type in the memory-properties of a physical device. This function checks, if a memory-
+     * type is available for an object (bit-mask) that supports certain property flags.
+     * @param properties Specifies the memory properties of a physical device.
+     * @param bits Specifies the memory-type bit mask.
+     * @param req_flags Specifies the required memory property flags.
+     * @return Returns the index of the memory type, if the required flags are supported. Otherwise, vka::NPOS32 is
+     * returned.
+     */
     uint32_t find_type_index(const VkPhysicalDeviceMemoryProperties& properties, uint32_t bits, VkMemoryPropertyFlags req_flags) noexcept;
 }
 

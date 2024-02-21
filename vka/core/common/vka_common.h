@@ -15,10 +15,10 @@
 
 namespace vka
 {
-    /*
-     * This class implements a one-time submit command buffer which is used to record buffer copy
-     * and texture create commands. The destructor of this class does free the command buffer
-     * automatically.
+    /**
+     * @brief Implements a one-time submit command buffer.
+     * @details This command buffer can only be submitted once. Its primary use case is recording buffer copy and
+     * texture creation commands and other things that only need to be executed once.
      */
     class CommandBufferOTS final
     {
@@ -34,21 +34,22 @@ namespace vka
         VkCommandPool m_pool;
         VkCommandBuffer m_cbo;
 
-        void internal_begin(VkDevice device, VkCommandPool pool);
+        /// @brief Destroy all vulkan handles allocated by this class.
+        void destroy_handles(void) noexcept;
 
-        // destroys the command buffer handle
-        inline void destroy(void) noexcept;
+        /// @brief Allocates the command buffer and begins it's recording.
+        void internal_begin(void);
 
     public:
-        // The default constructor initializes the internal command buffer handle with VK_NULL_HANDLE
+        /// @details Initializes the internal command buffer handle with VK_NULL_HANDLE.
         inline CommandBufferOTS(void) noexcept;
 
-        /*
-         * This constructor allocates the command buffer and begins its recording. A device and
-         * command pool is required and is specified by 'device' and 'pool'. If an error occured
-         * while allocating the command buffer or while beginning the command buffer recording, a
-         * std::runtime_error exception is thrown with an appropriate message about the error.
-         * NOTE: This constructor does the same as begin().
+        /**
+         * @brief Allocates the command buffer and begins it's recording.
+         * @details This constructor has the same functionality as the function begin().
+         * @param device Specifies a valid device.
+         * @param pool Specifies a valid command pool to allocate the command buffer from.
+         * @throw std::runtime_error Is thrown, if the allocation or beginning the command buffer failed.
          */
         explicit inline CommandBufferOTS(VkDevice device, VkCommandPool pool);
 
@@ -56,68 +57,84 @@ namespace vka
         CommandBufferOTS(const CommandBufferOTS&) = delete;
         CommandBufferOTS& operator= (const CommandBufferOTS&) = delete;
 
-        /*
-         * Moves another OTS command buffer into this. Only the command buffer handle is moved.
-         * The device and command pool remains in the source object. More informally, the ownership
-         * of the command buffer handle is transferred from 'src' into this.
+        /**
+         * @brief Moves the ownership from a OTS command buffer into 'this'.
+         * @details The source command buffer becomes invalidated. If 'this' has an allocated command buffer, it gets
+         * destroyed and replaced by the command buffer of the moved object.
+         * @param src Specifies the source command buffer which should be moved.
          */
         inline CommandBufferOTS(CommandBufferOTS&& src) noexcept;
         inline CommandBufferOTS& operator= (CommandBufferOTS&& src) noexcept;
 
-        // Frees the command buffer.
+        /**
+         * @details Frees the allocated command buffer although it is not required as the command pool takes care of
+         * this.
+         */
         inline ~CommandBufferOTS(void);
 
-        /*
-         * allocates the command buffer and begins its recording. A device and command pool is
-         * required and is specified by 'device' and 'pool'. If an error occured while allocating
-         * the command buffer or while beginning the command buffer recording, a std::runtime_error
-         * exception is thrown with an appropriate message about the error.
+        /**
+         * @brief Allocates the command buffer and begins it's recording.
+         * @param device Specifies a valid device.
+         * @param pool Specifies a valid command pool to allocate the command buffer from.
+         * @throw std::runtime_error Is thrown, if the allocation or beginning the command buffer failed.
          */
         inline void begin(VkDevice device, VkCommandPool pool);
 
-        // Ends the recording of the command buffer and submits it to the specified queue 'queue'.
+        /**
+         * @brief Ends the recording of the command buffer and submits the commands to a queue.
+         * @param queue Specifies a valid queue to submit the commands to.
+         * @throw std::runtime_error Is thrown, if ending the recording or submitting the commands failed.
+         */
         void end(VkQueue queue) const;
 
-        /*
-         * Does the same as end() but it additionally waits for the command buffer to finish.
-         * If no fence is specified, it is waited until the specified queue goes into idle mode.
-         * Otherwise, it is waited for the fence to become signaled, of if the timeout time has
-         * been elapsed. If the fence timed out VK_TIMEOUT is returned. If the fence did not time
-         * out, VK_SUCCESS is returned. If an error occured while waiting on either the queue or
-         * the fence, a std::runtime_error exception is thrown with an appropriate message about
-         * the error.
+        /**
+         * @brief Ends the recording of the command buffer, submits the commands to a queue and waits until the commands
+         * have been processed.
+         * @details If no fence is specified, the wait lasts until the specified queue goes into idle mode. If a fence
+         * is specified, the wait lasts until the fence is signaled or until the specified timeout time expires.
+         * elapsed.
+         * @param queue Specifies a valid queue to submit the commands to.
+         * @param fence Optionally specifies a fence to wait for the command execution to finish.
+         * @param timeout Optionally specifies a timeout time for the fence. This parameter defaults to a value so that
+         * no timeout occurs.
+         * @return Returns VK_TIMEOUT, if the fence timed out. Otherwise, VK_SUCCESS is returned.
+         * @throw std::runtime_error Is throw, if ending the recording, submitting the commands, waiting for the fence
+         * or the queue failed.
          */
         VkResult end_wait(VkQueue queue, VkFence fence = VK_NULL_HANDLE, uint64_t timeout = vka::NO_TIMEOUT) const;
 
-        // Returns the vulkan VkCommandBuffer handle.
+        /// @return Returns the vulkan command buffer handle.
         inline VkCommandBuffer handle(void) const noexcept;
     };
 
     namespace common
     {
-        /*
-        * Converts format feature flags to image usage flags. The format feature flags to convert
-        * are specified by 'format_feature'. The corresponding image usage flags are returned.
-        * NOTE: The function name stands for "convert format feature to image usage".
-        */
+        /**
+         * @brief Converts format feature flags to image usage flags.
+         * @param format_feature Specifies the format feature flags to convert.
+         * @return Returns the corresponding image usage flags.
+         * @note The function name stands for "convert format feature to image usage".
+         */
         constexpr VkImageUsageFlags cvt_ff2iu(VkFormatFeatureFlags format_feature) noexcept;
 
-        /*
-        * Converts image usage flags to format feature flags. The image usage flags to convert are
-        * specified by 'image_usage'. The corresponding format feature flags are returned.
-        * NOTE: The function name stands for "convert image usage to format feature".
-        */
+        /**
+         * @brief Converts image usage flags to format feature flags.
+         * @param image_usage Specifies the image usage flags to convert.
+         * @return Returns the corresponding format feature flags.
+         * @note The function name stands for "convert image usage to format feature".
+         */
         constexpr VkFormatFeatureFlags cvt_iu2ff(VkImageUsageFlags image_usage) noexcept;
 
-        /*
-        * Converts a vector of std::string strings to an array of const char*. The vector of std
-        * strings is given by 'std_in' and the resulting output vector is stored in 'ccp_out'.
-        * This function is mainly used to convert extension and layer names from std::string to
-        * const char* in order to pass them to the corresponding create-infos. The size of the
-        * array must correspond to the size of the vector.
-        * NOTE: The function name stands for "convert std::string to const char pointer vector"
-        */
-        void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;
+        /**
+         * @brief Converts a vector of std::string strings to an array of const char*.
+         * @details This function is mainly used to convert extension and layer names from std::string to const char* in
+         * order to pass them to the corresponding create-infos.
+         * @param std_in Specifies the vector of std::string strings.
+         * @param ccp_out Specifies an array in which to store the const char* strings. The size of the array must
+         * correspond to the size of the vector.
+         * @note The function name stands for "convert std::string to const char pointer vector"
+         */
+        inline void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;
     }
 }
 

@@ -18,7 +18,7 @@ inline vka::CommandBufferOTS::CommandBufferOTS(void) noexcept
 inline vka::CommandBufferOTS::CommandBufferOTS(VkDevice device, VkCommandPool pool)
     : m_device(device), m_pool(pool), m_cbo(VK_NULL_HANDLE)
 {
-    this->internal_begin(device, pool);
+    this->internal_begin();
 }
 
 inline vka::CommandBufferOTS::CommandBufferOTS(vka::CommandBufferOTS&& src) noexcept
@@ -30,7 +30,7 @@ inline vka::CommandBufferOTS::CommandBufferOTS(vka::CommandBufferOTS&& src) noex
 inline vka::CommandBufferOTS &vka::CommandBufferOTS::operator=(vka::CommandBufferOTS&& src) noexcept
 {
     // the command buffer of this may be allocated, if so, destroy it
-    this->destroy();
+    this->destroy_handles();
     this->m_device = src.m_device;
     this->m_pool = src.m_pool;
     this->m_cbo = src.m_cbo;
@@ -40,13 +40,7 @@ inline vka::CommandBufferOTS &vka::CommandBufferOTS::operator=(vka::CommandBuffe
 
 inline vka::CommandBufferOTS::~CommandBufferOTS(void)
 {
-    this->destroy();
-}
-
-inline void vka::CommandBufferOTS::destroy(void) noexcept
-{
-    if (this->m_cbo != VK_NULL_HANDLE)
-        vkFreeCommandBuffers(this->m_device, this->m_pool, 1, &this->m_cbo);
+    this->destroy_handles();
 }
 
 inline void vka::CommandBufferOTS::begin(VkDevice device, VkCommandPool pool)
@@ -55,7 +49,7 @@ inline void vka::CommandBufferOTS::begin(VkDevice device, VkCommandPool pool)
     {
         this->m_device = device;
         this->m_pool = pool;
-        this->internal_begin(device, pool);
+        this->internal_begin();
     }
 }
 
@@ -63,7 +57,6 @@ inline VkCommandBuffer vka::CommandBufferOTS::handle(void) const noexcept
 {
     return this->m_cbo;
 }
-
 
 
 constexpr VkImageUsageFlags vka::common::cvt_ff2iu(VkFormatFeatureFlags format_feature) noexcept
@@ -85,3 +78,10 @@ constexpr VkFormatFeatureFlags vka::common::cvt_iu2ff(VkImageUsageFlags image_us
         flags |= detail::common::iu2ff_bit(static_cast<VkImageUsageFlagBits>(image_usage & (1 << i)));
     return flags;
 }
+
+inline void vka::common::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept
+{
+    for (size_t i = 0; i < std_in.size(); i++)
+        ccp_out[i] = std_in[i].c_str();
+}
+
