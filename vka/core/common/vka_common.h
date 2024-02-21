@@ -59,16 +59,16 @@ namespace vka
 
         /**
          * @brief Moves the ownership from a OTS command buffer into 'this'.
-         * @details The source command buffer becomes invalidated. If 'this' has an allocated command buffer, it gets
-         * destroyed and replaced by the command buffer of the moved object.
-         * @param src Specifies the source command buffer which should be moved.
+         * @details The source command buffer becomes invalidated. If 'this' contains an allocated command buffer, it
+         * gets destroyed and replaced by the command buffer of the source object.
+         * @param src Specifies the command buffer to move.
          */
         inline CommandBufferOTS(CommandBufferOTS&& src) noexcept;
         inline CommandBufferOTS& operator= (CommandBufferOTS&& src) noexcept;
 
         /**
-         * @details Frees the allocated command buffer although it is not required as the command pool takes care of
-         * this.
+         * @brief Frees the allocated command buffer.
+         * @details Although it is not required as the command pool takes care of this.
          */
         inline ~CommandBufferOTS(void);
 

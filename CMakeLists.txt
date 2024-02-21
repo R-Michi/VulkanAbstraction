@@ -66,6 +66,7 @@ add_executable(vka
         vka/detail/push_constant/vka_push_constant_inline_impl.inl
         vka/core/swapchain/vka_swapchain_impl.inl
         vka/core/common/vka_common_impl.inl
+        vka/core/attachment/vka_attachment_impl.inl
 )
 target_link_libraries(vka Vulkan::Vulkan ${GLFW_LIBRARY})
 

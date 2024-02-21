@@ -287,7 +287,7 @@ namespace vka
         inline DescriptorSetArray(DescriptorSetArray&& src) noexcept;
         inline DescriptorSetArray& operator= (DescriptorSetArray&& src) noexcept;
 
-        /// @brief Destroys all the vulkan handles.
+        /// @brief Destroys all created vulkan handles.
         virtual inline ~DescriptorSetArray(void);
 
         /**
@@ -300,7 +300,7 @@ namespace vka
         inline void create(VkDescriptorPool pool, const DescriptorLayoutArray<S>& layout);
 
         /**
-         * @brief Destroys all the internal vulkan handles.
+         * @brief Destroys all created vulkan handles.
          * @details After the handles are destroyed they are reset to VK_NULL_HANDLE. Moreover, parent
          * handles are not destroyed by this function.
          */
