@@ -32,7 +32,7 @@ VkExtent2D vka::swapchain::image_extent(const VkSurfaceCapabilitiesKHR& capabili
     };
 }
 
-void vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views) noexcept
+void vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, VkImageView* image_views)
 {
     constexpr const char SWAPCHAIN_CREATE_FAILED[] = "[vka::swapchain::setup]: Failed to create swapchain.";
     constexpr const char IMAGE_VIEW_CREATE_FAILED[] = "[vka::swapchain::setup]: Failed to create image view";
