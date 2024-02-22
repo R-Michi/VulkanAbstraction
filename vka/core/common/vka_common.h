@@ -58,7 +58,7 @@ namespace vka
         CommandBufferOTS& operator= (const CommandBufferOTS&) = delete;
 
         /**
-         * @brief Moves the ownership from a OTS command buffer into 'this'.
+         * @brief Transfers ownership of an OTS command buffer to 'this'.
          * @details The source command buffer becomes invalidated. If 'this' contains an allocated command buffer, it
          * gets destroyed and replaced by the command buffer of the source object.
          * @param src Specifies the command buffer to move.

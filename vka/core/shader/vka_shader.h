@@ -22,74 +22,80 @@ namespace vka
         VkDevice m_device;
         VkShaderModule m_module;        // this is the shader handle
 
+        /// @brief Destroys all created vulkan handles.
         void destroy_handles(void) noexcept;
 
+        /**
+         * @brief Creates a shader module from a shader file.
+         * @param path Specifies the path to the shader file.
+         * @throw std::runtime_error Is thrown, if the file could not be opened or, if creating the shader module
+         * failed.
+         */
         void internal_create(const std::string& path);
 
     public:
-        /*
-        * Initialization constructor which initializes 'this' with a device. The device does not
-        * have to be valid at initialization, it must be valid at creation. This constructor has
-        * the same functionality as the .init() function. Furthermore, this constructor is also
-        * used as the default constructor, where the device is initialized to a VK_NULL_HANDLE.
-        * All other handles are initialized to a VK_NULL_HANDLE and every other member variable
-        * contains its default initialization.
-        */
-
+        /// @details Every vulkan handle is initialized to VK_NULL_HANDLE.
         inline Shader(void) noexcept;
 
+        /**
+         * @brief Creates a shader module from a shader file.
+         * @details This constructor has the same functionality as the function create().
+         * @param device Specifies a valid device.
+         * @param path Specifies the path to the shader file.
+         * @throw std::runtime_error Is thrown, if the file could not be opened or, if creating the shader module
+         * failed.
+         */
         explicit inline Shader(VkDevice device, const std::string& path);
 
         // There is no need for a shader to be copyable.
         Shader(const Shader&) = delete;
         Shader& operator= (const Shader&) = delete;
 
-        /*
-        * Moves another object of Shader into 'this'. 'This' now holds the ownership of all the
-        * handles of the source object. The source object will become invalidated and contains its
-        * default initialization except for the device. The device will be copied and is preserved
-        * in the moved object. If 'this' was created and is a valid object, 'this' is destroyed and
-        * replaced by the handles of the moved object.
-        */
+        /**
+         * @brief Transfers ownership of a shader module to 'this'.
+         * @details The source shader becomes invalidated. If 'this' has been created before and is a valid instance, it
+         * gets destroyed and replaced by the handles of the source object.
+         * @param src Specifies the shader to move.
+         */
         inline Shader(Shader&& src) noexcept;
         inline Shader& operator= (Shader&& src) noexcept;
 
-        // The destructor destroys all the vulkan handles.
+        /// @brief Destroys all created vulkan handles.
         virtual inline ~Shader(void);
 
-        /*
-        * This function creates the Shader and the internal handles are now valid, if no error
-        * occured. If an error occured while creating, a std::runtime_error exception is thrown
-        * with an appropriate message about the error. The shader code is loaded from a file and
-        * the path to the file is specified by 'path'. The shader stage is specified by 'stage'.
-        * Optionally, a custom entry point for the shader program can be specified by 'entry' which
-        * is "main" by default. A std::invalid_argument exception is thrown, if 'this' has not been
-        * initialized.
-        */
+        /**
+         * @brief Creates a shader module from a shader file.
+         * @param device Specifies a valid device.
+         * @param path Specifies the path to the shader file.
+         * @throw std::runtime_error Is thrown, if the file could not be opened or, if creating the shader module
+         * failed.
+         */
         inline void create(VkDevice device, const std::string& path);
 
-        /*
-        * Destroys the Shader object. After destroying, 'this' holds its default initialization
-        * except for the device. The device will be preserved after destroying and 'this' does not
-        * need to be reinitialized. This is also done by the destructor.
-        */
+        /**
+         * @brief Destroys all created vulkan handles.
+         * @details After the handles are destroyed they are reset to VK_NULL_HANDLE. Moreover, parent handles are not
+         * destroyed by this function.
+         */
         inline void destroy(void) noexcept;
 
-        // Returns the shader module handle.
+        /// @return Returns the shader module handle.
         inline VkShaderModule handle(void) const noexcept;
 
-        // Returns true, if the Shader is a valid object and false otherwise.
+        /// @return Returns true, if the shader is a valid object and false otherwise.
         inline bool is_valid(void) const noexcept;
 
-        /*
-        * Generates a pipeline shader stage from this shader. 'stage' specifies the stage that is used
-        * for this shader. 'flags' specifies the used flags for this shader stage which are 0 by
-        * default. 'entry' specifies the entry point (name of the main function) of the shader which
-        * is "main" by default. 'specialization' specifies additional specialization info used for the
-        * shader stage which is 'nullptr' (unused) by default. A Vulkan VkPipelineShaderStageCreateInfo
-        * structure is returned.
-        * NOTE: For more information also see the vulkan documentation of VkPipelineShaderStageCreateInfo.
-        */
+        /**
+         * @brief Generates a pipeline shader stage from the shader module.
+         * @param stage Specifies the stage where the shader is used.
+         * @param flags Optionally specifies additional flags for the shader stage.
+         * @param entry_point Optionally specifies a custom entry point for the shader stage. The entry point is the
+         * name of the main function and is "main" by default.
+         * @param specialization Optionally specifies additional specialization-info for the shader stage.
+         * @return Returns the shader stage in form of a VkPipelineShaderStageCreateInfo structure which is used to
+         * create a pipeline.
+         * @note For more information also see the vulkan documentation of VkPipelineShaderStageCreateInfo.
+         */
         inline VkPipelineShaderStageCreateInfo make_stage(
             VkShaderStageFlagBits stage,
             VkPipelineShaderStageCreateFlags flags = 0, 

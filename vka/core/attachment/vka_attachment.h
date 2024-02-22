@@ -61,7 +61,7 @@ namespace vka
         AttachmentImage& operator= (const AttachmentImage&) = delete;
 
         /**
-         * @brief Moves the ownership from an attachment image into 'this'.
+         * @brief Transfers ownership of an attachment image to 'this'.
          * @details The source attachment image becomes invalidated. If 'this' has been created before and is a valid
          * instance, it gets destroyed and replaced by the handles of the source object.
          * @param src Specifies the attachment image to move.

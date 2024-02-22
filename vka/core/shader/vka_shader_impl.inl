@@ -21,7 +21,7 @@ void vka::Shader::internal_create(const std::string& path)
 {
     // read shader file
     std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file) [[unlikely]] // it is expexted that the file exists
+    if (!file) [[unlikely]] // it is expected that the file exists
         detail::error::throw_runtime_error(FILE_OPEN_FAILED);
 
     // get size of file and set cursor to begin of file
@@ -39,7 +39,7 @@ void vka::Shader::internal_create(const std::string& path)
         .pNext = nullptr,
         .flags = 0,
         .codeSize = file_size,
-        .pCode = reinterpret_cast<uint32_t*>(code.get()) // shader code size is always a multiple of 4, its ok to cast from char* to uint32_t*
+        .pCode = reinterpret_cast<uint32_t*>(code.get()) // shader code size is always a multiple of 4, it's ok to cast from char* to uint32_t*
     };
     detail::error::check_result(vkCreateShaderModule(this->m_device, &ci, nullptr, &this->m_module), SHADER_CREATE_FAILED);
 }
