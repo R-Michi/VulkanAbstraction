@@ -350,7 +350,7 @@ inline bool vka::Texture::is_valid(void) const noexcept
 
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
 template<vka::ImageDataType Type>
-inline void* vka::Texture::load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components, const uint32_t force_components) noexcept
+inline void* vka::Texture::load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components, const uint32_t force_components)
 {
     void* data = nullptr;
     int w, h;

@@ -184,15 +184,10 @@ void vka::Texture::load(VkCommandBuffer cbo, const vka::Buffer& data, uint32_t l
         // If we are not in loading state, change the layout to the requiered layout
         // for the loading state and set the state to "loading".
         if (this->m_state == STATE_CREATED)
-        {
             this->change_layout_C2L(cbo);
-            this->m_state = STATE_LOADING;
-        }
         else if (this->m_state == STATE_FINISHED)
-        {
             this->change_layout_F2L(cbo);
-            this->m_state = STATE_LOADING;
-        }
+        this->m_state = STATE_LOADING;
         
         // copy buffer into the image
         const VkExtent3D extent = this->size(level);

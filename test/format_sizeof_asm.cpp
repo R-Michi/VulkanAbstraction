@@ -11,19 +11,8 @@
 
 #include "vka_test.h"
 
-float d, c;
-__attribute__((noinline)) float foo(VkFormat format)
+VkResult res = VK_TIMEOUT;
+void foo(void)
 {
-    return d * c;
-}
-
-float a, b, x, y;
-void foo2(VkFormat format)
-{
-    a = a * b;
-    float z = foo(format);
-    foo(format);
-    a = a + b + z;
-    z = foo(format);
-    x = a * y * z;
+    vka::detail::error::check_result(res, "This is a message");
 }

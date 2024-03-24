@@ -64,12 +64,15 @@ constexpr size_t vka::detail::format::get_format_size_offset(VkFormat format)
 {
     const uint32_t iformat = static_cast<uint32_t>(format);
 
-    if (iformat >= 0            && iformat <= 184)          return 0;
+    // all available vulkan formats
+    if (iformat <= 184)                                     return 0;
     if (iformat >= 1000156000   && iformat <= 1000156033)   return 1000156000 - 190;
-    if (iformat >= 1000330000   && iformat <= 1000330003)   return 1000330003 - 230;
+    if (iformat >= 1000330000   && iformat <= 1000330003)   return 1000330000 - 230;
     if (iformat >= 1000340000   && iformat <= 1000340001)   return 1000340000 - 240;
     if (iformat >= 1000066000   && iformat <= 1000066013)   return 1000066000 - 250;
     if (iformat >= 1000054000   && iformat <= 1000054007)   return 1000054000 - 270;
     if (iformat >= 1000464000   && iformat <= 1000464000)   return 1000464000 - 280;
+
+    // this statement should not be reached, if a valid vulkan format is given as input
     return NPOS;
 }
