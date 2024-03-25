@@ -13,7 +13,7 @@
 
 namespace vka::detail::format
 {
-    constexpr size_t get_format_size_offset(VkFormat format);
+    constexpr size_t format_lut_offset(VkFormat format);
 }
 
 #include "vka_format_inline_impl.inl"

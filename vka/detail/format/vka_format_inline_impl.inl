@@ -13,9 +13,8 @@
 
 namespace vka::detail::format
 {
-    constexpr size_t SIZE_LOOKUP[300] = {
-
-        // Standard / non-extension formats, (range [0, 184]):
+    constexpr size_t SIZE_LOOKUP[292] = {
+        // VK_VERSION_1_0 (non-extension) formats, (range [0, 184]):
         0, 1, 2, 2, 2, 2, 2, 2, 2, 1,
         1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
         2, 2, 2, 3, 3, 3, 3, 3, 3, 3,
@@ -36,43 +35,96 @@ namespace vka::detail::format
         16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
         16, 16, 16, 16, 16, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // extension formats, (range [1000156000, 1000156033]):
-        4, 4, 1, 1, 1, 1, 1, 2, 4, 8,
+        // VK_VERSION_1_1 (non-extension) formats, (range [1000156000, 1000156033]):
+        4, 4, 3, 3, 3, 3, 3, 2, 4, 8,
         8, 8, 6, 6, 6, 6, 6, 2, 4, 8,
         8, 8, 6, 6, 6, 6, 6, 8, 8, 6,
         6, 6, 6, 6, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // extension formats, (range [1000330000, 1000330003]):
+        // VK_VERSION_1_3 (non-extension) formats, (range [1000330000, 1000330003]):
         3, 6, 6, 6, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // extension formats, (range [1000340000, 1000340001]):
+        // VK_VERSION_1_3 (non-extension) formats, (range [1000340000, 1000340001]):
         2, 2, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // extension formats, (range [1000066000, 1000066013]):
+        // VK_VERSION_1_3 (non-extension) formats, (range [1000066000, 1000066013]):
         16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
         16, 16, 16, 16, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // extension formats, (range [1000054000, 1000054007]):
+        // VK_IMG_format_pvrtc (extension) formats, (range [1000054000, 1000054007]):
         8, 8, 8, 8, 8, 8, 8, 8, NSIZE, NSIZE,
 
-        // extension formats, (range [1000464000, 1000464000]):
-        4
+        // VK_NV_optical_flow (extension) formats, (range [1000464000, 1000464000]):
+        2, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_KHR_maintenance5 (extension) formats, (range [1000470000, 1000470001]):
+        2, 1
+    };
+
+    constexpr size_t COUNT_LOOKUP[292] = {
+        // VK_VERSION_1_0 (non-extension) formats, (range [0, 184]):
+        0, 2, 4, 4, 3, 3, 4, 4, 4, 1,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
+        2, 2, 2, 3, 3, 3, 3, 3, 3, 3,
+        3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        1, 1, 1, 1, 1, 1, 1, 2, 2, 2,
+        2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        3, 4, 4, 4, 4, 4, 4, 4, 1, 1,
+        1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+        1, 1, 1, 2, 2, 2, 3, 3, 3, 4,
+        4, 4, 3, 3, 1, 2, 1, 1, 2, 2,
+        2, 3, 3, 4, 4, 4, 4, 4, 4, 1,
+        1, 2, 2, 3, 3, 4, 4, 3, 3, 4,
+        4, 4, 4, 1, 1, 2, 2, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_VERSION_1_1 (non-extension) formats, (range [1000156000, 1000156033]):
+        4, 4, 3, 3, 3, 3, 3, 1, 2, 4,
+        4, 4, 3, 3, 3, 3, 3, 1, 2, 4,
+        4, 4, 3, 3, 3, 3, 3, 4, 4, 3,
+        3, 3, 3, 3, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_VERSION_1_3 (non-extension) formats, (range [1000330000, 1000330003]):
+        3, 3, 3, 3, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_VERSION_1_3 (non-extension) formats, (range [1000340000, 1000340001]):
+        4, 4, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_VERSION_1_3 (non-extension) formats, (range [1000066000, 1000066013]):
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_IMG_format_pvrtc (extension) formats, (range [1000054000, 1000054007]):
+        4, 4, 4, 4, 4, 4, 4, 4, NSIZE, NSIZE,
+
+        // VK_NV_optical_flow (extension) formats, (range [1000464000, 1000464000]):
+        // NOTE: It says R16G16, however in memory is only one component stored. The second one is calculated from the
+        // first one.
+        1, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
+        // VK_KHR_maintenance5 (extension) formats, (range [1000470000, 1000470001]):
+        4, 1
     };
 }
 
-constexpr size_t vka::detail::format::get_format_size_offset(VkFormat format)
+constexpr size_t vka::detail::format::format_lut_offset(VkFormat format)
 {
-    const uint32_t iformat = static_cast<uint32_t>(format);
+    const uint32_t i_format = static_cast<uint32_t>(format);
 
     // all available vulkan formats
-    if (iformat <= 184)                                     return 0;
-    if (iformat >= 1000156000   && iformat <= 1000156033)   return 1000156000 - 190;
-    if (iformat >= 1000330000   && iformat <= 1000330003)   return 1000330000 - 230;
-    if (iformat >= 1000340000   && iformat <= 1000340001)   return 1000340000 - 240;
-    if (iformat >= 1000066000   && iformat <= 1000066013)   return 1000066000 - 250;
-    if (iformat >= 1000054000   && iformat <= 1000054007)   return 1000054000 - 270;
-    if (iformat >= 1000464000   && iformat <= 1000464000)   return 1000464000 - 280;
+    if (i_format >= 1000156000 && i_format <= 1000156033)   return 1000156000 - 190;
+    if (i_format >= 1000330000 && i_format <= 1000330003)   return 1000330000 - 230;
+    if (i_format >= 1000340000 && i_format <= 1000340001)   return 1000340000 - 240;
+    if (i_format >= 1000066000 && i_format <= 1000066013)   return 1000066000 - 250;
+    if (i_format >= 1000054000 && i_format <= 1000054007)   return 1000054000 - 270;
+    if (i_format >= 1000464000 && i_format <= 1000464000)   return 1000464000 - 280;
+    if (i_format >= 1000470000 && i_format <= 1000470001)   return 1000464000 - 290;
 
-    // this statement should not be reached, if a valid vulkan format is given as input
-    return NPOS;
+    // if (i_format <= 184)
+    return 0;
 }

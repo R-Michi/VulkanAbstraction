@@ -12,7 +12,6 @@
 /*
  * Checklist:
  *   - model
- *   - comments
  */
 
 #pragma once

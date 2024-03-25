@@ -11,8 +11,9 @@
 
 #include "vka_test.h"
 
-VkResult res = VK_TIMEOUT;
+constexpr VkFormat format = VK_FORMAT_R32G32B32_SFLOAT;
+size_t s;
 void foo(void)
 {
-    vka::detail::error::check_result(res, "This is a message");
+    s = vka::format_countof(format);
 }

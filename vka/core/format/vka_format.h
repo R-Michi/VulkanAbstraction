@@ -90,6 +90,32 @@ namespace vka
      * @return Returns the byte-size of a vulkan format.
      */
     constexpr size_t format_sizeof(VkFormat format) noexcept;
+
+    /**
+     * @param format Specifies a version 1.0 vulkan format.
+     * @return Returns the byte-size of a vulkan format, if it is a version 1.0 format. If it is any other format, NSIZE
+     * is returned.
+     * @details This may be useful when dealing with vulkan version 1.0 formats (which is mostly the case) and when the
+     * format cannot be determined at compile-time. If those two conditions apply, it will have less overhead than the
+     * normal 'format_sizeof' counterpart.
+     */
+    constexpr size_t format_sizeof2(VkFormat format) noexcept;
+
+    /**
+     * @param format Specifies a vulkan format.
+     * @return Returns the number of components of a vulkan format.
+     */
+    constexpr size_t format_countof(VkFormat format) noexcept;
+
+    /**
+     * @param format Specifies a version 1.0 vulkan format.
+     * @return Returns the number of components of a vulkan format, if it is a version 1.0 format. If it is any other
+     * format, NSIZE is returned.
+     * @details This may be useful when dealing with vulkan version 1.0 formats (which is mostly the case) and when the
+     * format cannot be determined at compile-time. If those two conditions apply, it will have less overhead than the
+     * normal 'format_countof' counterpart.
+     */
+    constexpr size_t format_countof2(VkFormat format) noexcept;
 }
 
 #ifdef VKA_IMPLEMENTATION
