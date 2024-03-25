@@ -37,14 +37,14 @@ namespace vka::queue
 
     /**
      * @brief This function validates a QueueInfo structure.
-     * @details A queue info structure specifies a range of queues of a queue family. Finding a queue family only
-     * guarantees that this family has the required number of queues. However, it does not guarantee that a range of
-     * queues is within the bounds of defined (valid) queue-indices. This function validates that the range of queue-
-     * indices specified in a QueueInfo is in the bounds of the defined queue-index range.
      * @param queue_families Specifies all available queue family properties.
      * @param info Specifies the QueueInfo structure to check.
      * @return Returns 'true', if the validation was successful and 'false', if the QueueInfo structure contains any
      * invalid queue-indices.
+     * @details A queue info structure specifies a range of queues of a queue family. Finding a queue family only
+     * guarantees that this family has the required number of queues. However, it does not guarantee that a range of
+     * queues is within the bounds of defined (valid) queue-indices. This function validates that the range of queue-
+     * indices specified in a QueueInfo is in the bounds of the defined queue-index range.
      */
     inline bool validate(const std::vector<VkQueueFamilyProperties>& queue_families, const QueueInfo& info) noexcept;
 }

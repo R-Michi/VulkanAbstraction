@@ -47,15 +47,6 @@ namespace vka
     };
     using ModelLoadOptionFlags = uint32_t;
 
-#ifdef VKA_STB_IMAGE_LOAD_ENABLE
-    enum ImageDataType
-    {
-        VKA_IMAGE_DATA_TYPE_INT8,
-        VKA_IMAGE_DATA_TYPE_INT16,
-        VKA_IMAGE_DATA_TYPE_FLOAT
-    };
-#endif
-
     struct PhysicalDeviceFilter
     {
         const char*                         sequence;

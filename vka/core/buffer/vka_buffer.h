@@ -45,12 +45,12 @@ namespace vka
 
         /**
          * @brief Create the buffer.
-         * @details This constructor has the same functionality as the function create().
          * @param device Specifies a valid device.
          * @param properties Specifies memory properties of a physical device.
          * @param create_info Specifies the create info for the buffer.
          * @throw std::runtime_error Is thrown, if creating the buffer, allocating the memory or binding the memory
          * failed.
+         * @details This constructor has the same functionality as the function create().
          */
         explicit inline Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
@@ -63,9 +63,9 @@ namespace vka
 
         /**
          * @brief Transfers ownership of a buffer to 'this'.
+         * @param src Specifies the buffer to move.
          * @details The source buffer becomes invalidated. If 'this' has been created before and is a valid instance, it
          * gets destroyed and replaced by the handles of the source object.
-         * @param src Specifies the buffer to move.
          */
         inline Buffer(Buffer&& src) noexcept;
         inline Buffer& operator= (Buffer&& src) noexcept;
@@ -92,12 +92,12 @@ namespace vka
 
         /**
          * @brief Maps the buffer's memory.
-         * @details The region of the buffer to map is given by an offset and a size in bytes. Moreover, this function
-         * can not return 'nullptr'. If mapping the buffer failed, an exception is thrown.
          * @param offset Specifies the offset of the region to map.
          * @param size Specifies the size of the region to map.
          * @return Returns a pointer to the memory of the mapped buffer.
          * @throw std::runtime_error Is thrown, if mapping the buffer failed.
+         * @details The region of the buffer to map is given by an offset and a size in bytes. Moreover, this function
+         * can not return 'nullptr'. If mapping the buffer failed, an exception is thrown.
          */
         inline void* map(VkDeviceSize offset, VkDeviceSize size) noexcept;
 
@@ -109,19 +109,22 @@ namespace vka
 
         /**
          * @brief Records the required command for the copy operation.
+         * @param cbo Specifies a valid command buffer in which the copy command is recorded.
+         * @param src Specifies the buffer to copy.
          * @details The source and the destination buffer ('this') must be valid in order to perform the copy operation.
          * Otherwise, the function does nothing. Additionally, the source buffer must have the usage flag
          * VK_BUFFER_USAGE_TRANSFER_SRC_BIT set and the destination buffer must have the usage flag
          * VK_BUFFER_USAGE_TRANSFER_DST_BIT set.\n
          * The whole content if the source buffer is copied into the destination buffer and the destination buffer's
          * size must be greater than or equal to the source buffer's size. More formally: 'dst.size() >= src.size()'.
-         * @param cbo Specifies a valid command buffer in which the copy command is recorded.
-         * @param src Specifies the buffer to copy.
          */
         inline void copy(VkCommandBuffer cbo, const Buffer& src) noexcept;
 
         /**
          * @brief Records the required command for copying a region of a buffer.
+         * @param cbo Specifies a valid command buffer in which the copy command is recorded.
+         * @param src Specifies the buffer to copy.
+         * @param region Specifies the region of the buffer to copy.
          * @details Has the same functionality as the function copy(). Instead of copying the whole buffer, a region can
          * be specified that should be copied. The copy operation works as follows:\n\n
          * If VkBufferCopy::size equals 0, everything from 'VkBufferCopy::srcOffset' to 'src.size()' is copied. The size
@@ -134,9 +137,6 @@ namespace vka
          * 'VkBufferCopy::dstOffset + VkBufferCopy::size' bytes.\n
          * More formally:\n
          * 'dst.size() >= VkBufferCopy::dstOffset + VkBufferCopy::size'
-         * @param cbo Specifies a valid command buffer in which the copy command is recorded.
-         * @param src Specifies the buffer to copy.
-         * @param region Specifies the region of the buffer to copy.
          * @note See the vulkan documentation for VkBufferCopy and vkCmdCopyBuffer as it also applies to this copy
          * operation as well, except for the one special case.
          */
@@ -153,14 +153,14 @@ namespace vka
 
         /**
          * @brief Checks, if a buffer copy is invalid.
-         * @details Those checks are not included in the copy functions as it is already done by the vulkan API
-         * (validation layers). Usually, when a copy is invalid a VK_ERROR_DEVICE_LOST error is returned after the
-         * command has been submitted. However, if you wish to check yourself, if a copy is valid or not, you can call
-         * this function.
          * @param src Specifies the source buffer of a copy operation.
          * @param dst Specifies the destination buffer of a copy operation.
          * @param region Optionally specifies a copy region. This is only required, if a region-copy should be checked.
          * @return Returns 'true', if a copy operation would be invalid and 'false', if it would be valid.
+         * @details Those checks are not included in the copy functions as it is already done by the vulkan API
+         * (validation layers). Usually, when a copy is invalid a VK_ERROR_DEVICE_LOST error is returned after the
+         * command has been submitted. However, if you wish to check yourself, if a copy is valid or not, you can call
+         * this function.
          * @note If a buffer has the correct usage flags set, is not checked here. Those flags are not stored after the
          * buffer has been created.
          */
@@ -168,13 +168,13 @@ namespace vka
 
         /**
          * @brief Checks, if multiple buffer copies are invalid.
-         * @details All arrays must at least be 'count' elements in length.
          * @param count Specifies the number of buffers to copy.
          * @param src Specifies the source buffers of the copy operations.
          * @param dst Specifies the destination buffers of the copy operation.
          * @param results Specifies an array in which to store the results of the checks.
          * @param regions Optionally specifies copy regions. This is only required, if a region-copies should be
          * checked.
+         * @details All arrays must at least be 'count' elements in length.
          * @note Also read the description of the "single" version of this function.
          */
         static inline void is_copy_invalid(uint32_t count, const Buffer* src, const Buffer* dst, bool* results, const VkBufferCopy* regions = nullptr) noexcept;

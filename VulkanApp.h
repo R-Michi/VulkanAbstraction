@@ -21,8 +21,7 @@
 	#include <stb/stb_image.h>
 #endif
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -32,6 +31,7 @@
 #define VKA_GLFW_ENABLE
 #define VKA_MODEL_LOADING_ENABLE
 #define VKA_STB_IMAGE_LOAD_ENABLE
+
 #include "vka/vka.h"
 
 class VulkanApp

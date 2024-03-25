@@ -46,13 +46,13 @@ namespace vka
 
         /**
          * @brief Creates the attachment image.
-         * @details This constructor has the same functionality as the function create().
          * @param device Specifies a valid device.
          * @param pdevice Specifies a valid physical device.
          * @param properties Specifies the memory properties of the physical device.
          * @param create_info Specifies the create info for the attachment image.
          * @throw std::runtime_error Is thrown, if creating the image or image view, allocating the memory or binding
          * the memory to the image failed.
+         * @details This constructor has the same functionality as the function create().
          */
         explicit inline AttachmentImage(VkDevice device, VkPhysicalDevice pdevice, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
@@ -62,9 +62,9 @@ namespace vka
 
         /**
          * @brief Transfers ownership of an attachment image to 'this'.
-         * @details The source attachment image becomes invalidated. If 'this' has been created before and is a valid
          * instance, it gets destroyed and replaced by the handles of the source object.
          * @param src Specifies the attachment image to move.
+         * @details The source attachment image becomes invalidated. If 'this' has been created before and is a valid
          */
         inline AttachmentImage(AttachmentImage&& src) noexcept;
         inline AttachmentImage& operator= (AttachmentImage&& src) noexcept;

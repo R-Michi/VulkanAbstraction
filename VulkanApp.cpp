@@ -10,7 +10,6 @@
 */
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
 #include "VulkanApp.h"
 #include <iostream>
 #include <string>
@@ -765,8 +764,8 @@ void VulkanApp::create_textures(void)
 {
 	VkExtent3D size;
 	const void* const data[2] = {
-		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8, 4>("../../../assets/textures/texture.png", size),
-		vka::Texture::load_image<vka::VKA_IMAGE_DATA_TYPE_INT8, 4>("../../../assets/textures/texture2.jpeg", size)
+		vka::Texture::load_image<uint8_t, 4>("../../../assets/textures/texture.png", size),
+		vka::Texture::load_image<uint8_t, 4>("../../../assets/textures/texture2.jpeg", size)
 	};
 
 	const vka::TextureCreateInfo create_info = {

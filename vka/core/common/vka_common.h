@@ -46,10 +46,10 @@ namespace vka
 
         /**
          * @brief Allocates the command buffer and begins it's recording.
-         * @details This constructor has the same functionality as the function begin().
          * @param device Specifies a valid device.
          * @param pool Specifies a valid command pool to allocate the command buffer from.
          * @throw std::runtime_error Is thrown, if the allocation or beginning the command buffer failed.
+         * @details This constructor has the same functionality as the function begin().
          */
         explicit inline CommandBufferOTS(VkDevice device, VkCommandPool pool);
 
@@ -59,9 +59,9 @@ namespace vka
 
         /**
          * @brief Transfers ownership of an OTS command buffer to 'this'.
+         * @param src Specifies the command buffer to move.
          * @details The source command buffer becomes invalidated. If 'this' contains an allocated command buffer, it
          * gets destroyed and replaced by the command buffer of the source object.
-         * @param src Specifies the command buffer to move.
          */
         inline CommandBufferOTS(CommandBufferOTS&& src) noexcept;
         inline CommandBufferOTS& operator= (CommandBufferOTS&& src) noexcept;
@@ -90,9 +90,6 @@ namespace vka
         /**
          * @brief Ends the recording of the command buffer, submits the commands to a queue and waits until the commands
          * have been processed.
-         * @details If no fence is specified, the wait lasts until the specified queue goes into idle mode. If a fence
-         * is specified, the wait lasts until the fence is signaled or until the specified timeout time expires.
-         * elapsed.
          * @param queue Specifies a valid queue to submit the commands to.
          * @param fence Optionally specifies a fence to wait for the command execution to finish.
          * @param timeout Optionally specifies a timeout time for the fence. This parameter defaults to a value so that
@@ -100,6 +97,9 @@ namespace vka
          * @return Returns VK_TIMEOUT, if the fence timed out. Otherwise, VK_SUCCESS is returned.
          * @throw std::runtime_error Is throw, if ending the recording, submitting the commands, waiting for the fence
          * or the queue failed.
+         * @details If no fence is specified, the wait lasts until the specified queue goes into idle mode. If a fence
+         * is specified, the wait lasts until the fence is signaled or until the specified timeout time expires.
+         * elapsed.
          */
         VkResult end_wait(VkQueue queue, VkFence fence = VK_NULL_HANDLE, uint64_t timeout = vka::NO_TIMEOUT) const;
 
@@ -127,11 +127,11 @@ namespace vka
 
         /**
          * @brief Converts a vector of std::string strings to an array of const char*.
-         * @details This function is mainly used to convert extension and layer names from std::string to const char* in
-         * order to pass them to the corresponding create-infos.
          * @param std_in Specifies the vector of std::string strings.
          * @param ccp_out Specifies an array in which to store the const char* strings. The size of the array must
          * correspond to the size of the vector.
+         * @details This function is mainly used to convert extension and layer names from std::string to const char* in
+         * order to pass them to the corresponding create-infos.
          * @note The function name stands for "convert std::string to const char pointer vector"
          */
         inline void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;

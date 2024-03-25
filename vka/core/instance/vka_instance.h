@@ -58,10 +58,10 @@ namespace vka::instance
 
     /**
      * @brief Returns all required extensions by GLFW.
-     * @details Copies the strings (pointers) from the array that GLFW returns into the parameter array. This way other
-     * extensions can later be appended to the array.
      * @param extensions Specifies the array where the extension strings are returned.
      * @return Returns the number of extensions that where copied.
+     * @details Copies the strings (pointers) from the array that GLFW returns into the parameter array. This way other
+     * extensions can later be appended to the array.
      */
     uint32_t get_glfw_extensions(const char** extensions) noexcept;
 #endif

@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include "../../detail/texture/vka_texture.h"
+
 namespace vka
 {
     class Texture
@@ -58,48 +60,48 @@ namespace vka
 
         /**
          * @brief Changes the image layout from the created state to the loading state.
+         * @param cbo Specifies a command buffer in which to record the layout change.
          * @details The loading state includes loading data into the image buffer and creating mip-map levels. If the
          * image already has the correct layout, this function has no effect. Loading data into the image or creating
          * mip-map levels after the texture has been created requires calling this function.
-         * @param cbo Specifies a command buffer in which to record the layout change.
          */
         inline void change_layout_C2L(VkCommandBuffer cbo) noexcept;
 
         /**
          * @brief Changes the image layout from the finished state to the loading state.
+         * @param cbo Specifies a command buffer in which to record the layout change.
          * @details The loading state includes loading data into the image buffer and creating mip-map levels. If the
          * image already has the correct layout, this function has no effect. Loading data into the image or creating
          * mip-map levels after the texture has been finished requires calling this function.
-         * @param cbo Specifies a command buffer in which to record the layout change.
          */
         inline void change_layout_F2L(VkCommandBuffer cbo) noexcept;
 
         /**
          * @brief Changes the image layout from the mip-map creation state to the finished state.
+         * @param cbo Specifies a command buffer in which to record the layout changes.
+         * @param stages Specifies the pipeline shader stages where the texture is used.
          * @details The mip-map creation state is an intermediate state which is a result of required layout changes
          * during the mip-map creation process. Finishing the texture after creating mip-map levels requires calling
          * this function.
-         * @param cbo Specifies a command buffer in which to record the layout changes.
-         * @param stages Specifies the pipeline shader stages where the texture is used.
          */
         inline void change_layout_M2F(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
 
         /**
          * @brief Changes the image layout from the created state to the finished state.
+         * @param cbo Specifies a command buffer in which to record the layout changes.
+         * @param stages Specifies the pipeline shader stages where the texture is used.
          * @details The finished state implies it is ready for the use in shaders. If the image already has the correct
          * layout, this function has no effect. Finishing the texture after creating the texture requires calling this
          * function.
-         * @param cbo Specifies a command buffer in which to record the layout changes.
-         * @param stages Specifies the pipeline shader stages where the texture is used.
          */
         inline void change_layout_C2F(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
 
         /**
          * @brief Changes the image layout from the loading to the finished state.
-         * @details The finished state implies it is ready for the use in shaders. If the image already has the correct
-         * layout, this function has no effect. Finishing the texture after loading data requires calling this function.
          * @param cbo Specifies a command buffer in which to record the layout changes.
          * @param stages Specifies the pipeline shader stages where the texture is used.
+         * @details The finished state implies it is ready for the use in shaders. If the image already has the correct
+         * layout, this function has no effect. Finishing the texture after loading data requires calling this function.
          */
         inline void change_layout_L2F(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
 
@@ -133,17 +135,18 @@ namespace vka
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
         /**
          * @brief Wrapper function for stbi_load, stbi_load_16 and stbi_loadf.
-         * @details Which function is called is decided at compile-time through the template parameter.
-         * @tparam Type Specifies the data type of the values of the image. It is used to call the right load function.
+         * @tparam T Specifies the data type of a color component of a pixel.
          * @param path Specifies the path to the image file to load.
          * @param extent Returns the size/extent of the image.
          * @param components Returns the number of color components of the image.
          * @param force_components Forces the implementation to load a specified number of color components.
          * @throw std::runtime_error Is thrown, if loading the image failed.
          * @return Returns a pointer to the image's memory.
+         * @details The 'depth' component of the image's extent/size will always return 1. Furthermore, color components
+         * can have one of the following data types: uint8_t, uint16_t and float.
          */
-        template<ImageDataType Type>
-        static inline void* load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components,  uint32_t force_components);
+        template<typename T>
+        static inline T* load_image_internal(const char* path, VkExtent3D& extent, uint32_t* components, uint32_t force_components);
 #endif
 
     public:
@@ -152,13 +155,13 @@ namespace vka
 
         /**
          * @brief Creates the texture and allocates its memory.
-         * @details This constructor has the same functionality as the function create(). After creating the texture is
-         * in the created state.
          * @param device Specifies a valid device.
          * @param properties Specifies memory properties of a physical device.
          * @param create_info Specifies the create info for the texture.
          * @throw std::runtime_error Is thrown, if creating the texture image or the sampler, allocating the memory or
          * binding the memory failed.
+         * @details This constructor has the same functionality as the function create(). After creating the texture is
+         * in the created state.
          */
         explicit inline Texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
@@ -168,9 +171,9 @@ namespace vka
 
         /**
          * @brief Transfers ownership of a texture to 'this'.
+         * @param src Specifies the texture to move.
          * @details The source texture becomes invalidated. If 'this' has been created before and is a valid instance,
          * it gets destroyed and replaced by the handles of the source object.
-         * @param src Specifies the texture to move.
          */
         inline Texture(Texture&& src) noexcept;
         inline Texture& operator= (Texture&& src) noexcept;
@@ -180,22 +183,22 @@ namespace vka
 
         /**
          * @brief Creates the texture and allocates its memory.
-         * @details After creating the texture is in the created state.
          * @param device Specifies a valid device.
          * @param properties Specifies memory properties of a physical device.
          * @param create_info Specifies the create info for the texture.
          * @throw std::runtime_error Is thrown, if creating the texture image or the sampler, allocating the memory or
          * binding the memory failed.
+         * @details After creating the texture is in the created state.
          */
         inline void create(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
 
         /**
          * @brief Creates and adds an image view to the texture.
-         * @details If the texture has not been created yet, this function does nothing. Additionally, if the image view
-         * creation fails, it will not be added.
          * @param create_info Specifies the create info for the image view. This is not a VkImageViewCreateInfo, instead
          * a simplified version of the create info structure is used.
          * @throw std::runtime_error Is thrown, if creating the image view failed.
+         * @details If the texture has not been created yet, this function does nothing. Additionally, if the image view
+         * creation fails, it will not be added.
          */
         void create_view(const TextureViewCreateInfo& create_info);
 
@@ -208,8 +211,6 @@ namespace vka
 
         /**
          * @brief Records the required command to load the image data from a staging buffer into the texture image.
-         * @details Staging buffers usually use host memory.\n
-         * ¹The base mip-level specifies the original image without any scaling applied.
          * @param cbo Specifies a valid command buffer in which the load command is recorded.
          * @param data Specifies the staging buffer to load.
          * @param layer Specifies the target layer of the load operation.
@@ -217,11 +218,18 @@ namespace vka
          * for multiple layers. By default one layer is affected.
          * @param level Optionally specifies the affected mip-level of the texture. By default the base mip-level¹ is
          * the affected one.
+         * @details Staging buffers usually use host memory.\n
+         * ¹The base mip-level specifies the original image without any scaling applied.
          */
         void load(VkCommandBuffer cbo, const vka::Buffer& data, uint32_t layer, uint32_t layer_count = 1, uint32_t level = 0) noexcept;
 
         /**
          * @brief Loads image data into a staging buffer.
+         * @param data Specifies the image data.
+         * @param buffer Specifies the staging buffer in which the image data will be loaded.
+         * @param properties Specifies memory properties of a physical device.
+         * @param qfamidx Specifies the queue family (index) used for the buffer.
+         * @param level Optionally specifies the mip-level of the texture that the buffer should store.
          * @details For simplicity following variables are defined as:\n
          *  w := image width\n w' := downscaled image with\n h := image height\n h' := downscaled image height\n
          *  d := image depth\n d' := downscaled image depth\n f := image format\n s := data size in bytes\n
@@ -239,38 +247,32 @@ namespace vka
          * The function 'format_sizeof' translates to following formula:\n
          *  >> format_sizeof(f) = c * sizeof(type) \<\<\n
          * where 'sizeof' is the C++ sizeof operator.
-         *
-         * @param data Specifies the image data.
-         * @param buffer Specifies the staging buffer in which the image data will be loaded.
-         * @param properties Specifies memory properties of a physical device.
-         * @param qfamidx Specifies the queue family (index) used for the buffer.
-         * @param level Optionally specifies the mip-level of the texture that the buffer should store.
          * @note If the staging buffer already contained data, that data will now be overwritten by the image data.
          */
         inline void load_staging(const void* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t level = 0) const;
 
         /**
          * @brief Loads data from multiple images into one single staging buffer.
-         * @details Image data must be provided for every array layer to load. The data is passed by an array of buffers
-         * where each buffer contains the data for one array layer. Additionally, all buffers of the array must meet the
-         * size requirements described at the previous function. The number of elements this array must contain is
-         * greater than or equal to the number of array layers to load.
          * @param data Specifies the data of all images to be loaded into the staging buffer.
          * @param buffer Specifies the staging buffer in which the image data will be loaded.
          * @param properties Specifies memory properties of a physical device.
          * @param qfamidx Specifies the queue family (index) used for the buffer.
          * @param layer_count Specifies the number of array layers to load into the staging buffer.
          * @param level Optionally specifies the mip-level of the texture that the buffer should store.
+         * @details Image data must be provided for every array layer to load. The data is passed by an array of buffers
+         * where each buffer contains the data for one array layer. Additionally, all buffers of the array must meet the
+         * size requirements described at the previous function. The number of elements this array must contain is
+         * greater than or equal to the number of array layers to load.
          * @note If the staging buffer already contained data, that data will now be overwritten by the image data.
          */
         void load_staging(const void* const* data, vka::Buffer& buffer, const VkPhysicalDeviceMemoryProperties& properties, uint32_t qfamidx, uint32_t layer_count, uint32_t level = 0) const;
 
         /**
          * @brief Finishes the texture creation. This texture is now ready to be used in shaders.
-         * @details The layout is changed to the final layout required for rendering. Additionally, if mip-map creation
-         * is active, this function also records the commands to generate the mip-map levels.
          * @param cbo Specifies a valid command buffer in which the commands are recorded.
          * @param stages Specifies the (pipeline-) shader stages where the texture is used.
+         * @details The layout is changed to the final layout required for rendering. Additionally, if mip-map creation
+         * is active, this function also records the commands to generate the mip-map levels.
          * @note This function or 'finish_manual' must be called as the last operation when creating a texture.
          */
         void finish(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
@@ -278,11 +280,11 @@ namespace vka
         /**
          * @brief Finishes the texture creation, if mip-map levels were loaded manually. This texture is now ready to be
          * used in shaders.
+         * @param cbo Specifies a valid command buffer in which the commands are recorded.
+         * @param stages Specifies the (pipeline-) shader stages where the texture is used.
          * @details If mip-map creation is deactivated, this function has the same functionality as 'finish'. It does
          * not generate mip-map levels even, if mip-map generation is activated. It only changes the image's layout to
          * the final layout required for rendering.
-         * @param cbo Specifies a valid command buffer in which the commands are recorded.
-         * @param stages Specifies the (pipeline-) shader stages where the texture is used.
          * @note This function or 'finish' must be called as the last operation when creating a texture.
          */
         void finish_manual(VkCommandBuffer cbo, VkPipelineStageFlags stages) noexcept;
@@ -302,60 +304,68 @@ namespace vka
          */
         static inline uint32_t level_count(VkExtent3D extent) noexcept;
 
-        // Returns the number of array layers of the image.
+        /// @return Returns the number of array layers of the texture.
         inline uint32_t layer_count(void) const noexcept;
 
-        // Returns the vulkan image handle.
+        /// @return Returns the vulkan image handle.
         inline VkImage handle(void) const noexcept;
 
-        // Returns the vulkan sampler handle.
+        /// @return Returns the vulkan sampler handle.
         inline VkSampler sampler(void) const noexcept;
 
-        /*
-        * Returns the vulkan image view handle at the specified index 'i'. This function does
-        * perform a range check and throws a std::out_of_range exception, if the specified index
-        * is greater than or equal to the number of views.
-        */
+        /**
+         * @param i Specifies the index of the view to return.
+         * @return Returns the vulkan image view handle.
+         * @throw std::out_of_range Is thrown, if the specified index is grater than or equal to the number of views.
+         */
         inline VkImageView view(size_t i) const;
 
-        /*
-        * Returns the vulkan image view handle at the specified index 'i'. However, this function
-        * does not perform a range check. 
-        */
-        inline VkImageView viewu(size_t i) const noexcept;
+        /**
+         * @param i Specifies the index of the view to return.
+         * @return Returns the vulkan image view handle.
+         * @note This function does not perform a range check.
+         */
+        inline VkImageView view_u(size_t i) const noexcept;
 
-        // Returns true, if the Texture is a valid object and false otherwise.
+        /// @return Returns true, if the Texture is a valid object and false otherwise.
         inline bool is_valid(void) const noexcept;
 
 #ifdef VKA_STB_IMAGE_LOAD_ENABLE
-        /*
-        * Loads an image from a file. The path to the file is specified by 'path'. The size of the
-        * image is returned via the 'extent' and the number of color components/channels of the
-        * image is returned via the 'components' parameter. The (address of the-) image's memory is
-        * returned. The template argument 'T' specifies the data type of the color components.
-        * NOTE: 'extent.depth' is always 1.
-        * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
-        * Instead, a std::runtime_error exception is thrown which indicates that this operation
-        * failed or, if memory allocation failed.
-        */
-        template<ImageDataType Type>
-        static inline void* load_image(const char* path, VkExtent3D& extent, uint32_t& components) noexcept;
+        /**
+         * @brief Loads an image from a file.
+         * @tparam T Specifies the data type of a color component of a pixel.
+         * @param path Specifies the path to the image file.
+         * @param extent Returns the extent/size of the image.
+         * @param components Returns the number of color components of a pixel or number of color channels of the image
+         * respectively.
+         * @return Returns a pointer to a buffer where the image data is stored.
+         * @throw std::runtime_error Is thrown, if loading the image failed.
+         * @details The 'depth' component of the image's extent/size will always return 1. Furthermore, color components
+         * can have one of the following data types: uint8_t, uint16_t and float.
+         */
+        template<typename T>
+        static inline T* load_image(const char* path, VkExtent3D& extent, uint32_t& components);
 
-        /*
-        * Loads an image from a file. The path to the file is specified by 'path'. The size of the
-        * image is returned via the 'extent' parameter. The (address of the-) image's memory is
-        * returned. The template argument 'T' specifies the data type of the color components and
-        * 'force_components' forces the implementation to load a specified number of color
-        * components/channels.
-        * NOTE: 'extent.depth' is always 1.
-        * NOTE: This function can not return nullptr, if VKA_ALLOW_NULL_RETURN is not enabled.
-        * Instead, a std::runtime_error exception is thrown which indicates that this operation
-        * failed or, if memory allocation failed.
-        */
-        template<ImageDataType Type, uint32_t force_components>
-        static inline void* load_image(const char* path, VkExtent3D& extent) noexcept;
+        /**
+         * @brief Loads an image from a file.
+         * @tparam T Specifies the data type of a color component of a pixel.
+         * @tparam force_components Forces the implementation to load a desired number of color components independent
+         * of how many color channels the image file has. This value must be in the interval [1, 4].
+         * @param path Specifies the path to the image file.
+         * @param extent Returns the extent/size of the image.
+         * @return Returns a pointer to a buffer where the image data is stored.
+         * @throw std::runtime_error Is thrown, if loading the image failed.
+         * @details The 'depth' component of the image's extent/size will always return 1. Furthermore, color components
+         * can have one of the following data types: uint8_t, uint16_t and float.
+         */
+        template<typename T, uint32_t force_components>
+        static inline T* load_image(const char* path, VkExtent3D& extent);
 
-        // Frees allocated image data. Is just a wrapper for the function free().
+        /**
+         * @brief Frees allocated image data.
+         * @param data Specifies the data to free.
+         * @details Is just a wrapper for the function free().
+         */
         static inline void free_image(void* data) noexcept;
 #endif
     };

@@ -55,14 +55,14 @@ namespace vka
 
         /**
          * @brief Writes sets to a push constant range.
-         * @details Let 'b' be the begin address of this push constant range. Data is written in the
-         * following interval: [b + offset, b + size - 1]. More informally, the first byte gets written
-         * at the position which is specified by 'offset' and the last byte gets written at the position
-         * 'size - 1', assuming the first byte of this push constant range has position 0.
          * @param offset Specifies the byte offset in the push constant range memory.
          * @param size Specifies the number of bytes that should be written to the push constant range.
          * @param data Specifies the data that should be written to the push constant range. The sets
          * must be at least 'size' bytes in length.
+         * @details Let 'b' be the begin address of this push constant range. Data is written in the
+         * following interval: [b + offset, b + size - 1]. More informally, the first byte gets written
+         * at the position which is specified by 'offset' and the last byte gets written at the position
+         * 'size - 1', assuming the first byte of this push constant range has position 0.
          */
         inline void write(uint32_t offset, uint32_t size, const void* data);
 
@@ -90,12 +90,12 @@ namespace vka
 
         /**
          * @brief Rounds the size to the next multiple of 4.
+         * @param s Specifies the size to round.
+         * @return Returns the rounded size.
          * @details The vulkan specification states that every push constant range must be a multiple
          * of 4. More formally, let truncate(x) be the function that removes the fraction part of a
          * number 'x'. The result 'r' equals to 'r = truncate((s - 1) / 4) * 4 + 4' or 'r = 0', if s
          * is equal to 0.
-         * @param s Specifies the size to round.
-         * @return Returns the rounded size.
          */
         constexpr uint32_t round_size(uint32_t s) const noexcept;
 
@@ -122,11 +122,11 @@ namespace vka
 
         /**
          * @brief Moves another object of PushConstantLayout into 'this'.
+         * @param src Specifies the source object to move into 'this'.
          * @details 'this' now holds the ownership of all the push constant ranges of the source
          * object. The source object becomes invalidated and contains its default initialization.
          * If 'this' already contains push constant ranges, the get overwritten by the ranges of
          * the source object.
-         * @param src Specifies the source object to move into 'this'.
          */
         constexpr PushConstantLayout(PushConstantLayout&& src) noexcept;
         constexpr PushConstantLayout& operator= (PushConstantLayout&& src) noexcept;
@@ -135,10 +135,10 @@ namespace vka
 
         /**
          * @brief Initializes the layout with the actual maximum size for a push constant buffer.
-         * @details This can only be done, if no ranges have been added yet. Otherwise, this function
-         * does nothing.
          * @param properties Specifies the physical device properties which contains the maximum size
          * for the push constant buffer.
+         * @details This can only be done, if no ranges have been added yet. Otherwise, this function
+         * does nothing.
          */
         inline void init(const VkPhysicalDeviceProperties& properties) noexcept;
 
@@ -173,29 +173,29 @@ namespace vka
         constexpr const VkPushConstantRange* data(void) const noexcept;
 
         /**
-         * @details This function does perform a range check.
          * @param idx Specifies the index (position) of the VkPushConstantRange to return.
          * @return Returns the vulkan VkPushConstantRange at the specifies index (position).
          * @throw std::out_of_range If the index is greater than the maximum number of ranges specified
          * by the template parameter 'N'.
+         * @details This function does perform a range check.
          */
         constexpr const VkPushConstantRange& at(uint32_t idx) const;
 
         /**
-         * @details The index operator does not perform a range check. Therefore accessing with an
-         * invalid index may cause undefined behaviour.
          * @param idx Specifies the index (position) of the VkPushConstantRange to return.
          * @return Returns the vulkan VkPushConstantRange at the specifies index (position).
+         * @details The index operator does not perform a range check. Therefore accessing with an
+         * invalid index may cause undefined behaviour.
          */
         constexpr const VkPushConstantRange& operator[] (uint32_t idx) const noexcept;
 
         /**
          * @brief Checks, if all 'N' push constant ranges have been used.
+         * @throw std::runtime_error If any push constant range is unused.
          * @detail This is an optional function that can be called to check, if all push constant ranges
          * have actually been used. Unused push constant ranges will have a size of 0 and do not occupy
          * any push constant buffer memory. If an unused range is detected, the check fails and an
          * exception is thrown.
-         * @throw std::runtime_error If any push constant range is unused.
          */
         constexpr void validate(void) const;
     };
@@ -216,10 +216,10 @@ namespace vka
 
         /**
          * @brief Creates the PushConstant object with a specified layout.
-         * @details This constructor allocates memory for all push constant ranges specified by the
-         * layout and has the same functionality as the function 'create()'.
          * @param layout Specifies the layout that is used for the push constants.
          * @throw std::bad_alloc If memory allocation failed.
+         * @details This constructor allocates memory for all push constant ranges specified by the
+         * layout and has the same functionality as the function 'create()'.
          */
         explicit inline PushConstants(const PushConstantLayout<N>& layout);
 
@@ -229,12 +229,12 @@ namespace vka
 
         /**
          * @brief Moves another object of PushConstants into 'this'.
+         * @param src Specifies the source object to move into 'this'.
          * @details 'this' now holds the ownership of the push constant memory from the source object.
          * The source object becomes invalidated after the move operation. If 'this' already contains
          * a valid push constant buffer, this buffer will be deleted and replaced by the source buffer.
          * It is valid to call create() on the source object after the move as this function will
          * completely reinitialize the object.
-         * @param src Specifies the source object to move into 'this'.
          */
         inline PushConstants(PushConstants&& src) noexcept;
         inline PushConstants& operator= (PushConstants&& src) noexcept;
@@ -243,9 +243,9 @@ namespace vka
 
         /**
          * @brief Creates the PushConstant object with a specified layout.
-         * @details This function allocates memory for all push constant ranges specified by the layout.
          * @param layout Specifies the layout that is used for the push constants.
          * @throw std::bad_alloc If memory allocation failed.
+         * @details This function allocates memory for all push constant ranges specified by the layout.
          */
         inline void create(const PushConstantLayout<N>& layout);
 
@@ -260,22 +260,22 @@ namespace vka
         inline void push(VkCommandBuffer cbo, VkPipelineLayout layout) const noexcept;
 
         /**
-         * @details This function does perform a range check.
          * @param idx Specifies the index (position) of the push constant range to return.
          * @return Returns a view on the push constant range at a specified index (position).
          * @throw std::out_of_range If the index is greater than the maximum number of ranges specified
          * by the template parameter 'N'.
          * @throw std::runtime_error If 'this' is not a valid PushConstants object. An access to an
          * uninitialized / invalid object may cause undefined behaviour.
+         * @details This function does perform a range check.
          */
         inline PushConstantView at(uint32_t idx) const;
 
         /**
+         * @param idx Specifies the index (position) of the push constant range to return.
+         * @return Returns a view on the push constant range at a specified index (position).
          * @details The index operator does not perform a range check. Therefore accessing with an
          * invalid index may cause undefined behaviour. Undefined behaviour may also be cause, if
          * 'this' is an uninitialized / invalid object.
-         * @param idx Specifies the index (position) of the push constant range to return.
-         * @return Returns a view on the push constant range at a specified index (position).
          */
         inline PushConstantView operator[] (uint32_t idx) const noexcept;
 

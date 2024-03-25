@@ -39,11 +39,11 @@ namespace vka
 
         /**
          * @brief Creates a shader module from a shader file.
-         * @details This constructor has the same functionality as the function create().
          * @param device Specifies a valid device.
          * @param path Specifies the path to the shader file.
          * @throw std::runtime_error Is thrown, if the file could not be opened or, if creating the shader module
          * failed.
+         * @details This constructor has the same functionality as the function create().
          */
         explicit inline Shader(VkDevice device, const std::string& path);
 
@@ -53,9 +53,9 @@ namespace vka
 
         /**
          * @brief Transfers ownership of a shader module to 'this'.
+         * @param src Specifies the shader to move.
          * @details The source shader becomes invalidated. If 'this' has been created before and is a valid instance, it
          * gets destroyed and replaced by the handles of the source object.
-         * @param src Specifies the shader to move.
          */
         inline Shader(Shader&& src) noexcept;
         inline Shader& operator= (Shader&& src) noexcept;
