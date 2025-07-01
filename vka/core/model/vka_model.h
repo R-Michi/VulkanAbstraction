@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include "../../detail/model/vka_model.h"
-
 namespace vka
 {
     class Mesh

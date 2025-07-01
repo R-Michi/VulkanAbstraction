@@ -171,8 +171,7 @@ void VulkanApp::create_instance(void)
 #endif 
 	layers.emplace_back("VK_LAYER_LUNARG_monitor");
 
-	std::vector<std::string> extensions;
-	vka::instance::get_glfw_extensions(extensions);
+	std::vector<std::string> extensions = vka::instance::get_glfw_extensions();
 #ifdef VKA_DEBUG
 	//extensions.push_back("VK_EXT_debug_utils");
 #endif
@@ -194,7 +193,7 @@ void VulkanApp::create_instance(void)
 		throw std::runtime_error(str);
 	}
 
-	const char* _layers[layers.size()], *_extensions[extensions.size()];
+	const char* _layers[32], *_extensions[32];
 	vka::common::cvt_stdstr2ccpv(layers, _layers);
 	vka::common::cvt_stdstr2ccpv(extensions, _extensions);
 
@@ -208,27 +207,26 @@ void VulkanApp::create_instance(void)
 	instance_create_info.enabledExtensionCount = extensions.size();
 	instance_create_info.ppEnabledExtensionNames = _extensions;
 
-	VkResult result = vkCreateInstance(&instance_create_info, nullptr, &this->instance);
-	VULKAN_ASSERT(result);
+	const VkResult result = vkCreateInstance(&instance_create_info, nullptr, &this->instance);
+	vka::check_result(result, "vkCreateInstance");
 }
 
 void VulkanApp::create_surface(void)
 {
-	VkResult result = glfwCreateWindowSurface(this->instance, window, nullptr, &this->window_surface);
-	VULKAN_ASSERT(result);
+	const VkResult result = glfwCreateWindowSurface(this->instance, window, nullptr, &this->window_surface);
+	vka::check_result(result, "glfwCreateWindowSurface");
 }
 
 void VulkanApp::create_physical_device(void)
 {
-	std::vector<VkPhysicalDevice> physical_devices;
-	vka::device::get(this->instance, physical_devices);
+	const std::vector<VkPhysicalDevice> physical_devices = vka::device::get(this->instance);
 
 	vka::PhysicalDeviceFilter filter;
 	filter.sequence = nullptr;			// for local VRAM memory				// for staging memory / buffers
 	filter.memoryPropertyFlags = { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
 									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT};
-	filter.deviceTypeHirachy = { VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU };
+	filter.deviceTypeHierarchy = { VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU };
 	filter.queueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
 	filter.surfaceSupport = true;
 
@@ -245,8 +243,7 @@ void VulkanApp::create_physical_device(void)
 
 void VulkanApp::create_queues(void)
 {
-	std::vector<VkQueueFamilyProperties> queue_fam_properties;
-	vka::queue::properties(this->physical_device, queue_fam_properties);
+	const std::vector<VkQueueFamilyProperties> queue_fam_properties = vka::queue::properties(this->physical_device);
 
 	vka::QueueFamilyFilter queue_fam_filter = {};
 	queue_fam_filter.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
@@ -292,7 +289,7 @@ void VulkanApp::create_logical_device(void)
 		throw std::runtime_error(str);
 	}
 
-	const char* _extensions[device_extensions.size()];
+	const char* _extensions[32];
 	vka::common::cvt_stdstr2ccpv(device_extensions, _extensions);
 
 	VkDeviceCreateInfo device_create_info;
@@ -308,7 +305,7 @@ void VulkanApp::create_logical_device(void)
 	device_create_info.pEnabledFeatures = nullptr;
 
 	VkResult result = vkCreateDevice(this->physical_device, &device_create_info, nullptr, &this->device);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreateDevice");
 
 	// get queues from device
 	this->graphics_queues = new VkQueue[this->graphics_queue_info.usedQueueCount];
@@ -318,7 +315,7 @@ void VulkanApp::create_logical_device(void)
 	// check for durface support
 	VkBool32 supported;
 	result = vkGetPhysicalDeviceSurfaceSupportKHR(this->physical_device, this->graphics_queue_info.queueFamilyIndex, this->window_surface, &supported);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkGetPhysicalDeviceSurfaceSupportKHR");
 
 	if (!supported)
 	{
@@ -352,7 +349,7 @@ void VulkanApp::create_swapchain(void)
 	swapchain_create_info.oldSwapchain = old_swapchain;
 
 	this->swapchain_image_views.resize(swapchain_create_info.minImageCount);
-	vka::swapchain::setup(this->device, swapchain_create_info, this->swapchain, this->swapchain_image_views.data());
+	this->swapchain = vka::swapchain::setup(this->device, swapchain_create_info, this->swapchain_image_views.data());
 	vkDestroySwapchainKHR(this->device, old_swapchain, nullptr);
 }
 
@@ -371,7 +368,7 @@ void VulkanApp::create_depth_attachment(void)
 		.viewComponentMapping = component_mapping,
 		.viewAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
 	};
-	this->depth_attachment.create(this->device, this->physical_device, this->memory_properties, ci);
+	this->depth_attachment.create(this->device, this->memory_properties, ci);
 }
 
 void VulkanApp::create_render_pass(void)
@@ -443,7 +440,7 @@ void VulkanApp::create_render_pass(void)
 	render_pass_create_info.pDependencies = &main_pass_dependency;
 
 	VkResult result = vkCreateRenderPass(this->device, &render_pass_create_info, nullptr, &this->render_pass);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreateRenderPass");
 }
 
 void VulkanApp::create_shaders(void)
@@ -597,7 +594,7 @@ void VulkanApp::create_pipeline(void)
 	layout_create_info.pPushConstantRanges = nullptr;
 
 	VkResult result = vkCreatePipelineLayout(this->device, &layout_create_info, nullptr, &this->pipeline_layout);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreatePipelineLayout");
 
 	const VkPipelineShaderStageCreateInfo shader_stages[2] = {
 		this->shaders[0].make_stage(VK_SHADER_STAGE_VERTEX_BIT),
@@ -626,7 +623,7 @@ void VulkanApp::create_pipeline(void)
 	pipeline_create_info.basePipelineIndex = -1;
 
 	result = vkCreateGraphicsPipelines(this->device, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &this->pipeline);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreateGraphicsPipelines");
 }
 
 
@@ -652,7 +649,7 @@ void VulkanApp::create_framebuffers(void)
 
 		VkFramebuffer fbo;
 		VkResult result = vkCreateFramebuffer(this->device, &fbo_creare_info, nullptr, &fbo);
-		VULKAN_ASSERT(result);
+		vka::check_result(result, "vkCreateFramebuffer");
 
 		this->swapchain_framebuffers.push_back(fbo);
 	}
@@ -667,7 +664,7 @@ void VulkanApp::create_command_pool(void)
 	command_pool_create_info.queueFamilyIndex = this->graphics_queue_info.queueFamilyIndex;
 
 	VkResult result = vkCreateCommandPool(this->device, &command_pool_create_info, nullptr, &this->command_pool);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreateCommandPool");
 }
 
 void VulkanApp::create_global_command_buffers(void)
@@ -682,7 +679,7 @@ void VulkanApp::create_global_command_buffers(void)
 	cbo_alloc_info.commandBufferCount = this->swapchain_command_buffers.size();
 
 	VkResult result = vkAllocateCommandBuffers(this->device, &cbo_alloc_info, this->swapchain_command_buffers.data());
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkAllocateCommandBuffers");
 }
 
 void VulkanApp::create_vertex_buffers(void)
@@ -809,10 +806,9 @@ void VulkanApp::create_textures(void)
 	view.baseArrayLayer = 1;
 	this->texture.create_view(view);
 
-	vka::Buffer staging_buffer;
-	this->texture.load_staging(data, staging_buffer, this->memory_properties, this->graphics_queue_info.queueFamilyIndex, 2);
+	const vka::Buffer staging_buffer = this->texture.stage(data, this->memory_properties, this->graphics_queue_info.queueFamilyIndex, 2);
 
-    vka::CommandBufferOTS cbo(this->device, this->command_pool);
+    const vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->texture.load(cbo.handle(), staging_buffer, 0, 2);
     this->texture.finish(cbo.handle(), VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     cbo.end_wait(this->graphics_queues[0]);
@@ -834,7 +830,7 @@ void VulkanApp::create_descriptors(void)
         .pPoolSizes = sizes
     };
     VkResult result = vkCreateDescriptorPool(this->device, &ci, nullptr, &this->dpool);
-    VULKAN_ASSERT(result);
+    vka::check_result(result, "vkCreateDescriptorPool");
 
     vka::DescriptorSetBindingList<1> bindings;
     bindings.push(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -845,7 +841,7 @@ void VulkanApp::create_descriptors(void)
 
     const VkDescriptorBufferInfo buffer_info = vka::descriptor::make_buffer_info(this->uniform_buffer);
     const VkDescriptorImageInfo image_info = vka::descriptor::make_image_info(this->texture, 1);
-    vka::DescriptorSetArray<1>::UpdateOperation<2> update = this->descriptors.op_update<2>();
+    vka::DescriptorUpdateOperation<1, 2> update = this->descriptors.op_update<2>();
     update.write(0, 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &image_info);
     update.write(0, 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &buffer_info);
     update.execute();
@@ -859,9 +855,9 @@ void VulkanApp::create_semaphores(void)
 	semaphore_create_info.flags = 0;
 
 	VkResult result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_img_aviable);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreateSemaphore");
 	result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_rendering_done);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkCreateSemaphore");
 }
 
 
@@ -876,7 +872,7 @@ void VulkanApp::record_command_buffers(void)
 	for (size_t i = 0; i < this->swapchain_framebuffers.size(); i++)
 	{
 		VkResult result = vkBeginCommandBuffer(this->swapchain_command_buffers.at(i), &command_buffer_begin_info);
-		VULKAN_ASSERT(result);
+		vka::check_result(result, "vkBeginCommandBuffer");
 
 		VkRenderPassBeginInfo render_pass_begin_info;
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -927,7 +923,7 @@ void VulkanApp::record_command_buffers(void)
 		vkCmdEndRenderPass(this->swapchain_command_buffers.at(i));
 
 		result = vkEndCommandBuffer(this->swapchain_command_buffers.at(i));
-		VULKAN_ASSERT(result);
+		vka::check_result(result, "vkEndCommandBuffer");
 	}
 }
 
@@ -956,7 +952,7 @@ void VulkanApp::draw_frame(void)
 	submit_info.pSignalSemaphores = &this->sem_rendering_done;
 
 	VkResult result = vkQueueSubmit(this->graphics_queues[0], 1, &submit_info, VK_NULL_HANDLE);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkQueueSubmit");
 
 	VkPresentInfoKHR present_info;
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -969,7 +965,7 @@ void VulkanApp::draw_frame(void)
 	present_info.pResults = nullptr;
 
 	result = vkQueuePresentKHR(this->graphics_queues[0], &present_info);
-	VULKAN_ASSERT(result);
+	vka::check_result(result, "vkQueuePresentKHR");
 }
 
 void VulkanApp::update_frame_contents(void)

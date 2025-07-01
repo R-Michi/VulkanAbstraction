@@ -14,7 +14,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include "VulkanApp.h"
-#include "test/vka_test.h"
 #include <iostream>
 
 int main()
