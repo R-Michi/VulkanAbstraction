@@ -16,16 +16,16 @@ add_compile_options(${COMPILE_WARNINGS})
 
 # find vulkan library package
 find_package(Vulkan REQUIRED)
-message(STATUS "Vulkan found. Version: ${Vulkan_VERSION}")
+message(STATUS "[VKA]: Vulkan found. Version: ${Vulkan_VERSION}")
 
 # glfw library
-set(GLFW_FOLDER glfw)
-set(GLFW_PATH lib) # ---- SET THIS TO THE PATH WHERE GLFW IS INSTALLED ----
-find_path(GLFW NAMES ${GLFW_FOLDER} PATHS ${CMAKE_CURRENT_SOURCE_DIR}/${GLFW_PATH} REQUIRED)
-set(GLFW ${GLFW}/${GLFW_FOLDER})
-message(STATUS "Found glfw: ${GLFW}")
+set(VKA_GLFW_FOLDER glfw)
+set(VKA_GLFW_PATH lib)
+find_path(VKA_GLFW NAMES ${VKA_GLFW_FOLDER} PATHS ${CMAKE_CURRENT_SOURCE_DIR}/${VKA_GLFW_PATH} REQUIRED)
+set(VKA_GLFW ${VKA_GLFW}/${VKA_GLFW_FOLDER})
+message(STATUS "[VKA]: Found glfw: ${VKA_GLFW}")
 
-add_subdirectory(${GLFW}) # install glfw
+add_subdirectory(${VKA_GLFW}) # install glfw
 
 ########################################################################################################################
 ##################################################### DETAIL/COMMON ####################################################
@@ -335,7 +335,7 @@ target_link_libraries(vka Vulkan::Headers)
 add_library(vka_glfw STATIC ${VKA_FILES})
 target_compile_options(vka_glfw PRIVATE -D_VKA_GLFW)
 target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
-target_include_directories(vka_glfw PRIVATE ${GLFW}/include)
+target_include_directories(vka_glfw PRIVATE ${VKA_GLFW}/include)
 
 ########################################################################################################################
 ############################################### VKA GLFW EXTENSION FILES ###############################################
@@ -349,9 +349,8 @@ add_executable(vka_example
 )
 target_link_libraries(vka_example PRIVATE
         Vulkan::Vulkan
-        ${GLFW_LIBRARY}
-        vka_glfw
         glfw
+        vka_glfw
 )
 target_include_directories(vka_example PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm"
