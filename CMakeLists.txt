@@ -25,7 +25,9 @@ find_path(VKA_GLFW NAMES ${VKA_GLFW_FOLDER} PATHS ${CMAKE_CURRENT_SOURCE_DIR}/${
 set(VKA_GLFW ${VKA_GLFW}/${VKA_GLFW_FOLDER})
 message(STATUS "[VKA]: Found glfw: ${VKA_GLFW}")
 
-add_subdirectory(${VKA_GLFW}) # install glfw
+if (NOT TARGET glfw)
+    add_subdirectory(${VKA_GLFW}) # install glfw
+endif ()
 
 ########################################################################################################################
 ##################################################### DETAIL/COMMON ####################################################
