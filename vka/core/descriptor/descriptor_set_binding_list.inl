@@ -9,10 +9,12 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
+#include "descriptor_class.h"
+
 template<uint32_t S>
 inline uint32_t vka::DescriptorSetBindingList<S>::binding_count(uint32_t set) const noexcept
 {
-    return set >= S ? NSIZE32 : this->m_bindings[set].size();
+    return set >= S ? NCOUNT : this->m_bindings[set].size();
 }
 
 template<uint32_t S>

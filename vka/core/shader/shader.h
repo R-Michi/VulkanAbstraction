@@ -99,8 +99,3 @@ namespace vka
         ) const noexcept;
     };
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "shader.inl"
-#endif
-#include "shader_inline.inl"

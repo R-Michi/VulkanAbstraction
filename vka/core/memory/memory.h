@@ -23,7 +23,3 @@ namespace vka::memory
      */
     uint32_t find_type_index(const VkPhysicalDeviceMemoryProperties& properties, uint32_t bits, VkMemoryPropertyFlags req_flags) noexcept;
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "memory.inl"
-#endif

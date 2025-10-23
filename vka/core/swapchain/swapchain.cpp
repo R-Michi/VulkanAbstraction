@@ -6,7 +6,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#pragma once
+#include <vulkan/vulkan.h>
+#include "../../vka.h"
 
 uint32_t vka::swapchain::image_count(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t req_count) noexcept
 {
@@ -41,7 +42,7 @@ VkSwapchainKHR vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInf
     vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
     VkImage* const images = (VkImage*)alloca(image_count * sizeof(VkImage));
     vkGetSwapchainImagesKHR(device, swapchain, &image_count, images);
-    
+
     VkImageViewCreateInfo iv_ci = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
@@ -65,7 +66,7 @@ VkSwapchainKHR vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInf
     };
 
     for (uint32_t i = 0; i < image_count; i++)
-    { 
+    {
         iv_ci.image = images[i];
         iv_ci.format = create_info.imageFormat;
         check_result(vkCreateImageView(device, &iv_ci, nullptr, image_views + i), IMAGE_VIEW_CREATE_FAILED);

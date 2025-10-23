@@ -41,14 +41,19 @@ class VulkanApp
 		glm::mat4 MVP;
 	};
 
+	struct QueueInfo
+	{
+		VkQueue queue;
+		uint32_t family_index;
+	};
+
 private:
 	VkApplicationInfo app_info;
 	VkInstance instance;
 	VkSurfaceKHR window_surface;
 
 	VkPhysicalDevice physical_device;
-	vka::QueueInfo graphics_queue_info;
-	VkQueue* graphics_queues;
+	QueueInfo graphics_queue;
 	VkDevice device;
 
 	VkPhysicalDeviceProperties pdevice_properties;
@@ -80,7 +85,7 @@ private:
     vka::DescriptorLayoutArray<1> descriptor_layouts;
 	vka::DescriptorSetArray<1> descriptors;
 
-	VkSemaphore sem_img_aviable;
+	VkSemaphore sem_img_available;
 	VkSemaphore sem_rendering_done;
 
 	const GLFWvidmode* vid_mode;
@@ -96,47 +101,46 @@ private:
 	constexpr static VkImageUsageFlags SURFACE_IMAGE_USAGE = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	constexpr static VkPresentModeKHR PRESENTATION_MODE = VK_PRESENT_MODE_FIFO_KHR;
 
-	void glfw_init(void);
-	void glfw_destroy(void);
+	void glfw_init();
+	void glfw_destroy() const;
 
 	// vulkan methods
-	void vulkan_init(void);
-	void vulkan_destroy(void);
+	void vulkan_init();
+	void vulkan_destroy();
 
-	void load_models(void);
+	void load_models();
 
-	void make_application_info(void);
-	void create_instance(void);
-	void create_surface(void);
-	void create_physical_device(void);
-	void create_queues(void);
-	void create_logical_device(void);
+	void make_application_info();
+	void create_instance();
+	void create_surface();
+	void create_physical_device();
+	void create_logical_device();
 
-	void create_swapchain(void);
-	void create_depth_attachment(void);
-	void create_render_pass(void);
-	void create_shaders(void);
-	void create_pipeline(void);
+	void create_swapchain();
+	void create_depth_attachment();
+	void create_render_pass();
+	void create_shaders();
+	void create_pipeline();
 	
-	void create_framebuffers(void);
-	void create_command_pool(void);
-	void create_global_command_buffers(void);
-	void create_vertex_buffers(void);
-	void create_index_buffers(void);
-	void create_uniform_buffers(void);
-	void create_textures(void);
-	void create_descriptors(void);
-	void create_semaphores(void);
+	void create_framebuffers();
+	void create_command_pool();
+	void create_global_command_buffers();
+	void create_vertex_buffers();
+	void create_index_buffers();
+	void create_uniform_buffers();
+	void create_textures();
+	void create_descriptors();
+	void create_semaphores();
 	
-	void record_command_buffers(void);
-	void draw_frame(void);
-	void update_frame_contents(void);
+	void record_command_buffers() const;
+	void draw_frame() const;
+	void update_frame_contents();
 
 public:
-	VulkanApp(void) = default;
-	virtual ~VulkanApp(void);
+	VulkanApp() = default;
+	virtual ~VulkanApp();
 
-	void init(void);
-	void run(void);
-	void shutdown(void);
+	void init();
+	void run();
+	void shutdown();
 };

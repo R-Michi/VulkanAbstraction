@@ -18,7 +18,7 @@ namespace vka::detail::instance
      * @param layer_name Specifies the name of the layer.
      * @return Returns the index of the layer. If the layer is not supported, vka::NPOS is returned.
      */
-    inline size_t supports_layer(const VkLayerProperties* properties, uint32_t count, std::string_view layer_name) noexcept;
+    uint32_t supports_layer(const VkLayerProperties* properties, uint32_t count, std::string_view layer_name) noexcept;
 
     /**
      * @brief Checks if an extension at instance level is supported.
@@ -27,7 +27,5 @@ namespace vka::detail::instance
      * @param extension_name Specifies the name of the extension.
      * @return Returns the index of the extension. If the extension is not supported, vka::NPOS is returned.
      */
-    inline size_t supports_extension(const VkExtensionProperties* properties, uint32_t count, std::string_view extension_name) noexcept;
+    uint32_t supports_extension(const VkExtensionProperties* properties, uint32_t count, std::string_view extension_name) noexcept;
 }
-
-#include "instance.inl"

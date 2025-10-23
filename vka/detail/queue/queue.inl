@@ -8,12 +8,11 @@
 
 #pragma once
 
-inline uint8_t vka::detail::queue::has_flags(const VkQueueFamilyProperties& properties, VkQueueFlags req_flags) noexcept
-{
-    return (properties.queueFlags & req_flags) != req_flags ? 0x01 : 0;
-}
+#include "queue.h"
 
-inline uint8_t vka::detail::queue::has_count(const VkQueueFamilyProperties& properties, uint32_t req_count) noexcept
+inline bool vka::detail::queue::check_requirements(QueueFamilyRequirements requirements, const VkQueueFamilyProperties& properties) noexcept
 {
-    return properties.queueCount < req_count ? 0x02 : 0;
+    if ((properties.queueFlags & requirements.queueFlags) != requirements.queueFlags) return false;
+    if (properties.queueCount < requirements.queueCount) return false;
+    return true;
 }

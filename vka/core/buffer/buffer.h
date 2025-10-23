@@ -181,8 +181,3 @@ namespace vka
         static inline void is_copy_invalid(uint32_t count, const Buffer* src, const Buffer* dst, bool* results, const VkBufferCopy* regions = nullptr) noexcept;
     };
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "buffer.inl"
-#endif
-#include "buffer_inline.inl"

@@ -1,29 +1,31 @@
 /**
- * @brief Implements throw functions.
+ * @brief Implementation details for error handling.
  * @author GitHub: R-Michi
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+// ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
-[[noreturn]] void vka::detail::error::throw_invalid_argument(const char* msg)
+#include "error.h"
+
+inline void vka::detail::error::check_memory(const void* mem)
 {
-    throw std::invalid_argument(msg);
+    if (mem == nullptr) [[unlikely]]
+        throw_bad_alloc();
 }
 
-[[noreturn]] void vka::detail::error::throw_runtime_error(const char* msg)
+inline void vka::detail::error::check_range(uint32_t range_offset, uint32_t rsize, uint32_t size, const char* msg)
 {
-    throw std::runtime_error(msg);
+    if ((range_offset + rsize) > size) [[unlikely]]
+        throw_out_of_range(msg);
 }
 
-[[noreturn]] void vka::detail::error::throw_out_of_range(const char* msg)
+template<uint32_t N>
+inline void vka::detail::error::check_idx(uint32_t idx, const char* msg)
 {
-    throw std::out_of_range(msg);
-}
-
-[[noreturn]] void vka::detail::error::throw_bad_alloc()
-{
-    throw std::bad_alloc();
+    if (idx >= N) [[unlikely]]
+        throw_out_of_range(msg);
 }

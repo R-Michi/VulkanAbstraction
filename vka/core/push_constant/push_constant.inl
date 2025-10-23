@@ -9,6 +9,8 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
+#include "push_constant_class.h"
+
 template<uint32_t N>
 inline vka::PushConstants<N>::PushConstants() noexcept :
     m_layout(nullptr)

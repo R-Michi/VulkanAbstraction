@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "descriptor.h"
+
 /**************************************************** make helpers ****************************************************/
 
 inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorBufferInfo* infos) noexcept

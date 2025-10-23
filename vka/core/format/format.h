@@ -102,8 +102,3 @@ namespace vka
      */
     constexpr size_t format_countof2(VkFormat format) noexcept;
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "format.inl"
-#endif
-#include "format_inline.inl"

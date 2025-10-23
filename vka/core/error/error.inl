@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "error.h"
+
 inline bool vka::is_error(VkResult res) noexcept
 {
     return static_cast<int32_t>(res) < 0;

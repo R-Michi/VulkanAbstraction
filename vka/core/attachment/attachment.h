@@ -8,6 +8,7 @@
 
 #pragma once
 
+
 namespace vka
 {
     /**
@@ -101,8 +102,3 @@ namespace vka
         inline bool is_valid() const noexcept;
     };
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "attachment.inl"
-#endif
-#include "attachment_inline.inl"

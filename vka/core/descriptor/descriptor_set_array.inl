@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "descriptor_class.h"
+
 // ReSharper disable CppRedundantInlineSpecifier
 template<uint32_t S>
 inline vka::DescriptorSetArray<S>::DescriptorSetArray() noexcept :

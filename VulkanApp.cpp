@@ -19,7 +19,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-VulkanApp::~VulkanApp(void)
+VulkanApp::~VulkanApp()
 {
 	double res = 0.0f;
 
@@ -31,7 +31,7 @@ VulkanApp::~VulkanApp(void)
 }
 
 
-void VulkanApp::glfw_init(void)
+void VulkanApp::glfw_init()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -47,19 +47,18 @@ void VulkanApp::glfw_init(void)
 	glfwSetWindowPos(window, this->vid_mode->width / 4, this->vid_mode->height / 4);
 }
 
-void VulkanApp::glfw_destroy(void)
+void VulkanApp::glfw_destroy() const
 {
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
 }
 
-void VulkanApp::vulkan_init(void)
+void VulkanApp::vulkan_init()
 {
 	this->make_application_info();
 	this->create_instance();
 	this->create_surface();
 	this->create_physical_device();
-	this->create_queues();
 	this->create_logical_device();
 
 	this->create_swapchain();
@@ -81,11 +80,11 @@ void VulkanApp::vulkan_init(void)
 	this->record_command_buffers();
 }
 
-void VulkanApp::vulkan_destroy(void)
+void VulkanApp::vulkan_destroy()
 {
 	vkDeviceWaitIdle(this->device);
 
-	vkDestroySemaphore(this->device, this->sem_img_aviable, nullptr);
+	vkDestroySemaphore(this->device, this->sem_img_available, nullptr);
 	vkDestroySemaphore(this->device, this->sem_rendering_done, nullptr);
 
 	this->texture.destroy();
@@ -114,22 +113,21 @@ void VulkanApp::vulkan_destroy(void)
 		vkDestroyImageView(this->device, val, nullptr);
 	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
 
-	delete[] this->graphics_queues;
 	vkDestroyDevice(this->device, nullptr);
 	vkDestroySurfaceKHR(this->instance, this->window_surface, nullptr);
 	vkDestroyInstance(this->instance, nullptr);
 }
 
 
-void VulkanApp::load_models(void)
+void VulkanApp::load_models()
 {
 	vka::Model model;
-	model.load("../../../assets/models/test.obj", vka::VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL);
+	model.load("../../../assets/models/test.obj", (vka::ModelLoadOptionFlags)vka::ModelLoadOptionFlagBits::IGNORE_MATERIAL);
 
 	const std::vector<vka::VertexAttribute> merge_attribs = {
-		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_POSITION, 0 },
-		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE, 0 },
-		{ vka::VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL, 0 }	
+		{ vka::VertexAttributeType::POSITION, 0 },
+		{ vka::VertexAttributeType::TEXTURE_COORDINATE, 0 },
+		{ vka::VertexAttributeType::NORMAL, 0 }
 	};
 	
 	uint32_t base_index = 0;
@@ -152,7 +150,7 @@ void VulkanApp::load_models(void)
 }
 
 
-void VulkanApp::make_application_info(void)
+void VulkanApp::make_application_info()
 {
 	this->app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	this->app_info.pNext = nullptr;
@@ -163,7 +161,7 @@ void VulkanApp::make_application_info(void)
 	this->app_info.apiVersion = VK_API_VERSION_1_2;
 }
 
-void VulkanApp::create_instance(void)
+void VulkanApp::create_instance()
 {
 	std::vector<std::string> layers;
 #ifdef VKA_DEBUG
@@ -211,75 +209,74 @@ void VulkanApp::create_instance(void)
 	vka::check_result(result, "vkCreateInstance");
 }
 
-void VulkanApp::create_surface(void)
+void VulkanApp::create_surface()
 {
 	const VkResult result = glfwCreateWindowSurface(this->instance, window, nullptr, &this->window_surface);
 	vka::check_result(result, "glfwCreateWindowSurface");
 }
 
-void VulkanApp::create_physical_device(void)
+void VulkanApp::create_physical_device()
 {
+	constexpr VkMemoryPropertyFlags DEVICE_MEMORY = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	constexpr VkMemoryPropertyFlags HOST_MEMORY = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	constexpr VkMemoryPropertyFlags CACHED_MEMORY = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+	constexpr VkMemoryPropertyFlags REQUIRED_FLAGS[3] = { DEVICE_MEMORY, HOST_MEMORY, CACHED_MEMORY };
+	constexpr VkQueueFlags REQUIRED_QUEUE_FLAGS[2] = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
+
 	const std::vector<VkPhysicalDevice> physical_devices = vka::device::get(this->instance);
 
-	vka::PhysicalDeviceFilter filter;
-	filter.sequence = nullptr;			// for local VRAM memory				// for staging memory / buffers
-	filter.memoryPropertyFlags = { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-									  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT};
-	filter.deviceTypeHierarchy = { VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU };
-	filter.queueFamilyFlags = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_TRANSFER_BIT };
-	filter.surfaceSupport = true;
+	vka::PhysicalDeviceRequirements requirements = {};
+	requirements.type = VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+	requirements.memoryPropertyFlags = REQUIRED_FLAGS,
+	requirements.memoryPropertyFlagsCount = 3,
+	requirements.queueFamilyFlags = REQUIRED_QUEUE_FLAGS,
+	requirements.queueFamilyFlagsCount = 2,
+	requirements.surfaceSupport = true;
+	requirements.sequence = nullptr;
 
-    this->physical_device = vka::device::find(this->instance, physical_devices, filter, &this->pdevice_properties, &this->memory_properties);
-    if (this->physical_device == VK_NULL_HANDLE)
+    uint32_t idx = vka::device::find(this->instance, physical_devices, requirements, &this->pdevice_properties, &this->memory_properties);
+    if (idx == vka::NPOS)
     {
-        throw std::runtime_error("Failed to find physical device");
+    	requirements.type = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+    	idx = vka::device::find(this->instance, physical_devices, requirements, &this->pdevice_properties, &this->memory_properties);
+    	if (idx == vka::NPOS)
+			throw std::runtime_error("Failed to find physical device");
     }
 
+	this->physical_device = physical_devices[idx];
 	VkPhysicalDeviceProperties properties;
 	vkGetPhysicalDeviceProperties(this->physical_device, &properties);
 	std::cout << "Successfully found physical device: " << properties.deviceName << std::endl;
 }
 
-void VulkanApp::create_queues(void)
+void VulkanApp::create_logical_device()
 {
+	// check for queue support
 	const std::vector<VkQueueFamilyProperties> queue_fam_properties = vka::queue::properties(this->physical_device);
 
-	vka::QueueFamilyFilter queue_fam_filter = {};
-	queue_fam_filter.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
-	queue_fam_filter.queueCount = 4;
+	vka::QueueFamilyRequirements queue_family_requirements = {};
+	queue_family_requirements.queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
+	queue_family_requirements.queueCount = 1;
 
-	size_t idx = vka::queue::find(queue_fam_properties, queue_fam_filter, vka::VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL);
-	if(idx == vka::NPOS)
+	const size_t family_index = vka::queue::find(queue_fam_properties, queue_family_requirements, vka::QueueFamilyPriority::OPTIMAL);
+	if(family_index == vka::NPOS)
 	{
 		throw std::runtime_error("Failed to find queue family.");
 	}
 
-	this->graphics_queue_info.queueFamilyIndex = idx;
-	this->graphics_queue_info.usedQueueCount = queue_fam_filter.queueCount;
-	this->graphics_queue_info.queueOffset = 0;
-
-	if (!vka::queue::validate(queue_fam_properties, { this->graphics_queue_info }))
-		throw std::runtime_error("Validation of queue families failed!");
-
-	std::cout << "Successfully found queue family, index: " << idx << std::endl;
-}
-
-void VulkanApp::create_logical_device(void)
-{
-	std::vector<float> graphics_queue_priorities(this->graphics_queue_info.usedQueueCount, 1.0f);
+	constexpr float priority = 1.0f;
 	VkDeviceQueueCreateInfo queue_create_info;
 	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queue_create_info.pNext = nullptr;
 	queue_create_info.flags = 0;
-	queue_create_info.queueFamilyIndex = this->graphics_queue_info.queueFamilyIndex;
-	queue_create_info.queueCount = this->graphics_queue_info.usedQueueCount;
-	queue_create_info.pQueuePriorities = graphics_queue_priorities.data();
+	queue_create_info.queueFamilyIndex = family_index;
+	queue_create_info.queueCount = 1;
+	queue_create_info.pQueuePriorities = &priority;
 
 	std::vector<std::string> device_extensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
-	
+
 	size_t idx;
 	if ((idx = vka::device::supports_extensions(this->physical_device, device_extensions)) != vka::NPOS)
 	{
@@ -307,24 +304,13 @@ void VulkanApp::create_logical_device(void)
 	VkResult result = vkCreateDevice(this->physical_device, &device_create_info, nullptr, &this->device);
 	vka::check_result(result, "vkCreateDevice");
 
-	// get queues from device
-	this->graphics_queues = new VkQueue[this->graphics_queue_info.usedQueueCount];
-	for (uint32_t i = 0; i < this->graphics_queue_info.usedQueueCount; i++)
-		vkGetDeviceQueue(this->device, this->graphics_queue_info.queueFamilyIndex, i + this->graphics_queue_info.queueOffset, this->graphics_queues + i);
-
-	// check for durface support
-	VkBool32 supported;
-	result = vkGetPhysicalDeviceSurfaceSupportKHR(this->physical_device, this->graphics_queue_info.queueFamilyIndex, this->window_surface, &supported);
-	vka::check_result(result, "vkGetPhysicalDeviceSurfaceSupportKHR");
-
-	if (!supported)
-	{
-		throw std::runtime_error("Physical device does not support requiered surface!");
-	}
+	// get queue from the device
+	vkGetDeviceQueue(this->device, family_index, 0, &this->graphics_queue.queue);
+	this->graphics_queue.family_index = family_index;
 }
 
 
-void VulkanApp::create_swapchain(void)
+void VulkanApp::create_swapchain()
 {
 	VkSwapchainKHR old_swapchain = this->swapchain;
 
@@ -341,7 +327,7 @@ void VulkanApp::create_swapchain(void)
 	swapchain_create_info.imageUsage = SURFACE_IMAGE_USAGE;
 	swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	swapchain_create_info.queueFamilyIndexCount = 1;
-	swapchain_create_info.pQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex;
+	swapchain_create_info.pQueueFamilyIndices = &this->graphics_queue.family_index;
 	swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	swapchain_create_info.presentMode = PRESENTATION_MODE;
@@ -353,7 +339,7 @@ void VulkanApp::create_swapchain(void)
 	vkDestroySwapchainKHR(this->device, old_swapchain, nullptr);
 }
 
-void VulkanApp::create_depth_attachment(void)
+void VulkanApp::create_depth_attachment()
 {
 	VkComponentMapping component_mapping = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
 	const vka::AttachmentImageCreateInfo ci = {
@@ -363,7 +349,7 @@ void VulkanApp::create_depth_attachment(void)
 		.imageUsage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.imageQueueFamilyIndexCount = 1,
-		.imageQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.imageQueueFamilyIndices = &this->graphics_queue.family_index,
 		.viewFormat = DEPTH_FORMAT,
 		.viewComponentMapping = component_mapping,
 		.viewAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
@@ -371,7 +357,7 @@ void VulkanApp::create_depth_attachment(void)
 	this->depth_attachment.create(this->device, this->memory_properties, ci);
 }
 
-void VulkanApp::create_render_pass(void)
+void VulkanApp::create_render_pass()
 {
 	constexpr static size_t N_ATTACHMENTS = 2;
 
@@ -443,13 +429,13 @@ void VulkanApp::create_render_pass(void)
 	vka::check_result(result, "vkCreateRenderPass");
 }
 
-void VulkanApp::create_shaders(void)
+void VulkanApp::create_shaders()
 {
 	shaders[0].create(this->device, "../../../assets/shaders/bin/main.vert.spv");
 	shaders[1].create(this->device, "../../../assets/shaders/bin/main.frag.spv");
 }
 
-void VulkanApp::create_pipeline(void)
+void VulkanApp::create_pipeline()
 {
 	std::vector<VkVertexInputBindingDescription> bindings(1);
 	bindings[0].binding = 0;
@@ -588,7 +574,7 @@ void VulkanApp::create_pipeline(void)
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layout_create_info.pNext = nullptr;
 	layout_create_info.flags = 0;
-	layout_create_info.setLayoutCount = this->descriptor_layouts.count(),
+	layout_create_info.setLayoutCount = vka::DescriptorLayoutArray<1>::count(),
 	layout_create_info.pSetLayouts = this->descriptor_layouts.layouts(),
 	layout_create_info.pushConstantRangeCount = 0;
 	layout_create_info.pPushConstantRanges = nullptr;
@@ -627,7 +613,7 @@ void VulkanApp::create_pipeline(void)
 }
 
 
-void VulkanApp::create_framebuffers(void)
+void VulkanApp::create_framebuffers()
 {
 	for (VkImageView view : this->swapchain_image_views)
 	{
@@ -648,26 +634,26 @@ void VulkanApp::create_framebuffers(void)
 		fbo_creare_info.layers = 1;
 
 		VkFramebuffer fbo;
-		VkResult result = vkCreateFramebuffer(this->device, &fbo_creare_info, nullptr, &fbo);
+		const VkResult result = vkCreateFramebuffer(this->device, &fbo_creare_info, nullptr, &fbo);
 		vka::check_result(result, "vkCreateFramebuffer");
 
 		this->swapchain_framebuffers.push_back(fbo);
 	}
 }
 
-void VulkanApp::create_command_pool(void)
+void VulkanApp::create_command_pool()
 {
 	VkCommandPoolCreateInfo command_pool_create_info;
 	command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	command_pool_create_info.pNext = nullptr;
 	command_pool_create_info.flags = 0;
-	command_pool_create_info.queueFamilyIndex = this->graphics_queue_info.queueFamilyIndex;
+	command_pool_create_info.queueFamilyIndex = this->graphics_queue.family_index;
 
 	VkResult result = vkCreateCommandPool(this->device, &command_pool_create_info, nullptr, &this->command_pool);
 	vka::check_result(result, "vkCreateCommandPool");
 }
 
-void VulkanApp::create_global_command_buffers(void)
+void VulkanApp::create_global_command_buffers()
 {
 	this->swapchain_command_buffers.resize(this->swapchain_framebuffers.size());
 
@@ -682,16 +668,16 @@ void VulkanApp::create_global_command_buffers(void)
 	vka::check_result(result, "vkAllocateCommandBuffers");
 }
 
-void VulkanApp::create_vertex_buffers(void)
+void VulkanApp::create_vertex_buffers()
 {
-	VkDeviceSize size = sizeof(vka::real_t) * this->vertices.size();
+	const VkDeviceSize size = sizeof(vka::real_t) * this->vertices.size();
 	vka::BufferCreateInfo create_info = {
 		.bufferFlags = 0,
 		.bufferSize = size,
 		.bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
-		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 
@@ -709,10 +695,10 @@ void VulkanApp::create_vertex_buffers(void)
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->vertex_buffer.copy(cbo.handle(), staging_buffer);
-    cbo.end_wait(this->graphics_queues[0]);
+    cbo.end_wait(this->graphics_queue.queue);
 }
 
-void VulkanApp::create_index_buffers(void)
+void VulkanApp::create_index_buffers()
 {
 	VkDeviceSize size = this->indices.size() * sizeof(uint32_t);
 	vka::BufferCreateInfo create_info = {
@@ -721,7 +707,7 @@ void VulkanApp::create_index_buffers(void)
 		.bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
-		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 	
@@ -740,10 +726,10 @@ void VulkanApp::create_index_buffers(void)
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->index_buffer.copy(cbo.handle(), staging_buffer);
-    cbo.end_wait(this->graphics_queues[0]);
+    cbo.end_wait(this->graphics_queue.queue);
 }
 
-void VulkanApp::create_uniform_buffers(void)
+void VulkanApp::create_uniform_buffers()
 {
 	const vka::BufferCreateInfo create_info = {
 		.bufferFlags = 0,
@@ -751,13 +737,13 @@ void VulkanApp::create_uniform_buffers(void)
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
-		.bufferQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
 	};
 	this->uniform_buffer.create(this->device, this->memory_properties, create_info);
 }
 
-void VulkanApp::create_textures(void)
+void VulkanApp::create_textures()
 {
 	VkExtent3D size;
 	const void* const data[2] = {
@@ -772,7 +758,7 @@ void VulkanApp::create_textures(void)
 		.imageExtent = size,
 		.imageArrayLayers = 2,
 		.imageQueueFamilyIndexCount = 1,
-		.imageQueueFamilyIndices = &this->graphics_queue_info.queueFamilyIndex,
+		.imageQueueFamilyIndices = &this->graphics_queue.family_index,
 		.samplerMagFilter = VK_FILTER_NEAREST,
 		.samplerMinFilter = VK_FILTER_NEAREST,
 		.samplerMipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
@@ -806,22 +792,22 @@ void VulkanApp::create_textures(void)
 	view.baseArrayLayer = 1;
 	this->texture.create_view(view);
 
-	const vka::Buffer staging_buffer = this->texture.stage(data, this->memory_properties, this->graphics_queue_info.queueFamilyIndex, 2);
+	const vka::Buffer staging_buffer = this->texture.stage(data, this->memory_properties, this->graphics_queue.family_index, 2);
 
     const vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->texture.load(cbo.handle(), staging_buffer, 0, 2);
     this->texture.finish(cbo.handle(), VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    cbo.end_wait(this->graphics_queues[0]);
+    cbo.end_wait(this->graphics_queue.queue);
 }
 
-void VulkanApp::create_descriptors(void)
+void VulkanApp::create_descriptors()
 {
-    const VkDescriptorPoolSize sizes[2] = {
+	constexpr VkDescriptorPoolSize sizes[2] = {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
         { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
     };
 
-    const VkDescriptorPoolCreateInfo ci = {
+	const VkDescriptorPoolCreateInfo ci = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = vka::DescriptorSetArray<1>::POOL_FLAGS,
@@ -847,21 +833,21 @@ void VulkanApp::create_descriptors(void)
     update.execute();
 }
 
-void VulkanApp::create_semaphores(void)
+void VulkanApp::create_semaphores()
 {
 	VkSemaphoreCreateInfo semaphore_create_info;
 	semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphore_create_info.pNext = nullptr;
 	semaphore_create_info.flags = 0;
 
-	VkResult result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_img_aviable);
+	VkResult result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_img_available);
 	vka::check_result(result, "vkCreateSemaphore");
 	result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_rendering_done);
 	vka::check_result(result, "vkCreateSemaphore");
 }
 
 
-void VulkanApp::record_command_buffers(void)
+void VulkanApp::record_command_buffers() const
 {
 	VkCommandBufferBeginInfo command_buffer_begin_info;
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -927,23 +913,23 @@ void VulkanApp::record_command_buffers(void)
 	}
 }
 
-void VulkanApp::init(void)
+void VulkanApp::init()
 {
 	this->load_models();
 	this->glfw_init();
 	this->vulkan_init();
 }
 
-void VulkanApp::draw_frame(void)
+void VulkanApp::draw_frame() const
 {
 	uint32_t img_index;
-	vkAcquireNextImageKHR(this->device, this->swapchain, ~(0UI64), this->sem_img_aviable, VK_NULL_HANDLE, &img_index);
+	vkAcquireNextImageKHR(this->device, this->swapchain, ~(0UI64), this->sem_img_available, VK_NULL_HANDLE, &img_index);
 
 	VkSubmitInfo submit_info;
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.pNext = nullptr;
 	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &this->sem_img_aviable;
+	submit_info.pWaitSemaphores = &this->sem_img_available;
 	VkPipelineStageFlags wait_stage_mask[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submit_info.pWaitDstStageMask = wait_stage_mask;
 	submit_info.commandBufferCount = 1;
@@ -951,7 +937,7 @@ void VulkanApp::draw_frame(void)
 	submit_info.signalSemaphoreCount = 1;					  
 	submit_info.pSignalSemaphores = &this->sem_rendering_done;
 
-	VkResult result = vkQueueSubmit(this->graphics_queues[0], 1, &submit_info, VK_NULL_HANDLE);
+	VkResult result = vkQueueSubmit(this->graphics_queue.queue, 1, &submit_info, VK_NULL_HANDLE);
 	vka::check_result(result, "vkQueueSubmit");
 
 	VkPresentInfoKHR present_info;
@@ -964,17 +950,17 @@ void VulkanApp::draw_frame(void)
 	present_info.pImageIndices = &img_index;
 	present_info.pResults = nullptr;
 
-	result = vkQueuePresentKHR(this->graphics_queues[0], &present_info);
+	result = vkQueuePresentKHR(this->graphics_queue.queue, &present_info);
 	vka::check_result(result, "vkQueuePresentKHR");
 }
 
-void VulkanApp::update_frame_contents(void)
+void VulkanApp::update_frame_contents()
 {
 	UniformTransformMatrices utm = {};
 
 	glm::mat4 model(1.0f);
 	model = glm::rotate(model, static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.0f, -3.5f), glm::vec3(0.0f, 0.7f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	const glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.0f, -3.5f), glm::vec3(0.0f, 0.7f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 1000.0f);
 	projection[1][1] *= -1.0f;
 	utm.MVP = projection * view * model;
@@ -984,7 +970,7 @@ void VulkanApp::update_frame_contents(void)
 	this->uniform_buffer.unmap();
 }
 
-void VulkanApp::run(void)
+void VulkanApp::run()
 {
 	while (!glfwGetKey(this->window, GLFW_KEY_ESCAPE) && !glfwWindowShouldClose(this->window))
 	{
@@ -997,13 +983,13 @@ void VulkanApp::run(void)
 
 		double t_render = glfwGetTime() - t0_render;
 
-		std::cout << "\r" << 1.0 / t_render << "FPS                    ";
+		//std::cout << "\r" << 1.0 / t_render << "FPS                    ";
 		this->frame_times.push_back(t_render);
 	}
 	std::cout << std::endl;
 }
 
-void VulkanApp::shutdown(void)
+void VulkanApp::shutdown()
 {
 	this->vulkan_destroy();
 	this->glfw_destroy();

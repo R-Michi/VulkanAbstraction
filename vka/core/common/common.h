@@ -125,15 +125,11 @@ namespace vka
          * @param std_in Specifies the vector of std::string strings.
          * @param ccp_out Specifies an array in which to store the const char* strings. The size of the array must
          * correspond to the size of the vector.
+         * @param buff_size Optionally specifies the maximum buffer size.
          * @details This function is mainly used to convert extension and layer names from std::string to const char* to
          * pass them to the corresponding create-infos.
          * @note The function name stands for "convert std::string to const char pointer vector"
          */
-        inline void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out) noexcept;
+        inline void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out, size_t buff_size = NSIZE) noexcept;
     }
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "common.inl"
-#endif
-#include "common_inline.inl"

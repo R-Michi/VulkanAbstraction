@@ -6,7 +6,13 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#pragma once
+#ifdef _VKA_GLFW
+#define VKA_INCLUDE_GLFW
+#define VKA_GLFW_ENABLE
+#endif
+
+#include <vulkan/vulkan.h>
+#include "../../vka.h"
 
 bool vka::instance::supports_layer(std::string_view layer_name, VkLayerProperties* properties) noexcept
 {
@@ -25,7 +31,7 @@ bool vka::instance::supports_layer(std::string_view layer_name, VkLayerPropertie
     return b;
 }
 
-size_t vka::instance::supports_layers(const std::vector<std::string>& layer_names, VkLayerProperties* properties) noexcept
+uint32_t vka::instance::supports_layers(const std::vector<std::string>& layer_names, VkLayerProperties* properties) noexcept
 {
     uint32_t layer_count;
     VkResult res = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
@@ -63,7 +69,7 @@ bool vka::instance::supports_extension(std::string_view extension_name, VkExtens
     return b;
 }
 
-size_t vka::instance::supports_extensions(const std::vector<std::string>& extension_names, VkExtensionProperties* properties) noexcept
+uint32_t vka::instance::supports_extensions(const std::vector<std::string>& extension_names, VkExtensionProperties* properties) noexcept
 {
     uint32_t extension_count;
     VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
@@ -84,13 +90,14 @@ size_t vka::instance::supports_extensions(const std::vector<std::string>& extens
     return NPOS;
 }
 
-#ifdef VKA_GLFW_ENABLE
+#ifdef _VKA_GLFW
 std::vector<std::string> vka::instance::get_glfw_extensions()
 {
     std::vector<std::string> extensions;
     uint32_t count;
 
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&count);
+    extensions.reserve(count);
     for (uint32_t i = 0; i < count; i++)
         extensions.emplace_back(glfw_extensions[i]);
 

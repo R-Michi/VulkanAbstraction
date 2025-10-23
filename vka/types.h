@@ -19,55 +19,46 @@ namespace vka
     using StencilFormatArray = std::array<VkFormat, 4>;
     using DepthStencilFormatArray = std::array<VkFormat, 3>;
 
-    enum QueueFamilyPriority : uint32_t
+    enum class QueueFamilyPriority : uint8_t
     {
-        VKA_QUEUE_FAMILY_PRIORITY_FIRST = 0,
-        VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL = 1,
-        VKA_QUEUE_FAMILY_PRIORITY_MAX_ENUM = 0x7FFFFFFF
+        FIRST,
+        OPTIMAL,
     };
 
-    enum VertexAttributeType : uint32_t
+    enum class VertexAttributeType : uint32_t
     {
-        VKA_VERTEX_ATTRIBUTE_TYPE_NONE = 0,
-        VKA_VERTEX_ATTRIBUTE_TYPE_POSITION = 1,
-        VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL = 3,
-        VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE = 4,
-        VKA_VERTEX_ATTRIBUTE_TYPE_POSITION_W_EXT = 100,
-        VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE_W_EXT = 101,
-        VKA_VERTEX_ATTRIBUTE_TYPE_COLOR_EXT = 102,
-        VKA_VERTEX_ATTRIBUTE_TYPE_MAX_ENUM = 0x7FFFFFFF
+        NONE = 0,
+        POSITION = 1,
+        NORMAL = 3,
+        TEXTURE_COORDINATE = 4,
+        POSITION_W_EXT = 100,
+        TEXTURE_COORDINATE_W_EXT = 101,
+        COLOR_EXT = 102,
     };
 
-    enum ModelLoadOptionFlagBits : uint32_t
+    enum class ModelLoadOptionFlagBits : uint32_t
     {
-        VKA_MODEL_LOAD_OPTION_DEFAULT = 0x00000000,
-        VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL = 0x00000001,
-        VKA_MODEL_LOAD_OPTION_FORCE_PER_MESH_MATERIAL = 0x00000002,
-        VKA_MODEL_LOAD_OPTION_MAX_ENUM = 0x7FFFFFFF
+        DEFAULT = 0x00000000,
+        IGNORE_MATERIAL = 0x00000001,
+        FORCE_PER_MESH_MATERIAL = 0x00000002,
     };
     using ModelLoadOptionFlags = uint32_t;
 
-    // hierarchy
-    struct PhysicalDeviceFilter
+    struct PhysicalDeviceRequirements
     {
-        const char*                         sequence;
-        std::vector<VkMemoryPropertyFlags>  memoryPropertyFlags;
-        std::vector<VkPhysicalDeviceType>   deviceTypeHierarchy;
-        std::vector<VkQueueFlags>           queueFamilyFlags;
-        bool                                surfaceSupport;
+        VkPhysicalDeviceType            type;
+        const VkMemoryPropertyFlags*    memoryPropertyFlags;
+        uint32_t                        memoryPropertyFlagsCount;
+        const VkQueueFlags*             queueFamilyFlags;
+        uint32_t                        queueFamilyFlagsCount;
+        bool                            surfaceSupport;
+        const char*                     sequence;
     };
 
-    struct QueueFamilyFilter
+    struct QueueFamilyRequirements
     {
     	VkQueueFlags    queueFlags;
     	uint32_t        queueCount;
-    };
-
-    struct QueueInfo
-    {
-        uint32_t queueFamilyIndex;
-        uint32_t usedQueueCount;
-        uint32_t queueOffset;
     };
 
     struct VertexAttribute

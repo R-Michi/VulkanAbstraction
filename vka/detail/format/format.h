@@ -17,5 +17,3 @@ namespace vka::detail::format
      */
     constexpr size_t format_lut_offset(VkFormat format);
 }
-
-#include "format.inl"

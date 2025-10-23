@@ -34,8 +34,3 @@ namespace vka::detail::error
     template<uint32_t N>
     inline void check_idx(uint32_t idx, const char* msg);
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "error.inl"
-#endif
-#include "error_inline.inl"

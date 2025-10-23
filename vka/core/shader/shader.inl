@@ -1,5 +1,5 @@
 /**
- * @brief Implementation for the shader class.
+ * @brief Inline implementation for shader class.
  * @author GitHub: R-Michi
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
@@ -8,35 +8,81 @@
 
 #pragma once
 
-void vka::Shader::destroy_handles() const noexcept
+#include "shader.h"
+
+inline vka::Shader::Shader() noexcept :
+    m_device(VK_NULL_HANDLE),
+    m_module(VK_NULL_HANDLE)
+{}
+
+inline vka::Shader::Shader(VkDevice device, const std::string& path) :
+    m_device(device),
+    m_module(VK_NULL_HANDLE)
 {
-    if (this->m_module != VK_NULL_HANDLE)
-        vkDestroyShaderModule(this->m_device, this->m_module, nullptr);
+    this->internal_create(path);
 }
 
-void vka::Shader::internal_create(const std::string& path)
+inline vka::Shader::Shader(Shader&& src) noexcept :
+    m_device(src.m_device),
+    m_module(src.m_module)
 {
-    // read a shader file
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file) [[unlikely]] // it is expected that the file exists
-        detail::error::throw_runtime_error(FILE_OPEN_FAILED);
+    src.m_module = VK_NULL_HANDLE;
+}
 
-    // get the size of the file and set the cursor to the beginning of the file
-    const size_t file_size = file.tellg();
-    file.seekg(0, std::ifstream::beg);
+inline vka::Shader& vka::Shader::operator= (Shader&& src) noexcept
+{
+    // destroy 'this' shader, if it has been created, otherwise this function does nothing
+    this->destroy_handles();
+    this->m_device = src.m_device;
+    this->m_module = src.m_module;
+    src.m_module = VK_NULL_HANDLE;
+    return *this;
+}
 
-    // allocate a buffer and read the file
-    // use unique ptr for memory guard
-    const std::unique_ptr<char> code(new char[file_size]);
-    file.read(code.get(), (std::streamsize)file_size);
-    file.close();
+inline vka::Shader::~Shader()
+{
+    this->destroy_handles();
+}
 
-    const VkShaderModuleCreateInfo ci = {
-        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+inline void vka::Shader::create(VkDevice device, const std::string& path)
+{
+    if (!this->is_valid())
+    {
+        this->m_device = device;
+        this->internal_create(path);
+    }
+}
+
+inline void vka::Shader::destroy() noexcept
+{
+    this->destroy_handles();
+    this->m_module = VK_NULL_HANDLE;
+}
+
+inline VkShaderModule vka::Shader::handle() const noexcept
+{
+    return this->m_module;
+}
+
+inline bool vka::Shader::is_valid() const noexcept
+{
+    return (this->m_module != VK_NULL_HANDLE);
+}
+
+inline VkPipelineShaderStageCreateInfo vka::Shader::make_stage(
+    VkShaderStageFlagBits stage,
+    VkPipelineShaderStageCreateFlags flags,
+    const char* entry_point,
+    const VkSpecializationInfo* specialization
+) const noexcept
+{
+    return {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .pNext = nullptr,
-        .flags = 0,
-        .codeSize = file_size,
-        .pCode = reinterpret_cast<uint32_t*>(code.get()) // shader code size is always a multiple of 4, it's ok to cast from char* to uint32_t*
+        .flags = flags,
+        .stage = stage,
+        .module = this->m_module,
+        .pName = entry_point,
+        .pSpecializationInfo = specialization
     };
-    check_result(vkCreateShaderModule(this->m_device, &ci, nullptr, &this->m_module), SHADER_CREATE_FAILED);
 }

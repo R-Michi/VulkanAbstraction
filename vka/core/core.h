@@ -8,20 +8,20 @@
 
 #pragma once
 
-#include "error/error.h"
+#include "error/error.inl"
 #include "memory/memory.h"
-#include "attachment/attachment.h"
-#include "buffer/buffer.h"
-#include "common/common.h"
+#include "attachment/attachment.inl"
+#include "buffer/buffer.inl"
+#include "common/common.inl"
 #include "device/device.h"
-#include "format/format.h"
+#include "format/format.inl"
 #include "instance/instance.h"
 #include "push_constant/push_constant.h"
 #include "queue/queue.h"
-#include "shader/shader.h"
+#include "shader/shader.inl"
 #include "surface/surface.h"
 #include "swapchain/swapchain.h"
-#include "texture/texture.h"
+#include "texture/texture.inl"
 #include "descriptor/descriptor.h"
 
 #ifdef VKA_MODEL_LOADING_ENABLE

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "push_constant.h"
+
 inline vka::detail::PushConstantBuffer::PushConstantBuffer() noexcept :
     m_size(0),
     m_data(nullptr)

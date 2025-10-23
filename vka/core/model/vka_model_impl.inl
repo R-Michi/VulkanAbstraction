@@ -57,9 +57,9 @@ void vka::Model::load(const std::string& path, ModelLoadOptionFlags flags)
     {
         std::vector<uint32_t> mtlIDs;
         // if VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL is set, ignore material loading
-        if(!this->isset(flags, VKA_MODEL_LOAD_OPTION_IGNORE_MATERIAL))
+        if(!this->isset(flags, ModelLoadOptionFlagBits::IGNORE_MATERIAL))
         {
-            if(this->isset(flags, VKA_MODEL_LOAD_OPTION_FORCE_PER_MESH_MATERIAL))
+            if(this->isset(flags, ModelLoadOptionFlagBits::FORCE_PER_MESH_MATERIAL))
             {
                 // Materials are forced to be loaded per mesh.
                 // As materials are loaded per face in the tinyobj loader library,

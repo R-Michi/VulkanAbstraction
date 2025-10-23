@@ -87,7 +87,7 @@ void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttribu
         {
             switch(a.type)
             {
-            case VKA_VERTEX_ATTRIBUTE_TYPE_POSITION:
+            case VertexAttributeType::POSITION:
             {
                 const size_t begin  = i * VERTEX_COMPONENT_COUNT;
                 const size_t end    = begin + VERTEX_COMPONENT_COUNT;
@@ -95,7 +95,7 @@ void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttribu
                 data.insert(data.end(), a.spacing, 0);
                 break;
             }
-            case VKA_VERTEX_ATTRIBUTE_TYPE_NORMAL:
+            case VertexAttributeType::NORMAL:
             {
                 const size_t begin  = i * NORMAL_COMPONENT_COUNT;
                 const size_t end    = begin + NORMAL_COMPONENT_COUNT;
@@ -103,7 +103,7 @@ void vka::Mesh::merge(std::vector<real_t>& data, const std::vector<VertexAttribu
                 data.insert(data.end(), a.spacing, 0);
                 break;
             }
-            case VKA_VERTEX_ATTRIBUTE_TYPE_TEXTURE_COORDINATE:
+            case VertexAttributeType::TEXTURE_COORDINATE:
             {
                 const size_t begin  = i * TEXCOORD_COMPONENT_COUNT;
                 const size_t end    = begin + TEXCOORD_COMPONENT_COUNT;

@@ -25,7 +25,7 @@ namespace vka::instance
      * @return Returns vka::NPOS if all layers are supported. If at least one layer is not supported, the index of the
      * first not supported layer is returned.
      */
-    size_t supports_layers(const std::vector<std::string>& layer_names, VkLayerProperties* properties = nullptr) noexcept;
+    uint32_t supports_layers(const std::vector<std::string>& layer_names, VkLayerProperties* properties = nullptr) noexcept;
 
     /**
      * @brief Checks if an extension at instance level is supported.
@@ -42,7 +42,7 @@ namespace vka::instance
      * @return Returns vka::NPOS if all extensions are supported. If at least one extension is not supported, the index
      * of the first not supported extension is returned.
      */
-    size_t supports_extensions(const std::vector<std::string>& extension_names, VkExtensionProperties* properties = nullptr) noexcept;
+    uint32_t supports_extensions(const std::vector<std::string>& extension_names, VkExtensionProperties* properties = nullptr) noexcept;
 
 #ifdef VKA_GLFW_ENABLE
     /**
@@ -60,7 +60,3 @@ namespace vka::instance
     uint32_t get_glfw_extensions(const char** extensions) noexcept;
 #endif
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "instance.inl"
-#endif

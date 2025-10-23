@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "descriptor_class.h"
+
 inline VkDescriptorBufferInfo vka::descriptor::make_buffer_info(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range) noexcept
 {
     return { buffer, offset, range };

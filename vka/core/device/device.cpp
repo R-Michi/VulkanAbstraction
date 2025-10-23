@@ -6,7 +6,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#pragma once
+#include <vulkan/vulkan.h>
+#include "../../vka.h"
 
 std::vector<VkPhysicalDevice> vka::device::get(VkInstance instance)
 {
@@ -20,58 +21,38 @@ std::vector<VkPhysicalDevice> vka::device::get(VkInstance instance)
     return devices;
 }
 
-VkPhysicalDevice vka::device::find(
+uint32_t vka::device::find(
     [[maybe_unused]] VkInstance instance,
     const std::vector<VkPhysicalDevice>& devices,
-    const PhysicalDeviceFilter& filter,
+    const PhysicalDeviceRequirements& requirements,
     VkPhysicalDeviceProperties* prop,
     VkPhysicalDeviceMemoryProperties* mem_prop
 )
 {
-    VkPhysicalDeviceProperties* const properties = (VkPhysicalDeviceProperties*)alloca(devices.size() * sizeof(VkPhysicalDeviceProperties));
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    std::vector<size_t> candidates;
     for(size_t i = 0; i < devices.size(); i++)
     {
-        // get properties and memory properties of all physical devices
-        vkGetPhysicalDeviceProperties(devices[i], properties + i);
+        // physical device properties and memory properties
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceMemoryProperties memory_properties;
+        vkGetPhysicalDeviceProperties(devices[i], &properties);
         vkGetPhysicalDeviceMemoryProperties(devices[i], &memory_properties);
 
-        // get to queue family properties
-        uint32_t n_queue_families;
-        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &n_queue_families, nullptr);
-        VkQueueFamilyProperties* const queue_family_properties = (VkQueueFamilyProperties*)alloca(n_queue_families * sizeof(VkQueueFamilyProperties));
-        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &n_queue_families, queue_family_properties);
+        // get all queue family properties
+        uint32_t queue_families_count;
+        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queue_families_count, nullptr);
+        VkQueueFamilyProperties* const queue_family_properties = (VkQueueFamilyProperties*)alloca(queue_families_count * sizeof(VkQueueFamilyProperties));
+        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queue_families_count, queue_family_properties);
 
-        // check support for everything specified in the filter
-        uint8_t failed = 0;
-        failed |= detail::device::has_sequence(properties[i], filter.sequence);
-        failed |= detail::device::has_memory_properties(memory_properties, filter.memoryPropertyFlags);
-        failed |= detail::device::has_queue_flags(queue_family_properties, n_queue_families, filter.queueFamilyFlags);
-#ifdef VKA_GLFW_ENABLE
-        if (filter.surfaceSupport)
-            failed |= detail::device::has_surface_support(instance, devices[i], n_queue_families);
-#endif
-
-        // If no check has failed, the current device is a candidate to be used for the application.
-        if(failed == 0) candidates.push_back(i);
-    }
-
-    // find the best matching from the selected candidates
-    for (const VkPhysicalDeviceType type : filter.deviceTypeHierarchy)
-    {
-        for (const size_t cur_idx : candidates)
+        if (detail::device::check_requirements(requirements, instance, devices[i], properties, memory_properties, queue_family_properties, queue_families_count))
         {
-            VkPhysicalDevice cur_device = devices[cur_idx];
-            if (properties[cur_idx].deviceType == type)
-            {
-                if (prop != nullptr) *prop = properties[cur_idx];
-                if (mem_prop != nullptr) vkGetPhysicalDeviceMemoryProperties(cur_device, mem_prop);
-                return cur_device;
-            }
+            if (prop != nullptr)
+                *prop = properties;
+            if (mem_prop != nullptr)
+                *mem_prop = memory_properties;
+            return i;
         }
     }
-    return VK_NULL_HANDLE;
+    return NPOS;
 }
 
 bool vka::device::supports_layer(VkPhysicalDevice device, std::string_view layer_name, VkLayerProperties* properties) noexcept
@@ -92,7 +73,7 @@ bool vka::device::supports_layer(VkPhysicalDevice device, std::string_view layer
     return b;
 }
 
-size_t vka::device::supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, VkLayerProperties* properties) noexcept
+uint32_t vka::device::supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, VkLayerProperties* properties) noexcept
 {
     uint32_t layer_count;
     VkResult res = vkEnumerateDeviceLayerProperties(device, &layer_count, nullptr);
@@ -130,7 +111,7 @@ bool vka::device::supports_extension(VkPhysicalDevice device, std::string_view e
     return b;
 }
 
-size_t vka::device::supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, VkExtensionProperties* properties) noexcept
+uint32_t vka::device::supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, VkExtensionProperties* properties) noexcept
 {
     uint32_t extension_count;
     VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
@@ -150,3 +131,4 @@ size_t vka::device::supports_extensions(VkPhysicalDevice device, const std::vect
     }
     return NPOS;
 }
+

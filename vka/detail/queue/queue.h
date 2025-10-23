@@ -11,20 +11,10 @@
 namespace vka::detail::queue
 {
     /**
-     * @brief Checks if a combination of queue flags is supported.
-     * @param properties Specifies the memory properties.
-     * @param req_flags Specifies the required queue flags.
-     * @return Returns 0x00 if all flag combinations are supported and 0x01, if not.
+     * @brief Checks all queue family requirements.
+     * @param requirements Specifies the requirements.
+     * @param properties Specifies the properties of the queue family.
+     * @return Returns true if all requirements are satisfied.
      */
-    inline uint8_t has_flags(const VkQueueFamilyProperties& properties, VkQueueFlags req_flags) noexcept;
-
-    /**
-     * @brief Checks if a specific queue count is supported.
-     * @param properties Specifies the memory properties.
-     * @param req_count Specifies the required queue count.
-     * @return Returns 0x00 if all flag combinations are supported and 0x02, if not.
-     */
-    inline uint8_t has_count(const VkQueueFamilyProperties& properties, uint32_t req_count) noexcept;
+    inline bool check_requirements(QueueFamilyRequirements requirements, const VkQueueFamilyProperties& properties) noexcept;
 } // namespace vka::detail::queue
-
-#include "queue.inl"

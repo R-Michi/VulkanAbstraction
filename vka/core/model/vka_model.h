@@ -30,7 +30,7 @@ namespace vka
         std::vector<uint32_t> _materials;   // material ID's of the mesh
 
         inline bool isset(ModelLoadOptionFlags flags, ModelLoadOptionFlagBits bit) const noexcept
-        { return static_cast<bool>(flags & bit); }
+        { return static_cast<bool>(flags & static_cast<uint32_t>(bit)); }
 
     public:
         Mesh(void) = default;
@@ -245,7 +245,7 @@ namespace vka
         std::vector<tinyobj::material_t> _materials;
 
         inline bool isset(ModelLoadOptionFlags flags, ModelLoadOptionFlagBits bit) const noexcept
-        { return static_cast<bool>(flags & bit); }
+        { return static_cast<bool>(flags & static_cast<uint32_t>(bit)); }
     
     public:
         Model(void) = default;
@@ -269,7 +269,7 @@ namespace vka
          *                  If VKA_MODEL_LOAD_OPTION_FORCE_PER_MESH_MATERIAL is set,
          *                  materials are loaded per mesh instead of per face.            
          */
-        void load(const std::string& path, ModelLoadOptionFlags flags = VKA_MODEL_LOAD_OPTION_DEFAULT);
+        void load(const std::string& path, ModelLoadOptionFlags flags = (uint32_t)ModelLoadOptionFlagBits::DEFAULT);
 
         /**
          * @brief cleares the whole model

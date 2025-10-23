@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "push_constant_class.h"
+
 inline vka::PushConstantView::PushConstantView(const VkPushConstantRange& range, void* data) noexcept :
     m_range(range),
     m_data(detail::common::add_vp(data, range.offset))

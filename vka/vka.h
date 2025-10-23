@@ -12,12 +12,6 @@
 
 #pragma once
 
-#include <array>
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include <stdexcept>
-
 #include "defs.h"
 #include "constants.h"
 #include "types.h"

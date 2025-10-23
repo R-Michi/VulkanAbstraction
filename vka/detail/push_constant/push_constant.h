@@ -75,5 +75,3 @@ namespace vka::detail
         inline bool empty() const noexcept;
     };
 }
-
-#include "push_constant.inl"

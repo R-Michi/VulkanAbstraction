@@ -6,7 +6,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#pragma once
+#include <vulkan/vulkan.h>
+#include "../../vka.h"
 
 std::vector<VkSurfaceFormatKHR> vka::surface::formats(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
@@ -42,9 +43,9 @@ bool vka::surface::supports_format(const std::vector<VkSurfaceFormatKHR>& format
     return false;
 }
 
-size_t vka::surface::supports_formats(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* req_formats, size_t n) noexcept
+uint32_t vka::surface::supports_formats(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* req_formats, uint32_t n) noexcept
 {
-    for (size_t i = 0; i < n; i++)
+    for (uint32_t i = 0; i < n; i++)
     {
         if (!supports_format(formats, req_formats[i]))
             return i;
@@ -52,9 +53,9 @@ size_t vka::surface::supports_formats(const std::vector<VkSurfaceFormatKHR>& for
     return NPOS;
 }
 
-size_t vka::surface::supports_any_format(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* candidates, size_t n) noexcept
+uint32_t vka::surface::supports_any_format(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* candidates, uint32_t n) noexcept
 {
-    for (size_t i = 0; i < n; i++)
+    for (uint32_t i = 0; i < n; i++)
     {
         if (supports_format(formats, candidates[i]))
             return i;
@@ -72,9 +73,9 @@ bool vka::surface::supports_presentmode(const std::vector<VkPresentModeKHR>& mod
     return false;
 }
 
-size_t vka::surface::supports_presentmodes(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* req_modes, size_t n) noexcept
+uint32_t vka::surface::supports_presentmodes(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* req_modes, uint32_t n) noexcept
 {
-    for (size_t i = 0; i < n; i++)
+    for (uint32_t i = 0; i < n; i++)
     {
         if (!supports_presentmode(modes, req_modes[i]))
             return i;
@@ -82,9 +83,9 @@ size_t vka::surface::supports_presentmodes(const std::vector<VkPresentModeKHR>& 
     return NPOS;
 }
 
-size_t vka::surface::supports_any_presentmode(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* candidates, size_t n) noexcept
+uint32_t vka::surface::supports_any_presentmode(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* candidates, uint32_t n) noexcept
 {
-    for (size_t i = 0; i < n; i++)
+    for (uint32_t i = 0; i < n; i++)
     {
         if (supports_presentmode(modes, candidates[i]))
             return i;

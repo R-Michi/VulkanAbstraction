@@ -366,8 +366,3 @@ namespace vka
 #endif
     };
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "texture.inl"
-#endif
-#include "texture_inline.inl"

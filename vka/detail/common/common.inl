@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include "common.h"
+
 constexpr VkImageUsageFlagBits vka::detail::common::ff2iu_bit(VkFormatFeatureFlagBits format_feature) noexcept
 {
     switch (format_feature)

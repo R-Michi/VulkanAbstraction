@@ -9,6 +9,8 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
+#include "descriptor_class.h"
+
 template<uint32_t S>
 inline vka::DescriptorLayoutArray<S>::DescriptorLayoutArray() noexcept :
     m_device(VK_NULL_HANDLE),

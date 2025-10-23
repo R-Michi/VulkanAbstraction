@@ -32,5 +32,3 @@ namespace vka::detail::common
      */
     inline void* add_vp(void* p, uintptr_t x) noexcept;
 } // namespace vka::detail::common
-
-#include "common.inl"

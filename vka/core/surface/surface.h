@@ -40,7 +40,7 @@ namespace vka::surface
      * @return Returns vka::NPOS if all formats are supported. If any format is not supported, then the index of the
      * first not supported format is returned.
      */
-    size_t supports_formats(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* req_formats, size_t n) noexcept;
+    uint32_t supports_formats(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* req_formats, uint32_t n) noexcept;
 
     /**
      * @brief Checks if a surface supports any format.
@@ -49,7 +49,7 @@ namespace vka::surface
      * @param n Specifies the number of formats to check.
      * @return Returns the index of the first supported format. If no format is supported, vka::NPOS is returned.
      */
-    size_t supports_any_format(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* candidates, size_t n) noexcept;
+    uint32_t supports_any_format(const std::vector<VkSurfaceFormatKHR>& formats, const VkSurfaceFormatKHR* candidates, uint32_t n) noexcept;
 
     /**
      * @brief Checks if a surface supports a given presentation mode.
@@ -67,7 +67,7 @@ namespace vka::surface
      * @return Returns vka::NPOS if all presentation modes are supported. If any presentation mode is not supported,
      * then the index of the first not supported presentation mode is returned.
      */
-    size_t supports_presentmodes(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* req_modes, size_t n) noexcept;
+    uint32_t supports_presentmodes(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* req_modes, uint32_t n) noexcept;
 
     /**
      * @brief Checks if a surface supports any presentation mode.
@@ -77,9 +77,5 @@ namespace vka::surface
      * @return Returns the index of the first supported presentation mode. If no presentation mode is supported,
      * vka::NPOS is returned.
      */
-    size_t supports_any_presentmode(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* candidates, size_t n) noexcept;
+    uint32_t supports_any_presentmode(const std::vector<VkPresentModeKHR>& modes, const VkPresentModeKHR* candidates, uint32_t n) noexcept;
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "surface.inl"
-#endif

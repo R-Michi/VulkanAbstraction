@@ -19,18 +19,17 @@ namespace vka::device
 
     /**
      * @brief Searches for a physical device which supports the requirements for the program.
-     * @param instance Specifies a valid vulkan instance. This parameter is not used if GLFW is not enabled.
+     * @param instance Specifies a valid vulkan instance. This parameter is only used if GLFW is enabled.
      * @param devices Specifies all available physical devices.
-     * @param filter Specifies the requirements for the program.
+     * @param requirements Specifies the requirements for the program.
      * @param prop Optionally returns the properties of the first found physical device.
      * @param mem_prop Optionally returns the memory properties of the first found physical device.
-     * @return Returns the first physical device which matches the requirements. If no physical device could be found,
-     * VK_NULL_HANDLE is returned.
+     * @return Returns the index of the physical device. Returns vka::NPOS32 if no physical device has been found.
      */
-    VkPhysicalDevice find(
+    uint32_t find(
         [[maybe_unused]] VkInstance instance,
         const std::vector<VkPhysicalDevice>& devices,
-        const PhysicalDeviceFilter& filter,
+        const PhysicalDeviceRequirements& requirements,
         VkPhysicalDeviceProperties* prop = nullptr,
         VkPhysicalDeviceMemoryProperties* mem_prop = nullptr
     );
@@ -52,7 +51,7 @@ namespace vka::device
      * @return Returns vka::NPOS if all layers are supported. If at least one layer is not supported, the index of the
      * first not supported layer is returned.
      */
-    size_t supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, VkLayerProperties* properties = nullptr) noexcept;
+    uint32_t supports_layers(VkPhysicalDevice device, const std::vector<std::string>& layer_names, VkLayerProperties* properties = nullptr) noexcept;
 
     /**
      * @brief Checks if an extension at device level is supported.
@@ -71,9 +70,5 @@ namespace vka::device
      * @return Returns vka::NPOS if all extensions are supported. If at least one extension is not supported, the index
      * of the first not supported extension is returned.
      */
-    size_t supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, VkExtensionProperties* properties = nullptr) noexcept;
+    uint32_t supports_extensions(VkPhysicalDevice device, const std::vector<std::string>& extension_names, VkExtensionProperties* properties = nullptr) noexcept;
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "device.inl"
-#endif

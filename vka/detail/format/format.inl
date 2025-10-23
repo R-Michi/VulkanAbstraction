@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "format.h"
+
 namespace vka::detail::format
 {
-    constexpr size_t SIZE_LOOKUP[292] = {
+    constexpr size_t SIZE_LOOKUP[324] = {
         // VK_VERSION_1_0 (non-extension) formats, (range [0, 184]):
         0, 1, 2, 2, 2, 2, 2, 2, 2, 1,
         1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
@@ -48,17 +50,24 @@ namespace vka::detail::format
         16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
         16, 16, 16, 16, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
+        // VK_VERSION_1_4 (non-extension) formats, (range [1000470000, 1000470001]):
+        2, 1, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
         // VK_IMG_format_pvrtc (extension) formats, (range [1000054000, 1000054007]):
         8, 8, 8, 8, 8, 8, 8, 8, NSIZE, NSIZE,
+
+        // VK_ARM_tensors (extension) formats, (range [1000460000, 1000460000]):
+        1, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
         // VK_NV_optical_flow (extension) formats, (range [1000464000, 1000464000]):
         2, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // VK_KHR_maintenance5 (extension) formats, (range [1000470000, 1000470001]):
-        2, 1
+        // VK_ARM_format_pack (extension) formats, (range [1000609000, 1000609013]):
+        2, 4, 8, 2, 4, 8, 2, 4, 8, 2,
+        4, 8, 6, 6
     };
 
-    constexpr size_t COUNT_LOOKUP[292] = {
+    constexpr size_t COUNT_LOOKUP[324] = {
         // VK_VERSION_1_0 (non-extension) formats, (range [0, 184]):
         0, 2, 4, 4, 3, 3, 4, 4, 4, 1,
         1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
@@ -96,16 +105,23 @@ namespace vka::detail::format
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
+        // VK_VERSION_1_4 (non-extension) formats, (range [1000470000, 1000470001]):
+        4, 1, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
+
         // VK_IMG_format_pvrtc (extension) formats, (range [1000054000, 1000054007]):
         4, 4, 4, 4, 4, 4, 4, 4, NSIZE, NSIZE,
+
+        // VK_ARM_tensors (extension) formats, (range [1000460000, 1000460000]):
+        1, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
         // VK_NV_optical_flow (extension) formats, (range [1000464000, 1000464000]):
         // NOTE: Although it says R16G16, only one color-component stored in memory. The second one is calculated from
         // the first one.
         1, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE, NSIZE,
 
-        // VK_KHR_maintenance5 (extension) formats, (range [1000470000, 1000470001]):
-        4, 1
+        // VK_ARM_format_pack (extension) formats, (range [1000609000, 1000609013]):
+        1, 2, 4, 1, 2, 4, 1, 2, 4, 1,
+        2, 4, 3, 3
     };
 }
 
@@ -118,9 +134,11 @@ constexpr size_t vka::detail::format::format_lut_offset(VkFormat format)
     if (i_format >= 1000330000 && i_format <= 1000330003)   return 1000330000 - 230;
     if (i_format >= 1000340000 && i_format <= 1000340001)   return 1000340000 - 240;
     if (i_format >= 1000066000 && i_format <= 1000066013)   return 1000066000 - 250;
-    if (i_format >= 1000054000 && i_format <= 1000054007)   return 1000054000 - 270;
-    if (i_format >= 1000464000 && i_format <= 1000464000)   return 1000464000 - 280;
-    if (i_format >= 1000470000 && i_format <= 1000470001)   return 1000464000 - 290;
+    if (i_format >= 1000470000 && i_format <= 1000470001)   return 1000464000 - 270;
+    if (i_format >= 1000054000 && i_format <= 1000054007)   return 1000054000 - 280;
+    if (i_format >= 1000460000 && i_format <= 1000460000)   return 1000464000 - 290;
+    if (i_format >= 1000464000 && i_format <= 1000464000)   return 1000464000 - 300;
+    if (i_format >= 1000609000 && i_format <= 1000609013)   return 1000464000 - 310;
 
     // if (i_format <= 184)
     return 0;

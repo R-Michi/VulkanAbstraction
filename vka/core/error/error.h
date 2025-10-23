@@ -24,5 +24,3 @@ namespace vka
      */
     inline void check_result(VkResult res, const char* msg);
 }
-
-#include "error.inl"

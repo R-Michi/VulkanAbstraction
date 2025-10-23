@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "push_constant_class.h"
+
 template<uint32_t N>
 constexpr vka::PushConstantLayout<N>::PushConstantLayout() noexcept :
     m_ranges{}, m_total_size(0), m_max_size(MIN_SIZE), m_idx(0)

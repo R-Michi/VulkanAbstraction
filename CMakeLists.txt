@@ -52,7 +52,7 @@ set(VKA_DETAIL_DESCRIPTOR_FILES
 
 set(VKA_DETAIL_DEVICE_FILES
         vka/detail/device/device.h
-        vka/detail/device/device.inl
+        vka/detail/device/device.cpp
 )
 
 ########################################################################################################################
@@ -62,7 +62,7 @@ set(VKA_DETAIL_DEVICE_FILES
 set(VKA_DETAIL_ERROR_FILES
         vka/detail/error/error.h
         vka/detail/error/error.inl
-        vka/detail/error/error_inline.inl
+        vka/detail/error/error.cpp
 )
 
 ########################################################################################################################
@@ -80,7 +80,7 @@ set(VKA_DETAIL_FORMAT_FILES
 
 set(VKA_DETAIL_INSTANCE_FILES
         vka/detail/instance/instance.h
-        vka/detail/instance/instance.inl
+        vka/detail/instance/instance.cpp
 )
 
 ########################################################################################################################
@@ -90,6 +90,7 @@ set(VKA_DETAIL_INSTANCE_FILES
 set(VKA_DETAIL_PUSH_CONSTANT_FILES
         vka/detail/push_constant/push_constant.h
         vka/detail/push_constant/push_constant.inl
+        vka/core/push_constant/push_constant.h
 )
 
 ########################################################################################################################
@@ -141,7 +142,7 @@ set(VKA_DETAIL_FILES
 set(VKA_CORE_COMMON_FILES
         vka/core/common/common.h
         vka/core/common/common.inl
-        vka/core/common/common_inline.inl
+        vka/core/common/common.cpp
 )
 
 ########################################################################################################################
@@ -159,7 +160,7 @@ set(VKA_CORE_ERROR_FILES
 
 set(VKA_CORE_INSTANCE_FILES
         vka/core/instance/instance.h
-        vka/core/instance/instance.inl
+        vka/core/instance/instance.cpp
 )
 
 ########################################################################################################################
@@ -168,7 +169,7 @@ set(VKA_CORE_INSTANCE_FILES
 
 set(VKA_CORE_DEVICE_FILES
         vka/core/device/device.h
-        vka/core/device/device.inl
+        vka/core/device/device.cpp
 )
 
 ########################################################################################################################
@@ -177,8 +178,7 @@ set(VKA_CORE_DEVICE_FILES
 
 set(VKA_CORE_QUEUE_FILES
         vka/core/queue/queue.h
-        vka/core/queue/queue.inl
-        vka/core/queue/queue_inline.inl
+        vka/core/queue/queue.cpp
 )
 
 ########################################################################################################################
@@ -187,7 +187,7 @@ set(VKA_CORE_QUEUE_FILES
 
 set(VKA_CORE_SURFACE_FILES
         vka/core/surface/surface.h
-        vka/core/surface/surface.inl
+        vka/core/surface/surface.cpp
 )
 
 ########################################################################################################################
@@ -196,7 +196,7 @@ set(VKA_CORE_SURFACE_FILES
 
 set(VKA_CORE_SWAPCHAIN_FILES
         vka/core/swapchain/swapchain.h
-        vka/core/swapchain/swapchain.inl
+        vka/core/swapchain/swapchain.cpp
 )
 
 ########################################################################################################################
@@ -205,7 +205,7 @@ set(VKA_CORE_SWAPCHAIN_FILES
 
 set(VKA_CORE_MEMORY_FILES
         vka/core/memory/memory.h
-        vka/core/memory/memory.inl
+        vka/core/memory/memory.cpp
 )
 
 ########################################################################################################################
@@ -215,7 +215,7 @@ set(VKA_CORE_MEMORY_FILES
 set(VKA_CORE_FORMAT_FILES
         vka/core/format/format.h
         vka/core/format/format.inl
-        vka/core/format/format_inline.inl
+        vka/core/format/format.cpp
 )
 
 ########################################################################################################################
@@ -225,7 +225,7 @@ set(VKA_CORE_FORMAT_FILES
 set(VKA_CORE_ATTACHMENT_FILES
         vka/core/attachment/attachment.h
         vka/core/attachment/attachment.inl
-        vka/core/attachment/attachment_inline.inl
+        vka/core/attachment/attachment.cpp
 )
 
 ########################################################################################################################
@@ -235,7 +235,7 @@ set(VKA_CORE_ATTACHMENT_FILES
 set(VKA_CORE_BUFFER_FILES
         vka/core/buffer/buffer.h
         vka/core/buffer/buffer.inl
-        vka/core/buffer/buffer_inline.inl
+        vka/core/buffer/buffer.cpp
 )
 
 ########################################################################################################################
@@ -245,7 +245,7 @@ set(VKA_CORE_BUFFER_FILES
 set(VKA_CORE_SHADER_FILES
         vka/core/shader/shader.h
         vka/core/shader/shader.inl
-        vka/core/shader/shader_inline.inl
+        vka/core/shader/shader.cpp
 )
 
 ########################################################################################################################
@@ -255,7 +255,7 @@ set(VKA_CORE_SHADER_FILES
 set(VKA_CORE_TEXTURE_FILES
         vka/core/texture/texture.h
         vka/core/texture/texture.inl
-        vka/core/texture/texture_inline.inl
+        vka/core/texture/texture.cpp
 )
 
 ########################################################################################################################
@@ -263,11 +263,12 @@ set(VKA_CORE_TEXTURE_FILES
 ########################################################################################################################
 
 set(VKA_CORE_DESCRIPTOR_FILES
-        vka/core/descriptor/descriptor.h
+        vka/core/descriptor/descriptor_class.h
         vka/core/descriptor/descriptor_inline.inl
         vka/core/descriptor/descriptor_set_binding_list.inl
         vka/core/descriptor/descriptor_layout_array.inl
         vka/core/descriptor/descriptor_set_array.inl
+        vka/core/descriptor/descriptor.h
 )
 
 ########################################################################################################################
@@ -275,7 +276,7 @@ set(VKA_CORE_DESCRIPTOR_FILES
 ########################################################################################################################
 
 set(VKA_CORE_PUSH_CONSTANT_FILES
-        vka/core/push_constant/push_constant.h
+        vka/core/push_constant/push_constant_class.h
         vka/core/push_constant/push_constant.inl
         vka/core/push_constant/push_constant_layout.inl
         vka/core/push_constant/push_constant_view.inl
@@ -326,21 +327,33 @@ set(VKA_FILES
 )
 
 ########################################################################################################################
+####################################################### LIBRARIES ######################################################
+########################################################################################################################
+
+add_library(vka STATIC ${VKA_FILES})
+target_link_libraries(vka Vulkan::Headers)
+
+add_library(vka_glfw STATIC ${VKA_FILES})
+target_compile_options(vka_glfw PRIVATE -D_VKA_GLFW)
+target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
+target_include_directories(vka_glfw PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/include)
+
+########################################################################################################################
 ############################################### VKA GLFW EXTENSION FILES ###############################################
 ########################################################################################################################
 
 # compile and link executable
-add_executable(vka
+add_executable(vka_example
         main.cpp
         VulkanApp.h
         VulkanApp.cpp
-        ${VKA_FILES}
 )
-target_link_libraries(vka PRIVATE
+target_link_libraries(vka_example PRIVATE
         Vulkan::Vulkan
         ${GLFW_LIBRARY}
+        vka_glfw
 )
-target_include_directories(vka PRIVATE
+target_include_directories(vka_example PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm"
         "${CMAKE_CURRENT_SOURCE_DIR}/lib/stb_master"

@@ -52,7 +52,3 @@ namespace vka::swapchain
      */
     VkSwapchainKHR setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkImageView* image_views);
 }
-
-#ifdef VKA_IMPLEMENTATION
-    #include "swapchain.inl"
-#endif

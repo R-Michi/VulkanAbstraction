@@ -8,6 +8,13 @@
 
 #pragma once
 
+#include <array>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <stdexcept>
+#include <fstream>
+
 /// --------------------------------------------------- Requirements ---------------------------------------------------
 
 /// Vulkan must be included before vka.
