@@ -15,18 +15,17 @@ set(COMPILE_WARNINGS -Walloca -Wall)
 add_compile_options(${COMPILE_WARNINGS})
 
 # find vulkan library package
-find_package(Vulkan)
-if(NOT Vulkan_FOUND)
-    message(FATAL_ERROR "Vulkan not found but required.")
-endif()
+find_package(Vulkan REQUIRED)
 message(STATUS "Vulkan found. Version: ${Vulkan_VERSION}")
 
-# find GLFW library package
-find_library(GLFW_LIBRARY NAMES "glfw3.lib" PATHS "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/lib")
-if(NOT GLFW_LIBRARY)
-    message(FATAL_ERROR "GLFW3 not found but required.")
-endif()
-message(STATUS "GLFW3 found: ${GLFW_LIBRARY}")
+# glfw library
+set(GLFW_FOLDER glfw)
+set(GLFW_PATH lib) # ---- SET THIS TO THE PATH WHERE GLFW IS INSTALLED ----
+find_path(GLFW NAMES ${GLFW_FOLDER} PATHS ${CMAKE_CURRENT_SOURCE_DIR}/${GLFW_PATH} REQUIRED)
+set(GLFW ${GLFW}/${GLFW_FOLDER})
+message(STATUS "Found glfw: ${GLFW}")
+
+add_subdirectory(${GLFW}) # install glfw
 
 ########################################################################################################################
 ##################################################### DETAIL/COMMON ####################################################
@@ -336,7 +335,7 @@ target_link_libraries(vka Vulkan::Headers)
 add_library(vka_glfw STATIC ${VKA_FILES})
 target_compile_options(vka_glfw PRIVATE -D_VKA_GLFW)
 target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
-target_include_directories(vka_glfw PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/include)
+target_include_directories(vka_glfw PRIVATE ${GLFW}/include)
 
 ########################################################################################################################
 ############################################### VKA GLFW EXTENSION FILES ###############################################
@@ -352,12 +351,11 @@ target_link_libraries(vka_example PRIVATE
         Vulkan::Vulkan
         ${GLFW_LIBRARY}
         vka_glfw
+        glfw
 )
 target_include_directories(vka_example PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw-3.3.3/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/lib/stb_master"
-        "${CMAKE_CURRENT_SOURCE_DIR}/lib/tiny_obj_loader"
+        "${CMAKE_CURRENT_SOURCE_DIR}/lib"
 )
 
 # custom command to compile shaders while compiling the program

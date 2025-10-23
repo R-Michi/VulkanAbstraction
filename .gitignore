@@ -34,5 +34,6 @@
 .vs
 .idea
 build
-lib
 out
+lib/glm
+lib/tiny_obj_loader.h
