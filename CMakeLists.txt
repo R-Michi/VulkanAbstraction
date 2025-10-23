@@ -20,8 +20,7 @@ message(STATUS "[VKA]: Vulkan found. Version: ${Vulkan_VERSION}")
 
 # glfw library
 set(VKA_GLFW_FOLDER glfw)
-set(VKA_GLFW_PATH lib)
-find_path(VKA_GLFW NAMES ${VKA_GLFW_FOLDER} PATHS ${CMAKE_CURRENT_SOURCE_DIR}/${VKA_GLFW_PATH} REQUIRED)
+find_path(VKA_GLFW NAMES ${VKA_GLFW_FOLDER} PATHS ${CMAKE_SOURCE_DIR}/* REQUIRED)
 set(VKA_GLFW ${VKA_GLFW}/${VKA_GLFW_FOLDER})
 message(STATUS "[VKA]: Found glfw: ${VKA_GLFW}")
 
