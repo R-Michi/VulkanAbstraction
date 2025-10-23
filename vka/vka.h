@@ -8,7 +8,6 @@
 
 // TODO: make DescriptorSetBindingList static/compile-time evaluable
 // TODO: improve model loading
-// TODO: move check_result from detail to common
 
 #pragma once
 
