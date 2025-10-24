@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 [[noreturn]] void vka::detail::error::throw_invalid_argument(const char* msg)
 {

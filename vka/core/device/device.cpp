@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 std::vector<VkPhysicalDevice> vka::device::get(VkInstance instance)
 {

@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 uint32_t vka::memory::find_type_index(const VkPhysicalDeviceMemoryProperties& properties, uint32_t bits, VkMemoryPropertyFlags req_flags) noexcept
 {

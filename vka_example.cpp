@@ -10,7 +10,7 @@
 */
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include "VulkanApp.h"
+#include "vka_example.h"
 #include <iostream>
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,7 +19,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-VulkanApp::~VulkanApp()
+vka_example::~vka_example()
 {
 	double res = 0.0f;
 
@@ -31,7 +31,7 @@ VulkanApp::~VulkanApp()
 }
 
 
-void VulkanApp::glfw_init()
+void vka_example::glfw_init()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -47,13 +47,13 @@ void VulkanApp::glfw_init()
 	glfwSetWindowPos(window, this->vid_mode->width / 4, this->vid_mode->height / 4);
 }
 
-void VulkanApp::glfw_destroy() const
+void vka_example::glfw_destroy() const
 {
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
 }
 
-void VulkanApp::vulkan_init()
+void vka_example::vulkan_init()
 {
 	this->make_application_info();
 	this->create_instance();
@@ -80,7 +80,7 @@ void VulkanApp::vulkan_init()
 	this->record_command_buffers();
 }
 
-void VulkanApp::vulkan_destroy()
+void vka_example::vulkan_destroy()
 {
 	vkDeviceWaitIdle(this->device);
 
@@ -119,7 +119,7 @@ void VulkanApp::vulkan_destroy()
 }
 
 
-void VulkanApp::load_models()
+void vka_example::load_models()
 {
 	vka::Model model;
 	model.load("../../../assets/models/test.obj", (vka::ModelLoadOptionFlags)vka::ModelLoadOptionFlagBits::IGNORE_MATERIAL);
@@ -150,7 +150,7 @@ void VulkanApp::load_models()
 }
 
 
-void VulkanApp::make_application_info()
+void vka_example::make_application_info()
 {
 	this->app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	this->app_info.pNext = nullptr;
@@ -161,7 +161,7 @@ void VulkanApp::make_application_info()
 	this->app_info.apiVersion = VK_API_VERSION_1_2;
 }
 
-void VulkanApp::create_instance()
+void vka_example::create_instance()
 {
 	std::vector<std::string> layers;
 #ifdef VKA_DEBUG
@@ -209,13 +209,13 @@ void VulkanApp::create_instance()
 	vka::check_result(result, "vkCreateInstance");
 }
 
-void VulkanApp::create_surface()
+void vka_example::create_surface()
 {
 	const VkResult result = glfwCreateWindowSurface(this->instance, window, nullptr, &this->window_surface);
 	vka::check_result(result, "glfwCreateWindowSurface");
 }
 
-void VulkanApp::create_physical_device()
+void vka_example::create_physical_device()
 {
 	constexpr VkMemoryPropertyFlags DEVICE_MEMORY = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	constexpr VkMemoryPropertyFlags HOST_MEMORY = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -249,7 +249,7 @@ void VulkanApp::create_physical_device()
 	std::cout << "Successfully found physical device: " << properties.deviceName << std::endl;
 }
 
-void VulkanApp::create_logical_device()
+void vka_example::create_logical_device()
 {
 	// check for queue support
 	const std::vector<VkQueueFamilyProperties> queue_fam_properties = vka::queue::properties(this->physical_device);
@@ -310,7 +310,7 @@ void VulkanApp::create_logical_device()
 }
 
 
-void VulkanApp::create_swapchain()
+void vka_example::create_swapchain()
 {
 	VkSwapchainKHR old_swapchain = this->swapchain;
 
@@ -339,7 +339,7 @@ void VulkanApp::create_swapchain()
 	vkDestroySwapchainKHR(this->device, old_swapchain, nullptr);
 }
 
-void VulkanApp::create_depth_attachment()
+void vka_example::create_depth_attachment()
 {
 	VkComponentMapping component_mapping = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
 	const vka::AttachmentImageCreateInfo ci = {
@@ -357,7 +357,7 @@ void VulkanApp::create_depth_attachment()
 	this->depth_attachment.create(this->device, this->memory_properties, ci);
 }
 
-void VulkanApp::create_render_pass()
+void vka_example::create_render_pass()
 {
 	constexpr static size_t N_ATTACHMENTS = 2;
 
@@ -429,13 +429,13 @@ void VulkanApp::create_render_pass()
 	vka::check_result(result, "vkCreateRenderPass");
 }
 
-void VulkanApp::create_shaders()
+void vka_example::create_shaders()
 {
 	shaders[0].create(this->device, "../../../assets/shaders/bin/main.vert.spv");
 	shaders[1].create(this->device, "../../../assets/shaders/bin/main.frag.spv");
 }
 
-void VulkanApp::create_pipeline()
+void vka_example::create_pipeline()
 {
 	std::vector<VkVertexInputBindingDescription> bindings(1);
 	bindings[0].binding = 0;
@@ -613,7 +613,7 @@ void VulkanApp::create_pipeline()
 }
 
 
-void VulkanApp::create_framebuffers()
+void vka_example::create_framebuffers()
 {
 	for (VkImageView view : this->swapchain_image_views)
 	{
@@ -641,7 +641,7 @@ void VulkanApp::create_framebuffers()
 	}
 }
 
-void VulkanApp::create_command_pool()
+void vka_example::create_command_pool()
 {
 	VkCommandPoolCreateInfo command_pool_create_info;
 	command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -653,7 +653,7 @@ void VulkanApp::create_command_pool()
 	vka::check_result(result, "vkCreateCommandPool");
 }
 
-void VulkanApp::create_global_command_buffers()
+void vka_example::create_global_command_buffers()
 {
 	this->swapchain_command_buffers.resize(this->swapchain_framebuffers.size());
 
@@ -668,7 +668,7 @@ void VulkanApp::create_global_command_buffers()
 	vka::check_result(result, "vkAllocateCommandBuffers");
 }
 
-void VulkanApp::create_vertex_buffers()
+void vka_example::create_vertex_buffers()
 {
 	const VkDeviceSize size = sizeof(vka::real_t) * this->vertices.size();
 	vka::BufferCreateInfo create_info = {
@@ -698,7 +698,7 @@ void VulkanApp::create_vertex_buffers()
     cbo.end_wait(this->graphics_queue.queue);
 }
 
-void VulkanApp::create_index_buffers()
+void vka_example::create_index_buffers()
 {
 	VkDeviceSize size = this->indices.size() * sizeof(uint32_t);
 	vka::BufferCreateInfo create_info = {
@@ -729,7 +729,7 @@ void VulkanApp::create_index_buffers()
     cbo.end_wait(this->graphics_queue.queue);
 }
 
-void VulkanApp::create_uniform_buffers()
+void vka_example::create_uniform_buffers()
 {
 	const vka::BufferCreateInfo create_info = {
 		.bufferFlags = 0,
@@ -743,7 +743,7 @@ void VulkanApp::create_uniform_buffers()
 	this->uniform_buffer.create(this->device, this->memory_properties, create_info);
 }
 
-void VulkanApp::create_textures()
+void vka_example::create_textures()
 {
 	VkExtent3D size;
 	const void* const data[2] = {
@@ -800,7 +800,7 @@ void VulkanApp::create_textures()
     cbo.end_wait(this->graphics_queue.queue);
 }
 
-void VulkanApp::create_descriptors()
+void vka_example::create_descriptors()
 {
 	constexpr VkDescriptorPoolSize sizes[2] = {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
@@ -833,7 +833,7 @@ void VulkanApp::create_descriptors()
     update.execute();
 }
 
-void VulkanApp::create_semaphores()
+void vka_example::create_semaphores()
 {
 	VkSemaphoreCreateInfo semaphore_create_info;
 	semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -847,7 +847,7 @@ void VulkanApp::create_semaphores()
 }
 
 
-void VulkanApp::record_command_buffers() const
+void vka_example::record_command_buffers() const
 {
 	VkCommandBufferBeginInfo command_buffer_begin_info;
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -913,14 +913,14 @@ void VulkanApp::record_command_buffers() const
 	}
 }
 
-void VulkanApp::init()
+void vka_example::init()
 {
 	this->load_models();
 	this->glfw_init();
 	this->vulkan_init();
 }
 
-void VulkanApp::draw_frame() const
+void vka_example::draw_frame() const
 {
 	uint32_t img_index;
 	vkAcquireNextImageKHR(this->device, this->swapchain, ~(0UI64), this->sem_img_available, VK_NULL_HANDLE, &img_index);
@@ -954,7 +954,7 @@ void VulkanApp::draw_frame() const
 	vka::check_result(result, "vkQueuePresentKHR");
 }
 
-void VulkanApp::update_frame_contents()
+void vka_example::update_frame_contents()
 {
 	UniformTransformMatrices utm = {};
 
@@ -970,7 +970,7 @@ void VulkanApp::update_frame_contents()
 	this->uniform_buffer.unmap();
 }
 
-void VulkanApp::run()
+void vka_example::run()
 {
 	while (!glfwGetKey(this->window, GLFW_KEY_ESCAPE) && !glfwWindowShouldClose(this->window))
 	{
@@ -989,7 +989,7 @@ void VulkanApp::run()
 	std::cout << std::endl;
 }
 
-void VulkanApp::shutdown()
+void vka_example::shutdown()
 {
 	this->vulkan_destroy();
 	this->glfw_destroy();

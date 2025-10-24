@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 void vka::AttachmentImage::destroy_handles() const noexcept
 {

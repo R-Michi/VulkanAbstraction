@@ -7,7 +7,8 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
+#include <fstream>
 
 void vka::Shader::destroy_handles() const noexcept
 {

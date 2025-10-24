@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 std::vector<VkSurfaceFormatKHR> vka::surface::formats(VkPhysicalDevice device, VkSurfaceKHR surface)
 {

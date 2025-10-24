@@ -12,7 +12,7 @@
 #endif
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 /**
  * @brief Checks if one combination of memory property flags is supported.

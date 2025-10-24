@@ -12,7 +12,7 @@
 #endif
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 bool vka::instance::supports_layer(std::string_view layer_name, VkLayerProperties* properties) noexcept
 {

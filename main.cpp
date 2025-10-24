@@ -13,12 +13,12 @@
 #define VKA_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
 
-#include "VulkanApp.h"
+#include "vka_example.h"
 #include <iostream>
 
 int main()
 {
-    VulkanApp app;
+    vka_example app;
     try
     {
         app.init();

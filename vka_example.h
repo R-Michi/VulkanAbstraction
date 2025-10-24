@@ -32,9 +32,9 @@
 #define VKA_MODEL_LOADING_ENABLE
 #define VKA_STB_IMAGE_LOAD_ENABLE
 
-#include "vka/vka.h"
+#include <vka/vka.h>
 
-class VulkanApp
+class vka_example
 {
 	struct UniformTransformMatrices
 	{
@@ -137,8 +137,8 @@ private:
 	void update_frame_contents();
 
 public:
-	VulkanApp() = default;
-	virtual ~VulkanApp();
+	vka_example() = default;
+	virtual ~vka_example();
 
 	void init();
 	void run();

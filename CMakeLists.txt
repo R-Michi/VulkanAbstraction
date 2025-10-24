@@ -2,7 +2,7 @@
 cmake_minimum_required (VERSION 3.25)
 
 # current project
-project("VulkanAbstraction")
+project("VKA")
 
 # This lib is built for C++ 20 and above
 # It is not made backwards compatible to older versions.
@@ -14,19 +14,20 @@ set(COMPILE_WARNINGS -Walloca -Wall)
 # Global compile options for all targets.
 add_compile_options(${COMPILE_WARNINGS})
 
+# Useful variables
+set(VKA_INCLUDE_DIR ${VKA_SOURCE_DIR}) # use: #include <vka/vka.h>
+
 # find vulkan library package
 find_package(Vulkan REQUIRED)
-message(STATUS "[VKA]: Vulkan found. Version: ${Vulkan_VERSION}")
+message(STATUS "[VKA]: Detected Vulkan: API version ${Vulkan_VERSION}")
 
 # glfw library
-set(VKA_GLFW_FOLDER glfw)
-find_path(VKA_GLFW NAMES ${VKA_GLFW_FOLDER} PATHS ${CMAKE_SOURCE_DIR}/* REQUIRED)
-set(VKA_GLFW ${VKA_GLFW}/${VKA_GLFW_FOLDER})
-message(STATUS "[VKA]: Found glfw: ${VKA_GLFW}")
-
 if (NOT TARGET glfw)
-    add_subdirectory(${VKA_GLFW}) # install glfw
+    find_path(VKA_SUBMODULE_GLFW NAMES glfw PATHS ${VKA_SOURCE_DIR}/lib REQUIRED)
+    add_subdirectory(${VKA_SOURCE_DIR}/lib/glfw)
 endif ()
+set(VKA_GLFW_INCLUDE_DIR "${GLFW_SOURCE_DIR}/include")
+message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
 
 ########################################################################################################################
 ##################################################### DETAIL/COMMON ####################################################
@@ -332,11 +333,13 @@ set(VKA_FILES
 
 add_library(vka STATIC ${VKA_FILES})
 target_link_libraries(vka Vulkan::Headers)
+target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR})
 
 add_library(vka_glfw STATIC ${VKA_FILES})
 target_compile_options(vka_glfw PRIVATE -D_VKA_GLFW)
 target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
-target_include_directories(vka_glfw PRIVATE ${VKA_GLFW}/include)
+target_include_directories(vka_glfw PRIVATE ${VKA_GLFW_INCLUDE_DIR})
+target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR})
 
 ########################################################################################################################
 ############################################### VKA GLFW EXTENSION FILES ###############################################
@@ -345,8 +348,8 @@ target_include_directories(vka_glfw PRIVATE ${VKA_GLFW}/include)
 # compile and link executable
 add_executable(vka_example
         main.cpp
-        VulkanApp.h
-        VulkanApp.cpp
+        vka_example.h
+        vka_example.cpp
 )
 target_link_libraries(vka_example PRIVATE
         Vulkan::Vulkan

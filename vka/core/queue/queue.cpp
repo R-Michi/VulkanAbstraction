@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 std::vector<VkQueueFamilyProperties> vka::queue::properties(const VkPhysicalDevice& device)
 {

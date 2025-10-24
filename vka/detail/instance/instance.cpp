@@ -7,7 +7,7 @@
  */
 
 #include <vulkan/vulkan.h>
-#include "../../vka.h"
+#include <vka/vka.h>
 
 uint32_t vka::detail::instance::supports_layer(const VkLayerProperties* properties, uint32_t count, std::string_view layer_name) noexcept
 {
