@@ -6,6 +6,11 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#ifdef _VKA_GLFW
+#define VKA_INCLUDE_GLFW
+#define VKA_GLFW_ENABLE
+#endif
+
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
@@ -21,36 +26,65 @@ std::vector<VkPhysicalDevice> vka::device::get(VkInstance instance)
     return devices;
 }
 
+bool vka::device::check_requirements(
+    const PhysicalDeviceRequirements& requirements,
+    [[maybe_unused]] VkInstance instance,
+    VkPhysicalDevice device,
+    VkPhysicalDeviceProperties* prop,
+    VkPhysicalDeviceMemoryProperties* mem_prop
+) noexcept
+{
+    // physical device properties and memory properties
+    VkPhysicalDeviceProperties properties;
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceProperties(device, &properties);
+    vkGetPhysicalDeviceMemoryProperties(device, &memory_properties);
+
+    // get all queue family properties
+    uint32_t queue_family_count;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+    VkQueueFamilyProperties* const queue_family_properties = (VkQueueFamilyProperties*)alloca(queue_family_count * sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_family_properties);
+
+    // check the requirements
+    if (properties.deviceType != requirements.type)
+        return false;
+
+    if (!detail::device::check_memory_properties(memory_properties, requirements.memoryPropertyFlags, requirements.memoryPropertyFlagsCount))
+        return false;
+
+    if (!detail::device::check_queue_flags(queue_family_properties, queue_family_count, requirements.queueFamilyFlags, requirements.queueFamilyFlagsCount))
+        return false;
+
+#ifdef _VKA_GLFW
+    if (requirements.surfaceSupport && !detail::device::check_surface_support(instance, device, queue_family_count))
+        return false;
+#endif
+
+    if (!detail::device::check_sequence(properties, requirements.sequence))
+        return false;
+
+    // optionally return properties
+    if (prop != nullptr)
+        *prop = properties;
+    if (mem_prop != nullptr)
+        *mem_prop = memory_properties;
+
+    return true;
+}
+
 uint32_t vka::device::find(
     [[maybe_unused]] VkInstance instance,
     const std::vector<VkPhysicalDevice>& devices,
     const PhysicalDeviceRequirements& requirements,
     VkPhysicalDeviceProperties* prop,
     VkPhysicalDeviceMemoryProperties* mem_prop
-)
+) noexcept
 {
     for(size_t i = 0; i < devices.size(); i++)
     {
-        // physical device properties and memory properties
-        VkPhysicalDeviceProperties properties;
-        VkPhysicalDeviceMemoryProperties memory_properties;
-        vkGetPhysicalDeviceProperties(devices[i], &properties);
-        vkGetPhysicalDeviceMemoryProperties(devices[i], &memory_properties);
-
-        // get all queue family properties
-        uint32_t queue_families_count;
-        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queue_families_count, nullptr);
-        VkQueueFamilyProperties* const queue_family_properties = (VkQueueFamilyProperties*)alloca(queue_families_count * sizeof(VkQueueFamilyProperties));
-        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queue_families_count, queue_family_properties);
-
-        if (detail::device::check_requirements(requirements, instance, devices[i], properties, memory_properties, queue_family_properties, queue_families_count))
-        {
-            if (prop != nullptr)
-                *prop = properties;
-            if (mem_prop != nullptr)
-                *mem_prop = memory_properties;
+        if (check_requirements(requirements, instance, devices[i], prop, mem_prop))
             return i;
-        }
     }
     return NPOS;
 }

@@ -18,12 +18,30 @@ namespace vka::device
     std::vector<VkPhysicalDevice> get(VkInstance instance);
 
     /**
+     * @brief Checks all requirements for a physical device.
+     * @param requirements Specifies the requirements to check.
+     * @param instance Specifies a valid vulkan instance. This parameter is only used if GLFW is enabled.
+     * @param device Specifies the physical device to check.
+     * @param prop Optionally returns the properties if the check was successful.
+     * @param mem_prop Optionally returns the memory properties if the check was successful.
+     * @return Returns true if all requirements are satisfied.
+     * @note If the check was not successful, 'prop' and 'mem_prop' are unaffected.
+     */
+    bool check_requirements(
+        const PhysicalDeviceRequirements& requirements,
+        [[maybe_unused]] VkInstance instance,
+        VkPhysicalDevice device,
+        VkPhysicalDeviceProperties* prop = nullptr,
+        VkPhysicalDeviceMemoryProperties* mem_prop = nullptr
+    ) noexcept;
+
+    /**
      * @brief Searches for a physical device which supports the requirements for the program.
      * @param instance Specifies a valid vulkan instance. This parameter is only used if GLFW is enabled.
      * @param devices Specifies all available physical devices.
      * @param requirements Specifies the requirements for the program.
-     * @param prop Optionally returns the properties of the first found physical device.
-     * @param mem_prop Optionally returns the memory properties of the first found physical device.
+     * @param prop Optionally returns the properties of the found physical device.
+     * @param mem_prop Optionally returns the memory properties of the found physical device.
      * @return Returns the index of the physical device. Returns vka::NPOS32 if no physical device has been found.
      */
     uint32_t find(
@@ -32,7 +50,7 @@ namespace vka::device
         const PhysicalDeviceRequirements& requirements,
         VkPhysicalDeviceProperties* prop = nullptr,
         VkPhysicalDeviceMemoryProperties* mem_prop = nullptr
-    );
+    ) noexcept;
 
     /**
      * @brief Checks if a layer at device level is supported.
