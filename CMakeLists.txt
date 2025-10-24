@@ -2,20 +2,20 @@
 cmake_minimum_required (VERSION 3.25)
 
 # current project
-project("VKA")
+project("VulkanAbstraction")
 
 # This lib is built for C++ 20 and above
 # It is not made backwards compatible to older versions.
 set(CMAKE_CXX_STANDARD 20)
 
 # Global compile warnings for all targets.
-set(COMPILE_WARNINGS -Walloca -Wall)
+set(VKA_COMPILE_WARNINGS -Walloca -Wall)
 
 # Global compile options for all targets.
-add_compile_options(${COMPILE_WARNINGS})
+add_compile_options(${VKA_COMPILE_WARNINGS})
 
 # Useful variables
-set(VKA_INCLUDE_DIR ${VKA_SOURCE_DIR}) # use: #include <vka/vka.h>
+set(VKA_INCLUDE_DIR ${VulkanAbstraction_SOURCE_DIR}) # use: #include <vka/vka.h>
 
 # find vulkan library package
 find_package(Vulkan REQUIRED)
@@ -23,8 +23,8 @@ message(STATUS "[VKA]: Detected Vulkan: API version ${Vulkan_VERSION}")
 
 # glfw library
 if (NOT TARGET glfw)
-    find_path(VKA_SUBMODULE_GLFW NAMES glfw PATHS ${VKA_SOURCE_DIR}/lib REQUIRED)
-    add_subdirectory(${VKA_SOURCE_DIR}/lib/glfw)
+    find_path(VKA_SUBMODULE_GLFW NAMES glfw PATHS ${VulkanAbstraction_SOURCE_DIR}/lib REQUIRED)
+    add_subdirectory(${VulkanAbstraction_SOURCE_DIR}/lib/glfw)
 endif ()
 set(VKA_GLFW_INCLUDE_DIR "${GLFW_SOURCE_DIR}/include")
 message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
