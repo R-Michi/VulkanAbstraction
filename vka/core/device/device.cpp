@@ -40,22 +40,24 @@ bool vka::device::check_requirements(
     vkGetPhysicalDeviceProperties(device, &properties);
     vkGetPhysicalDeviceMemoryProperties(device, &memory_properties);
 
-    // get all queue family properties
-    uint32_t queue_family_count;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-    VkQueueFamilyProperties* const queue_family_properties = (VkQueueFamilyProperties*)alloca(queue_family_count * sizeof(VkQueueFamilyProperties));
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_family_properties);
-
-    // check the requirements
+    // check memory requirements
     if (properties.deviceType != requirements.type)
         return false;
 
     if (!detail::device::check_memory_properties(memory_properties, requirements.memoryPropertyFlags, requirements.memoryPropertyFlagsCount))
         return false;
 
+    // get all queue family properties
+    uint32_t queue_family_count;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+    VkQueueFamilyProperties* const queue_family_properties = (VkQueueFamilyProperties*)alloca(queue_family_count * sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_family_properties);
+
+    // check queue family properties
     if (!detail::device::check_queue_flags(queue_family_properties, queue_family_count, requirements.queueFamilyFlags, requirements.queueFamilyFlagsCount))
         return false;
 
+    // check other properties
 #ifdef _VKA_GLFW
     if (requirements.surfaceSupport && !detail::device::check_surface_support(instance, device, queue_family_count))
         return false;
