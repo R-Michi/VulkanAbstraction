@@ -10,45 +10,32 @@
 
 namespace vka::swapchain
 {
-    /**
-     * @brief Clamps a given image count to the minimum and maximum capable image count.
-     * @param capabilities Specifies the capabilities of a surface.
-     * @param req_count Specifies the required image count.
-     * @return Returns the clamped image count for the swapchain.
-     * @details If the required image count is no special value, it gets limited to the minimum and maximum capable
-     * image count. More formally: Lets assume 'c' is the required, 'a' the minimum and 'b' the maximum image count.
-     * This function then computes the resulting image count 'r' as follows: 'r = min(max(c, a), b)'.\n
-     * Furthermore, the required image count can have two special values:
-     *  - If the value is 0, the minimum capable image count is returned.
-     *  - If the value is 0xFFFFFFFF (maximum value of uint32_t), the maximum capable image count is returned.
+     /**
+     * @brief Creates the swapchain and its associated image views.
+     * @param device Specifies the device to create the swapchain and its corresponding image views.
+     * @param create_info Specifies the create-info of the swapchain.
+     * @param swapchain Returns the created swapchain handle. If the creation of the >> swapchain << failed, the handle
+     * is not altered.
+     * @param image_views Returns all image views created from the swapchain. The size of the vector indicates the
+     * actual number of images created by the swapchain. Note that the actual image count might be different from the
+     * count specified in VkSwapchainCreateInfoKHR::minImageCount. The vector only contains successfully created image
+     * views.
+     * @return Returns VK_SUCCESS iff everything was created successfully.
+     * @note This function does not clear the vector, and image views are only appended to the vector. Keep in mind that
+     * this function may still fail after the swapchain handle has already been created!
+     * @details A swapchain can be created for the first time, or it can be created from a so-called "old" swapchain
+     * handle. The first case is straightforward and proceeds in the same way as creating any other vulkan handle. For
+     * the second case follow these steps in order:
+     * 1. Initialize the new create-info with the current swapchain handle.
+     * 2. Destroy all current image views.
+     * 3. Invalidate the image view handles (clearing the vector that contains them).
+     * 4. Create a new temporary VkSwapchainKHR handle and initialize it with VK_NULL_HANDLE.
+     * 5. Call this function.
+     * 6. Destroy the current swapchain handle.
+     * 7. Update the current swapchain with the new obtained swapchain handle.
+     * 8. Check the result.
+     * @details Some of those steps could be exchanged. However, an exception must not be thrown between steps 2 and 3,
+     * and between steps 5 and 7 to avoid leaks or accessing dangling handles.
      */
-    uint32_t image_count(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t req_count = 0) noexcept;
-
-    /**
-     * @brief Clamps a given image extent to the minimum and maximum capable image extent.
-     * @param capabilities Specifies the capabilities of a surface.
-     * @param req_extent Specifies the required image extent.
-     * @return Returns the clamped image extent for the swapchain.
-     * @details If the required image extent is no special value, it gets limited to the minimum and maximum capable
-     * image extent. More formally: Lets assume 'e' is the required, 'a' the minimum and 'b' the maximum image extent.
-     * This function then computes the resulting image extent 'r' as follows: 'r = min(max(e, a), b)'.\n
-     * Furthermore, the required image extent can have two special values:
-     *  - If any of the required extent's values is 0, the minimum extent is returned.
-     *  - If any of the required extent's values is 0xFFFFFFFF (maximum value of uint32_t), the maximum capable image
-     *  extent is returned.
-     */
-    VkExtent2D image_extent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D req_extent = { 0, 0 }) noexcept;
-
-    /**
-     * @brief Creates the swapchain and the corresponding image views.
-     * @param device Specifies a valid device.
-     * @param create_info Specifies a swapchain create info.
-     * @param image_views Specifies an array in which to store all created image views. The length of the array must be
-     * greater than or equal to the number of images specified in the swapchain create-info.
-     * @return Returns the created swapchain.
-     * @throw std::runtime_error Is thrown if creating the swapchain or the image views failed.
-     * @note It is recommended to initialize the input swapchain handle and the image view handles with VK_NULL_HANDLE
-     * to be able to delete the right handles again in case of an error.
-     */
-    VkSwapchainKHR setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkImageView* image_views);
+    VkResult create(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, std::vector<VkImageView>& image_views);
 }

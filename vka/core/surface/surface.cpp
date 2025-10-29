@@ -9,6 +9,13 @@
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
+VkSurfaceCapabilitiesKHR vka::surface::capabilities(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept
+{
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &capabilities);
+    return capabilities;
+}
+
 std::vector<VkSurfaceFormatKHR> vka::surface::formats(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
     std::vector<VkSurfaceFormatKHR> formats;

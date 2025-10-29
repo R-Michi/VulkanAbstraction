@@ -6,11 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifdef _VKA_GLFW
-#define VKA_INCLUDE_GLFW
-#define VKA_GLFW_ENABLE
-#endif
-
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
@@ -90,7 +85,7 @@ uint32_t vka::instance::supports_extensions(const std::vector<std::string>& exte
     return NPOS;
 }
 
-#ifdef _VKA_GLFW
+#ifdef VKA_GLFW_ENABLE
 std::vector<std::string> vka::instance::get_glfw_extensions()
 {
     std::vector<std::string> extensions;

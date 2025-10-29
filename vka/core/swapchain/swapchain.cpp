@@ -9,67 +9,51 @@
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
-uint32_t vka::swapchain::image_count(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t req_count) noexcept
+VkResult vka::swapchain::create(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, std::vector<VkImageView>& image_views)
 {
-    if (req_count == 0)
-        return capabilities.minImageCount;
-    if (req_count == 0xFFFFFFFF)
-        return capabilities.maxImageCount;
-    return std::min(std::max(req_count, capabilities.minImageCount), capabilities.maxImageCount);
-}
+    VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain);
+    if (is_error(result)) return result;
 
-VkExtent2D vka::swapchain::image_extent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D req_extent) noexcept
-{
-    if (req_extent.width == 0 || req_extent.height == 0)
-        return capabilities.minImageExtent;
-    if (req_extent.width == 0xFFFFFFFF || req_extent.height == 0xFFFFFFFF)
-        return capabilities.maxImageExtent;
-    return {
-        std::min(std::max(req_extent.width, capabilities.minImageExtent.width), capabilities.maxImageExtent.width),
-        std::min(std::max(req_extent.height, capabilities.minImageExtent.height), capabilities.maxImageExtent.height)
-    };
-}
-
-VkSwapchainKHR vka::swapchain::setup(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkImageView* image_views)
-{
-    constexpr char SWAPCHAIN_CREATE_FAILED[] = "[vka::swapchain::setup]: Failed to create swapchain.";
-    constexpr char IMAGE_VIEW_CREATE_FAILED[] = "[vka::swapchain::setup]: Failed to create image view";
-
-    VkSwapchainKHR swapchain;
-    check_result(vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain), SWAPCHAIN_CREATE_FAILED);
-
+    // get images from swapchain (only temporary)
     uint32_t image_count;
-    vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
-    VkImage* const images = (VkImage*)alloca(image_count * sizeof(VkImage));
-    vkGetSwapchainImagesKHR(device, swapchain, &image_count, images);
+    result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
 
-    VkImageViewCreateInfo iv_ci = {
+    VkImage* images = (VkImage*)alloca(image_count * sizeof(VkImage));
+    if (is_error(result)) return result;
+    result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, images);
+    if (is_error(result)) return result;
+
+    // create image views from the images
+    constexpr VkComponentMapping component_mapping = {
+        VK_COMPONENT_SWIZZLE_IDENTITY,
+        VK_COMPONENT_SWIZZLE_IDENTITY,
+        VK_COMPONENT_SWIZZLE_IDENTITY,
+        VK_COMPONENT_SWIZZLE_IDENTITY
+    };
+    constexpr VkImageSubresourceRange subresource_range = {
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseMipLevel = 0,
+        .levelCount = 1,
+        .baseArrayLayer = 0,
+        .layerCount = 1,
+    };
+    VkImageViewCreateInfo view_create_info = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .image = VK_NULL_HANDLE,        // set in loop
+        .image = VK_NULL_HANDLE, // set in loop
         .viewType = VK_IMAGE_VIEW_TYPE_2D,
-        .format = VK_FORMAT_MAX_ENUM,   // set in loop
-        .components = {
-            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-        },
-        .subresourceRange = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel = 0,
-            .levelCount = 1,            // the final image should not have mipmapping
-            .baseArrayLayer = 0,
-            .layerCount = 1
-        }
+        .format = create_info.imageFormat,
+        .components = component_mapping,
+        .subresourceRange = subresource_range
     };
-
     for (uint32_t i = 0; i < image_count; i++)
     {
-        iv_ci.image = images[i];
-        iv_ci.format = create_info.imageFormat;
-        check_result(vkCreateImageView(device, &iv_ci, nullptr, image_views + i), IMAGE_VIEW_CREATE_FAILED);
+        VkImageView view;
+        view_create_info.image = images[i];
+        result = vkCreateImageView(device, &view_create_info, nullptr, &view);
+        if (is_error(result)) return result;
+        image_views.push_back(view);
     }
-    return swapchain;
+    return VK_SUCCESS;
 }

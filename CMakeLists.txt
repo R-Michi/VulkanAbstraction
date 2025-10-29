@@ -336,7 +336,7 @@ target_link_libraries(vka Vulkan::Headers)
 target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR})
 
 add_library(vka_glfw STATIC ${VKA_FILES})
-target_compile_options(vka_glfw PRIVATE -D_VKA_GLFW)
+target_compile_options(vka_glfw PRIVATE -DVKA_GLFW_ENABLE -DVKA_INCLUDE_GLFW)
 target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
 target_include_directories(vka_glfw PRIVATE ${VKA_GLFW_INCLUDE_DIR})
 target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR})

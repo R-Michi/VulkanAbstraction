@@ -6,11 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifdef _VKA_GLFW
-#define VKA_INCLUDE_GLFW
-#define VKA_GLFW_ENABLE
-#endif
-
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
@@ -69,7 +64,7 @@ bool vka::detail::device::check_queue_flags(const VkQueueFamilyProperties* prope
     return true;
 }
 
-#ifdef _VKA_GLFW // requires glfw
+#ifdef VKA_GLFW_ENABLE // requires glfw
 bool vka::detail::device::check_surface_support(VkInstance instance, VkPhysicalDevice device, uint32_t queue_family_count) noexcept
 {
     // check if at least one queue family has surface support

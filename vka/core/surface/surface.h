@@ -11,16 +11,26 @@
 namespace vka::surface
 {
     /**
+     * @brief Queries the capabilities of a specific surface.
      * @param device Specifies a valid physical device.
      * @param surface Specifies a valid surface from which to query the formats.
-     * @return Returns all available surface formats of a physical device.
+     * @return Returns the surface capabilities.
+     */
+    VkSurfaceCapabilitiesKHR capabilities(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept;
+
+    /**
+     * @brief Queries all formats available for a specific surface.
+     * @param device Specifies a valid physical device.
+     * @param surface Specifies a valid surface from which to query the formats.
+     * @return Returns all available surface formats.
      */
     std::vector<VkSurfaceFormatKHR> formats(VkPhysicalDevice device, VkSurfaceKHR surface);
 
     /**
+     * @brief Queries all presentation modes available for a specific surface.
      * @param device Specifies a valid physical device.
      * @param surface Specifies a valid surface from which to query the presentation modes.
-     * @return Returns all available surface presentation modes of a physical device.
+     * @return Returns all available surface presentation modes.
      */
     std::vector<VkPresentModeKHR> presentation_modes(VkPhysicalDevice device, VkSurfaceKHR surface);
 

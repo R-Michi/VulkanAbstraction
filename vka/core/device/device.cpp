@@ -6,11 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifdef _VKA_GLFW
-#define VKA_INCLUDE_GLFW
-#define VKA_GLFW_ENABLE
-#endif
-
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
@@ -58,7 +53,7 @@ bool vka::device::check_requirements(
         return false;
 
     // check other properties
-#ifdef _VKA_GLFW
+#ifdef VKA_GLFW_ENABLE
     if (requirements.surfaceSupport && !detail::device::check_surface_support(instance, device, queue_family_count))
         return false;
 #endif

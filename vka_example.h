@@ -25,7 +25,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#define VKA_DEBUG
+//#define VKA_DEBUG
 #define VKA_INCLUDE_GLFW
 #define VKA_INCLUDE_TINYOBJ
 #define VKA_GLFW_ENABLE
@@ -34,7 +34,7 @@
 
 #include <vka/vka.h>
 
-class vka_example
+class VkaExample
 {
 	struct UniformTransformMatrices
 	{
@@ -48,6 +48,13 @@ class vka_example
 	};
 
 private:
+	constexpr static uint32_t SWAPCHAIN_IMAGE_COUNT = 4;
+	constexpr static VkFormat SURFACE_COLOR_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
+	constexpr static VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+	constexpr static VkColorSpaceKHR SURFACE_COLOR_SPACE = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+	constexpr static VkImageUsageFlags SURFACE_IMAGE_USAGE = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	constexpr static VkPresentModeKHR PRESENTATION_MODE = VK_PRESENT_MODE_MAILBOX_KHR;
+
 	VkApplicationInfo app_info;
 	VkInstance instance;
 	VkSurfaceKHR window_surface;
@@ -85,21 +92,15 @@ private:
     vka::DescriptorLayoutArray<1> descriptor_layouts;
 	vka::DescriptorSetArray<1> descriptors;
 
-	VkSemaphore sem_img_available;
-	VkSemaphore sem_rendering_done;
+	VkSemaphore sem_img_available[SWAPCHAIN_IMAGE_COUNT];
+	VkSemaphore sem_rendering_done[SWAPCHAIN_IMAGE_COUNT];
+	VkFence fence_render[SWAPCHAIN_IMAGE_COUNT];
 
 	const GLFWvidmode* vid_mode;
 	GLFWwindow* window;
 	int width, height;
 
 	std::vector<double> frame_times;
-
-	constexpr static uint32_t SWAPCHAIN_IMAGE_COUNT = 3;
-	constexpr static VkFormat SURFACE_COLOR_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-	constexpr static VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
-	constexpr static VkColorSpaceKHR SURFACE_COLOR_SPACE = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-	constexpr static VkImageUsageFlags SURFACE_IMAGE_USAGE = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	constexpr static VkPresentModeKHR PRESENTATION_MODE = VK_PRESENT_MODE_FIFO_KHR;
 
 	void glfw_init();
 	void glfw_destroy() const;
@@ -137,8 +138,8 @@ private:
 	void update_frame_contents();
 
 public:
-	vka_example() = default;
-	virtual ~vka_example();
+	VkaExample() = default;
+	virtual ~VkaExample();
 
 	void init();
 	void run();

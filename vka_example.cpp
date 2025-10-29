@@ -19,7 +19,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-vka_example::~vka_example()
+VkaExample::~VkaExample()
 {
 	double res = 0.0f;
 
@@ -31,7 +31,7 @@ vka_example::~vka_example()
 }
 
 
-void vka_example::glfw_init()
+void VkaExample::glfw_init()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -47,13 +47,13 @@ void vka_example::glfw_init()
 	glfwSetWindowPos(window, this->vid_mode->width / 4, this->vid_mode->height / 4);
 }
 
-void vka_example::glfw_destroy() const
+void VkaExample::glfw_destroy() const
 {
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
 }
 
-void vka_example::vulkan_init()
+void VkaExample::vulkan_init()
 {
 	this->make_application_info();
 	this->create_instance();
@@ -80,12 +80,16 @@ void vka_example::vulkan_init()
 	this->record_command_buffers();
 }
 
-void vka_example::vulkan_destroy()
+void VkaExample::vulkan_destroy()
 {
 	vkDeviceWaitIdle(this->device);
 
-	vkDestroySemaphore(this->device, this->sem_img_available, nullptr);
-	vkDestroySemaphore(this->device, this->sem_rendering_done, nullptr);
+	for (uint32_t i = 0; i < SWAPCHAIN_IMAGE_COUNT; i++)
+	{
+		vkDestroyFence(this->device, this->fence_render[i], nullptr);
+		vkDestroySemaphore(this->device, this->sem_img_available[i], nullptr);
+		vkDestroySemaphore(this->device, this->sem_rendering_done[i], nullptr);
+	}
 
 	this->texture.destroy();
 	this->uniform_buffer.destroy();
@@ -119,7 +123,7 @@ void vka_example::vulkan_destroy()
 }
 
 
-void vka_example::load_models()
+void VkaExample::load_models()
 {
 	vka::Model model;
 	model.load("../../../assets/models/test.obj", (vka::ModelLoadOptionFlags)vka::ModelLoadOptionFlagBits::IGNORE_MATERIAL);
@@ -150,7 +154,7 @@ void vka_example::load_models()
 }
 
 
-void vka_example::make_application_info()
+void VkaExample::make_application_info()
 {
 	this->app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	this->app_info.pNext = nullptr;
@@ -161,7 +165,7 @@ void vka_example::make_application_info()
 	this->app_info.apiVersion = VK_API_VERSION_1_2;
 }
 
-void vka_example::create_instance()
+void VkaExample::create_instance()
 {
 	std::vector<std::string> layers;
 #ifdef VKA_DEBUG
@@ -209,13 +213,13 @@ void vka_example::create_instance()
 	vka::check_result(result, "vkCreateInstance");
 }
 
-void vka_example::create_surface()
+void VkaExample::create_surface()
 {
 	const VkResult result = glfwCreateWindowSurface(this->instance, window, nullptr, &this->window_surface);
 	vka::check_result(result, "glfwCreateWindowSurface");
 }
 
-void vka_example::create_physical_device()
+void VkaExample::create_physical_device()
 {
 	constexpr VkMemoryPropertyFlags DEVICE_MEMORY = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	constexpr VkMemoryPropertyFlags HOST_MEMORY = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -249,7 +253,7 @@ void vka_example::create_physical_device()
 	std::cout << "Successfully found physical device: " << properties.deviceName << std::endl;
 }
 
-void vka_example::create_logical_device()
+void VkaExample::create_logical_device()
 {
 	// check for queue support
 	const std::vector<VkQueueFamilyProperties> queue_fam_properties = vka::queue::properties(this->physical_device);
@@ -310,10 +314,8 @@ void vka_example::create_logical_device()
 }
 
 
-void vka_example::create_swapchain()
+void VkaExample::create_swapchain()
 {
-	VkSwapchainKHR old_swapchain = this->swapchain;
-
 	VkSwapchainCreateInfoKHR swapchain_create_info;
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.pNext = nullptr;
@@ -332,14 +334,23 @@ void vka_example::create_swapchain()
 	swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	swapchain_create_info.presentMode = PRESENTATION_MODE;
 	swapchain_create_info.clipped = VK_TRUE;
-	swapchain_create_info.oldSwapchain = old_swapchain;
+	swapchain_create_info.oldSwapchain = this->swapchain;
 
-	this->swapchain_image_views.resize(swapchain_create_info.minImageCount);
-	this->swapchain = vka::swapchain::setup(this->device, swapchain_create_info, this->swapchain_image_views.data());
-	vkDestroySwapchainKHR(this->device, old_swapchain, nullptr);
+	for (const VkImageView image_view : this->swapchain_image_views) // NOLINT(*-misplaced-const)
+		vkDestroyImageView(this->device, image_view, nullptr);
+	this->swapchain_image_views.clear();
+
+	VkSwapchainKHR new_swapchain = VK_NULL_HANDLE;
+	const VkResult result = vka::swapchain::create(this->device, swapchain_create_info, new_swapchain, this->swapchain_image_views);
+	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
+	this->swapchain = new_swapchain;
+
+	// Important to note is that the result should be checked after the swapchain handle has been guarded. The function
+	// may still fail (e.g., when creating the images), although the swapchain handle has already been created.
+	vka::check_result(result, "vkCreateSwapchainKHR");
 }
 
-void vka_example::create_depth_attachment()
+void VkaExample::create_depth_attachment()
 {
 	VkComponentMapping component_mapping = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
 	const vka::AttachmentImageCreateInfo ci = {
@@ -357,7 +368,7 @@ void vka_example::create_depth_attachment()
 	this->depth_attachment.create(this->device, this->memory_properties, ci);
 }
 
-void vka_example::create_render_pass()
+void VkaExample::create_render_pass()
 {
 	constexpr static size_t N_ATTACHMENTS = 2;
 
@@ -429,13 +440,13 @@ void vka_example::create_render_pass()
 	vka::check_result(result, "vkCreateRenderPass");
 }
 
-void vka_example::create_shaders()
+void VkaExample::create_shaders()
 {
 	shaders[0].create(this->device, "../../../assets/shaders/bin/main.vert.spv");
 	shaders[1].create(this->device, "../../../assets/shaders/bin/main.frag.spv");
 }
 
-void vka_example::create_pipeline()
+void VkaExample::create_pipeline()
 {
 	std::vector<VkVertexInputBindingDescription> bindings(1);
 	bindings[0].binding = 0;
@@ -613,7 +624,7 @@ void vka_example::create_pipeline()
 }
 
 
-void vka_example::create_framebuffers()
+void VkaExample::create_framebuffers()
 {
 	for (VkImageView view : this->swapchain_image_views)
 	{
@@ -641,7 +652,7 @@ void vka_example::create_framebuffers()
 	}
 }
 
-void vka_example::create_command_pool()
+void VkaExample::create_command_pool()
 {
 	VkCommandPoolCreateInfo command_pool_create_info;
 	command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -653,7 +664,7 @@ void vka_example::create_command_pool()
 	vka::check_result(result, "vkCreateCommandPool");
 }
 
-void vka_example::create_global_command_buffers()
+void VkaExample::create_global_command_buffers()
 {
 	this->swapchain_command_buffers.resize(this->swapchain_framebuffers.size());
 
@@ -668,7 +679,7 @@ void vka_example::create_global_command_buffers()
 	vka::check_result(result, "vkAllocateCommandBuffers");
 }
 
-void vka_example::create_vertex_buffers()
+void VkaExample::create_vertex_buffers()
 {
 	const VkDeviceSize size = sizeof(vka::real_t) * this->vertices.size();
 	vka::BufferCreateInfo create_info = {
@@ -698,7 +709,7 @@ void vka_example::create_vertex_buffers()
     cbo.end_wait(this->graphics_queue.queue);
 }
 
-void vka_example::create_index_buffers()
+void VkaExample::create_index_buffers()
 {
 	VkDeviceSize size = this->indices.size() * sizeof(uint32_t);
 	vka::BufferCreateInfo create_info = {
@@ -729,7 +740,7 @@ void vka_example::create_index_buffers()
     cbo.end_wait(this->graphics_queue.queue);
 }
 
-void vka_example::create_uniform_buffers()
+void VkaExample::create_uniform_buffers()
 {
 	const vka::BufferCreateInfo create_info = {
 		.bufferFlags = 0,
@@ -743,7 +754,7 @@ void vka_example::create_uniform_buffers()
 	this->uniform_buffer.create(this->device, this->memory_properties, create_info);
 }
 
-void vka_example::create_textures()
+void VkaExample::create_textures()
 {
 	VkExtent3D size;
 	const void* const data[2] = {
@@ -800,14 +811,14 @@ void vka_example::create_textures()
     cbo.end_wait(this->graphics_queue.queue);
 }
 
-void vka_example::create_descriptors()
+void VkaExample::create_descriptors()
 {
-	constexpr VkDescriptorPoolSize sizes[2] = {
+	static constexpr VkDescriptorPoolSize sizes[2] = {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
         { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
     };
 
-	const VkDescriptorPoolCreateInfo ci = {
+	constexpr VkDescriptorPoolCreateInfo ci = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = vka::DescriptorSetArray<1>::POOL_FLAGS,
@@ -833,21 +844,31 @@ void vka_example::create_descriptors()
     update.execute();
 }
 
-void vka_example::create_semaphores()
+void VkaExample::create_semaphores()
 {
 	VkSemaphoreCreateInfo semaphore_create_info;
 	semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphore_create_info.pNext = nullptr;
 	semaphore_create_info.flags = 0;
 
-	VkResult result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_img_available);
-	vka::check_result(result, "vkCreateSemaphore");
-	result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, &this->sem_rendering_done);
-	vka::check_result(result, "vkCreateSemaphore");
+	VkFenceCreateInfo fence_create_info;
+	fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fence_create_info.pNext = nullptr;
+	fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (uint32_t i = 0; i < SWAPCHAIN_IMAGE_COUNT; i++)
+	{
+		VkResult result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, this->sem_img_available + i);
+		vka::check_result(result, "vkCreateSemaphore");
+		result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, this->sem_rendering_done + i);
+		vka::check_result(result, "vkCreateSemaphore");
+		result = vkCreateFence(this->device, &fence_create_info, nullptr, this->fence_render + i);
+		vka::check_result(result, "vkCreateFence");
+	}
 }
 
 
-void vka_example::record_command_buffers() const
+void VkaExample::record_command_buffers() const
 {
 	VkCommandBufferBeginInfo command_buffer_begin_info;
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -913,38 +934,43 @@ void vka_example::record_command_buffers() const
 	}
 }
 
-void vka_example::init()
+void VkaExample::init()
 {
 	this->load_models();
 	this->glfw_init();
 	this->vulkan_init();
 }
 
-void vka_example::draw_frame() const
+void VkaExample::draw_frame() const
 {
-	uint32_t img_index;
-	vkAcquireNextImageKHR(this->device, this->swapchain, ~(0UI64), this->sem_img_available, VK_NULL_HANDLE, &img_index);
+	static uint32_t frame_index = 0;
 
+	vkWaitForFences(this->device, 1, this->fence_render + frame_index, VK_TRUE, UINT64_MAX);
+	vkResetFences(this->device, 1, this->fence_render + frame_index);
+
+	uint32_t img_index;
+	vkAcquireNextImageKHR(this->device, this->swapchain, UINT64_MAX, this->sem_img_available[frame_index], VK_NULL_HANDLE, &img_index);
+
+	constexpr VkPipelineStageFlags wait_stage_mask[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	VkSubmitInfo submit_info;
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.pNext = nullptr;
 	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &this->sem_img_available;
-	VkPipelineStageFlags wait_stage_mask[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submit_info.pWaitSemaphores = this->sem_img_available + frame_index;
 	submit_info.pWaitDstStageMask = wait_stage_mask;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &this->swapchain_command_buffers.at(img_index);
 	submit_info.signalSemaphoreCount = 1;					  
-	submit_info.pSignalSemaphores = &this->sem_rendering_done;
+	submit_info.pSignalSemaphores = this->sem_rendering_done + img_index;
 
-	VkResult result = vkQueueSubmit(this->graphics_queue.queue, 1, &submit_info, VK_NULL_HANDLE);
+	VkResult result = vkQueueSubmit(this->graphics_queue.queue, 1, &submit_info, this->fence_render[frame_index]);
 	vka::check_result(result, "vkQueueSubmit");
 
 	VkPresentInfoKHR present_info;
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	present_info.pNext = nullptr;
 	present_info.waitSemaphoreCount = 1;
-	present_info.pWaitSemaphores = &this->sem_rendering_done;
+	present_info.pWaitSemaphores = this->sem_rendering_done + img_index;
 	present_info.swapchainCount = 1;
 	present_info.pSwapchains = &this->swapchain;
 	present_info.pImageIndices = &img_index;
@@ -952,9 +978,11 @@ void vka_example::draw_frame() const
 
 	result = vkQueuePresentKHR(this->graphics_queue.queue, &present_info);
 	vka::check_result(result, "vkQueuePresentKHR");
+
+	frame_index = (frame_index + 1) % SWAPCHAIN_IMAGE_COUNT;
 }
 
-void vka_example::update_frame_contents()
+void VkaExample::update_frame_contents()
 {
 	UniformTransformMatrices utm = {};
 
@@ -970,26 +998,26 @@ void vka_example::update_frame_contents()
 	this->uniform_buffer.unmap();
 }
 
-void vka_example::run()
+void VkaExample::run()
 {
 	while (!glfwGetKey(this->window, GLFW_KEY_ESCAPE) && !glfwWindowShouldClose(this->window))
 	{
-		double t0_render = glfwGetTime();
+		//double t0_render = glfwGetTime();
 
 		glfwPollEvents();
 
 		this->update_frame_contents();
 		this->draw_frame();
 
-		double t_render = glfwGetTime() - t0_render;
+		//double t_render = glfwGetTime() - t0_render;
 
 		//std::cout << "\r" << 1.0 / t_render << "FPS                    ";
-		this->frame_times.push_back(t_render);
+		//this->frame_times.push_back(t_render);
 	}
 	std::cout << std::endl;
 }
 
-void vka_example::shutdown()
+void VkaExample::shutdown()
 {
 	this->vulkan_destroy();
 	this->glfw_destroy();

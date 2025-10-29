@@ -18,7 +18,7 @@
 
 int main()
 {
-    vka_example app;
+    VkaExample app;
     try
     {
         app.init();
