@@ -97,31 +97,13 @@ namespace vka
 
     public:
         /**
-         * @brief Default initialization.
-         * @details The default maximum size of the push constant buffer is 128 bytes. The vulkan specification
-         * guarantees a minimum push constant buffer size of 128 bytes.
+         * @bief Initializes the layout with a push constant buffer size. The limit is by default 128 bytes. 128 bytes
+         * are guaranteed by the vulkan API. The actual limit of the device can be found in the physical device limits.
+         * @param size Specifies the size of the push constant buffer.
          */
-        constexpr PushConstantLayout() noexcept;
+        explicit constexpr PushConstantLayout(uint32_t size = MIN_SIZE) noexcept;
 
-        /**
-         * @bief Initializes the layout with the actual push constant buffer size limit which is
-         * contained by the physical device properties.
-         * @param size Specifies the maximum push-constant size queried from the physical device properties.
-         */
-        explicit constexpr PushConstantLayout(uint32_t size) noexcept;
-
-        PushConstantLayout(const PushConstantLayout&) = delete;
-        PushConstantLayout& operator= (const PushConstantLayout&) = delete;
-
-        /**
-         * @brief Moves the ownership of push-constant-layout to a different object.
-         * @param src Specifies the source object to move.
-         * @details The source push-constant-layout becomes invalidated. If the move destination has been created before
-         * and is a valid object, it gets destroyed.
-         */
-        constexpr PushConstantLayout(PushConstantLayout&& src) noexcept;
-        constexpr PushConstantLayout& operator= (PushConstantLayout&& src) noexcept;
-
+        // nothing to destroy
         ~PushConstantLayout() = default;
 
         /**
@@ -158,8 +140,8 @@ namespace vka
          */
         constexpr uint32_t size() const noexcept;
 
-        /// @returns Returns an array of 'count()' elements of vulkan VkPushConstantRange structs.
-        constexpr const VkPushConstantRange* data() const noexcept;
+        /// @returns Returns the push constant ranges. The array contains 'count()' elements.
+        constexpr const VkPushConstantRange* ranges() const noexcept;
 
         /**
          * @param idx Specifies the index (position) of the VkPushConstantRange to return.

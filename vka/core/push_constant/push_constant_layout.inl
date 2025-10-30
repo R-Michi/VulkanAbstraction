@@ -11,38 +11,9 @@
 #include "push_constant_class.h"
 
 template<uint32_t N>
-constexpr vka::PushConstantLayout<N>::PushConstantLayout() noexcept :
-    m_ranges{}, m_total_size(0), m_max_size(MIN_SIZE), m_idx(0)
-{}
-
-template<uint32_t N>
 constexpr vka::PushConstantLayout<N>::PushConstantLayout(uint32_t size) noexcept :
     m_ranges{}, m_total_size(0), m_max_size(size), m_idx(0)
 {}
-
-template<uint32_t N>
-constexpr vka::PushConstantLayout<N>::PushConstantLayout(PushConstantLayout&& src) noexcept :
-    m_ranges(src.m_ranges), m_total_size(src.m_total_size), m_max_size(src.m_max_size), m_idx(src.m_idx)
-{
-    src.m_ranges.fill({});
-    src.m_total_size = 0;
-    src.m_max_size = MIN_SIZE;
-    src.m_idx = 0;
-}
-
-template<uint32_t N>
-constexpr vka::PushConstantLayout<N>& vka::PushConstantLayout<N>::operator= (PushConstantLayout&& src) noexcept
-{
-    this->m_ranges = src.m_ranges;
-    this->m_total_size = src.m_total_size;
-    this->m_max_size = src.m_max_size;
-    this->m_idx = src.m_idx;
-    src.m_ranges.fill({});
-    src.m_total_size = 0;
-    src.m_max_size = MIN_SIZE;
-    src.m_idx = 0;
-    return *this;
-}
 
 template<uint32_t N>
 constexpr void vka::PushConstantLayout<N>::init(uint32_t size) noexcept
@@ -67,7 +38,7 @@ constexpr void vka::PushConstantLayout<N>::add(uint32_t size, VkShaderStageFlags
 
     size = round_size(size);
     const uint32_t new_size = this->m_total_size + size;
-    if (new_size > this->m_max_size)
+    if (new_size > this->m_max_size) [[unlikely]]
         detail::error::throw_runtime_error(MSG_SIZE);
 
     m_ranges[this->m_idx++] = { stages, this->m_total_size, size };
@@ -94,7 +65,7 @@ constexpr uint32_t vka::PushConstantLayout<N>::size() const noexcept
 }
 
 template<uint32_t N>
-constexpr const VkPushConstantRange* vka::PushConstantLayout<N>::data() const noexcept
+constexpr const VkPushConstantRange* vka::PushConstantLayout<N>::ranges() const noexcept
 {
     return this->m_ranges.data();
 }
