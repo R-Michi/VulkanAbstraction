@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(VKA_COMPILE_WARNINGS -Walloca -Wall)
 
 # Global compile options for all targets.
-add_compile_options(${VKA_COMPILE_WARNINGS} -masm=intel)
+add_compile_options(${VKA_COMPILE_WARNINGS})
 
 # Useful variables
 set(VKA_INCLUDE_DIR ${VulkanAbstraction_SOURCE_DIR}) # use: #include <vka/vka.h>

@@ -17,8 +17,8 @@
 VkResult vka::swapchain::create(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, std::vector<VkImageView>& image_views)
 {
     VkSwapchainKHR tmp_swapchain = VK_NULL_HANDLE;
+    detail::SwapchainGuard swapchain_guard(device, &tmp_swapchain);
     VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &tmp_swapchain);
-    detail::SwapchainGuard swapchain_guard(device, tmp_swapchain);
     if (is_error(result)) [[unlikely]] return result;
 
     // get images from swapchain (only temporary)
@@ -60,7 +60,7 @@ VkResult vka::swapchain::create(VkDevice device, const VkSwapchainCreateInfoKHR&
     for (uint32_t i = 0; i < image_count; i++)
         views[i] = VK_NULL_HANDLE;
 
-    detail::ImageViewArrayGuard view_guard(device, views, image_count);
+    detail::ImageViewGuard view_guard(device, views, image_count);
     for (uint32_t i = 0; i < image_count; i++)
     {
         view_create_info.image = images[i];

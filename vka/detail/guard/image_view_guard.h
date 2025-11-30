@@ -3,22 +3,29 @@
 namespace vka::detail
 {
     /**
-     * Defines a guard around an array of VkImageView handles which are automatically destroyed it if the guard goes out
-     * of scope.\n
+     * Builds a guard around a single or an array of VkImageView handles which are automatically destroyed if the guard
+     * goes out of scope.\n
      * Precondition: The image view handles to guard are either valid handles or VK_NULL_HANDLE.
      */
-    class ImageViewArrayGuard final
+    class ImageViewGuard final
     {
     public:
-        /// Initializes the object with image views to guard.
-        explicit ImageViewArrayGuard(VkDevice device, VkImageView* views, uint32_t count) :
+        /// Initializes the object with a single image view to guard.
+        explicit ImageViewGuard(VkDevice device, VkImageView* view) :
+            m_device(device),
+            m_views(view),
+            m_count(1)
+        {}
+
+        /// Initializes the object with an array of image views to guard.
+        explicit ImageViewGuard(VkDevice device, VkImageView* views, uint32_t count) :
             m_device(device),
             m_views(views),
             m_count(count)
         {}
 
         /// Destroys all image views.
-        ~ImageViewArrayGuard()
+        ~ImageViewGuard()
         {
             for (uint32_t i = 0; i < this->m_count; i++) [[unlikely]]
             {
