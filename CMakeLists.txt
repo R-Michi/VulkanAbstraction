@@ -12,14 +12,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(VKA_COMPILE_WARNINGS -Walloca -Wall)
 
 # Global compile options for all targets.
-add_compile_options(${VKA_COMPILE_WARNINGS})
+add_compile_options(${VKA_COMPILE_WARNINGS} -masm=intel)
 
 # Useful variables
 set(VKA_INCLUDE_DIR ${VulkanAbstraction_SOURCE_DIR}) # use: #include <vka/vka.h>
 
 # find vulkan library package
 find_package(Vulkan REQUIRED)
-message(STATUS "[VKA]: Detected Vulkan: API version ${Vulkan_VERSION}")
+find_program(SPIRV_OPT REQUIRED NAMES "spirv-opt" PATHS "$ENV{VULKAN_SDK}/Bin")
 
 # glfw library
 if (NOT TARGET glfw)
@@ -112,6 +112,16 @@ set(VKA_DETAIL_TEXTURE_FILES
 )
 
 ########################################################################################################################
+##################################################### DETAIL/GUARD #####################################################
+########################################################################################################################
+
+set(VKA_DETAIL_GUARD_FILES
+        vka/detail/guard/guard.h
+        vka/detail/guard/swapchain_guard.h
+        vka/detail/guard/image_view_guard.h
+)
+
+########################################################################################################################
 ##################################################### DETAIL/MODEL #####################################################
 ########################################################################################################################
 
@@ -132,6 +142,7 @@ set(VKA_DETAIL_FILES
         ${VKA_DETAIL_PUSH_CONSTANT_FILES}
         ${VKA_DETAIL_QUEUE_FILES}
         ${VKA_DETAIL_TEXTURE_FILES}
+        ${VKA_DETAIL_GUARD_FILES}
         ${VKA_DETAIL_MODEL_FILES}
         vka/detail/detail.h
 )
@@ -361,9 +372,30 @@ target_include_directories(vka_example PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/lib"
 )
 
-# custom command to compile shaders while compiling the program
-#add_custom_command(
-#    TARGET vka
-#    PRE_BUILD COMMAND "compile_shader.bat"
-#    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-#)
+# find all shader files that end with ".vert" and ".frag"
+# More shader stages can be added, if required.
+file(GLOB_RECURSE SHADER_FILES LIST_DIRECTORIES false RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        assets/shaders/*.vert
+        assets/shaders/*.frag
+)
+
+# add custom compile command for each shader file
+foreach(SHADER IN ITEMS ${SHADER_FILES})
+    message(STATUS "Found shader file: ${SHADER}")  # print shader file location
+    set(INPUT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}")   # input file path
+    set(OUTPUT_SPV "${CMAKE_CURRENT_BINARY_DIR}/${SHADER}.spv") # output file path
+    add_custom_command(             # compile command
+            OUTPUT ${OUTPUT_SPV}    # generates the output file (-path), in fact this is also done by glslangValidator.exe
+            COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V ${INPUT_SHADER} -o ${OUTPUT_SPV}  # calls the glsl compiler
+            COMMAND ${SPIRV_OPT} -O ${OUTPUT_SPV} -o ${OUTPUT_SPV}                              # calls the glsl optimizer
+            DEPENDS ${INPUT_SHADER} # creates the dependency, if the file has changed
+            COMMENT "Building shader ${SHADER}"
+    )
+    list(APPEND SHADER_BINARY_FILES ${OUTPUT_SPV})
+endforeach()
+
+# Create the custom target for a build dependency.
+# This target depends on the built shader binaries.
+# Meaning, to create the 'Shaders' target, the binaries must have been created.
+add_custom_target(Shaders DEPENDS ${SHADER_BINARY_FILES})
+add_dependencies(vka_example Shaders) # Add dependency to targets

@@ -125,6 +125,7 @@ void VkaExample::vulkan_destroy()
 
 void VkaExample::load_models()
 {
+#if 1
 	vka::Model model;
 	model.load("../../../assets/models/test.obj", (vka::ModelLoadOptionFlags)vka::ModelLoadOptionFlagBits::IGNORE_MATERIAL);
 
@@ -151,6 +152,15 @@ void VkaExample::load_models()
 	std::cout << "Number of materials: " << model.materials().size() << std::endl;
 	std::cout << "Number of vertices: " << vertex_count << std::endl;
 	std::cout << "Number of indices: " << idx_count << std::endl;
+#else
+	this->vertices = {
+		0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+		0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	};
+	this->indices = { 0, 1, 2, 2, 3, 0 };
+#endif
 }
 
 
@@ -442,8 +452,8 @@ void VkaExample::create_render_pass()
 
 void VkaExample::create_shaders()
 {
-	shaders[0].create(this->device, "../../../assets/shaders/bin/main.vert.spv");
-	shaders[1].create(this->device, "../../../assets/shaders/bin/main.frag.spv");
+	shaders[0].create(this->device, "assets/shaders/main.vert.spv");
+	shaders[1].create(this->device, "assets/shaders/main.frag.spv");
 }
 
 void VkaExample::create_pipeline()
@@ -986,11 +996,21 @@ void VkaExample::update_frame_contents()
 {
 	UniformTransformMatrices utm = {};
 
-	glm::mat4 model(1.0f);
-	model = glm::rotate(model, static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-	const glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.0f, -3.5f), glm::vec3(0.0f, 0.7f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 projection = glm::perspective(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 1000.0f);
-	projection[1][1] *= -1.0f;
+	const glm::mat4 model = glm::rotate(glm::mat4(1.0f), static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	const glm::vec4 pos = { 0.0f, 3.0f, -7.0f, 0.0f };
+	glm::mat4 tmp_view = glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // pitch angle (invert pitch angle)
+	tmp_view = glm::rotate(tmp_view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // yaw angle
+	tmp_view[1] *= -1.0f; // invert y-axis
+	glm::mat4 view = glm::transpose(tmp_view);
+	view[3][0] = -glm::dot(pos, tmp_view[0]);
+	view[3][1] = -glm::dot(pos, tmp_view[1]);
+	view[3][2] = -glm::dot(pos, tmp_view[2]);
+	view[3][3] = 1.0f;
+
+	glm::mat4 projection = glm::perspectiveRH_ZO(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 1000.0f);
+	projection[2][2] *= -1.0f;
+	projection[2][3] *= -1.0f;
 	utm.MVP = projection * view * model;
 
 	void* _map = this->uniform_buffer.map(0, sizeof(UniformTransformMatrices));

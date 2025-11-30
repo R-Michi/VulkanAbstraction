@@ -1,6 +1,4 @@
 #version 460 core
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_KHR_vulkan_glsl : requiere
 
 layout (location = 0) in vec2 frag_tex_coord;
 layout (location = 1) in vec3 frag_normal;

@@ -25,7 +25,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-//#define VKA_DEBUG
+#define VKA_DEBUG
 #define VKA_INCLUDE_GLFW
 #define VKA_INCLUDE_TINYOBJ
 #define VKA_GLFW_ENABLE
