@@ -9,6 +9,7 @@
 #pragma once
 
 #include "error/error.inl"
+#include "handle/handle.h"
 #include "memory/memory.h"
 #include "attachment/attachment.inl"
 #include "buffer/buffer.inl"

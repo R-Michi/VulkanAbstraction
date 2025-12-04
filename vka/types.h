@@ -14,6 +14,8 @@ namespace vka
     using real_t = tinyobj::real_t;
 #endif
 
+    using null_handle_t = decltype(VK_NULL_HANDLE);
+
     using ColorFormatArray = std::array<VkFormat, 123>;
     using DepthFormatArray = std::array<VkFormat, 6>;
     using StencilFormatArray = std::array<VkFormat, 4>;
@@ -25,7 +27,7 @@ namespace vka
         OPTIMAL,
     };
 
-    enum class VertexAttributeType : uint32_t
+    enum class VertexAttributeType : uint32_t // deprecated
     {
         NONE = 0,
         POSITION = 1,
@@ -36,7 +38,7 @@ namespace vka
         COLOR_EXT = 102,
     };
 
-    enum class ModelLoadOptionFlagBits : uint32_t
+    enum class ModelLoadOptionFlagBits : uint32_t // deprecated
     {
         DEFAULT = 0x00000000,
         IGNORE_MATERIAL = 0x00000001,
@@ -61,7 +63,7 @@ namespace vka
     	uint32_t        queueCount;
     };
 
-    struct VertexAttribute
+    struct VertexAttribute // deprecated
     {
         VertexAttributeType type;
         size_t              spacing;
@@ -130,5 +132,11 @@ namespace vka
         VkComponentMapping      components;
         uint32_t                baseArrayLayer;
         uint32_t                layerCount;
+    };
+
+    struct SwapchainFramebuffer
+    {
+        VkImageView view;
+        VkFramebuffer framebuffer;
     };
 }

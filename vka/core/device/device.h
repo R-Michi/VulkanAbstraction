@@ -18,7 +18,7 @@ namespace vka::device
     std::vector<VkPhysicalDevice> get(VkInstance instance);
 
     /**
-     * @brief Checks all requirements for a physical device.
+     * @brief Checks requirements for a physical device.
      * @param requirements Specifies the requirements to check.
      * @param instance Specifies a valid vulkan instance. This parameter is only used if GLFW is enabled.
      * @param device Specifies the physical device to check.
