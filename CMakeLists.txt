@@ -299,7 +299,12 @@ set(VKA_CORE_PUSH_CONSTANT_FILES
 set(VKA_CORE_HANDLE_FILES
         vka/core/handle/handle.h
         vka/core/handle/unique_handle.h
+        vka/core/handle/unique_handle_parent.inl
+        vka/core/handle/unique_handle_no_parent.inl
+        vka/core/handle/unique_handle_static_array.inl
+        vka/core/handle/unique_handle_dynamic_array.inl
         vka/core/handle/handle_guard.h
+        vka/core/handle/handle_guard.inl
 )
 
 ########################################################################################################################

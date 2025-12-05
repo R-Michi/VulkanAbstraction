@@ -114,6 +114,12 @@ namespace vka::detail::handle
     template<> struct destroy_func<VkAccelerationStructureKHR>      { static constexpr auto func = vkDestroyAccelerationStructureKHR;       };
     template<> struct destroy_func<VkAccelerationStructureKHR[]>    { static constexpr auto func = vkDestroyAccelerationStructureKHR;       };
 
+#ifdef _DEBUG
+    constexpr bool debug_noexcept = false;
+#else
+    constexpr bool debug_noexcept = true;
+#endif
+
     template<typename T, uint32_t N>
     constexpr bool always_false_v = false;
 
