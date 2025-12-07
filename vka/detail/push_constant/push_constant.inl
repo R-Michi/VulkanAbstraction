@@ -30,7 +30,7 @@ inline vka::detail::PushConstantBuffer::PushConstantBuffer(PushConstantBuffer&& 
 
 inline vka::detail::PushConstantBuffer& vka::detail::PushConstantBuffer::operator= (PushConstantBuffer&& src) noexcept
 {
-    this->free();
+    this->free_memory();
     this->m_size = src.m_size;
     this->m_data = src.m_data;
     src.m_size = 0;
