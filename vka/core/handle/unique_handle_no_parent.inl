@@ -2,108 +2,119 @@
 
 #include "unique_handle.h"
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr vka::unique_handle<Handle, N, void>::unique_handle(Handle handle) noexcept :
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>::unique_handle() noexcept :
+    m_handle{}
+{}
+
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>::unique_handle(Handle handle) noexcept :
     m_handle(handle)
 {}
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr vka::unique_handle<Handle, N, void>::unique_handle(unique_handle&& src) noexcept :
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>::unique_handle(unique_handle&& src) noexcept :
     m_handle(src.m_handle)
 {
-    src.m_handle = VK_NULL_HANDLE;
+    src.reset_state();
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr vka::unique_handle<Handle, N, void>::~unique_handle()
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>::~unique_handle()
 {
     this->destroy_handle();
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr vka::unique_handle<Handle, N, void>& vka::unique_handle<Handle, N, void>::operator= (null_handle_t) noexcept
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>& vka::unique_handle<Handle, deleter, void>::operator= (null_handle_t) noexcept
 {
     this->destroy_handle();
-    this->m_handle = VK_NULL_HANDLE;
+    this->reset_state();
     return *this;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr vka::unique_handle<Handle, N, void>& vka::unique_handle<Handle, N, void>::operator= (unique_handle&& src) noexcept
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>& vka::unique_handle<Handle, deleter, void>::operator= (unique_handle&& src) noexcept
 {
     this->destroy_handle();
     this->m_handle = src.m_handle;
-    src.m_handle = VK_NULL_HANDLE;
+    src.reset_state();
     return *this;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr bool vka::unique_handle<Handle, N, void>::operator== (null_handle_t) const noexcept
+template<typename Handle, auto deleter>
+constexpr bool vka::unique_handle<Handle, deleter, void>::operator== (null_handle_t) const noexcept
 {
     return this->m_handle == VK_NULL_HANDLE;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr bool vka::unique_handle<Handle, N, void>::operator== (const unique_handle& src) const noexcept
+template<typename Handle, auto deleter>
+constexpr bool vka::unique_handle<Handle, deleter, void>::operator== (const unique_handle& src) const noexcept
 {
     return this->m_handle == src.m_handle;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr bool vka::unique_handle<Handle, N, void>::operator!= (null_handle_t) const noexcept
+template<typename Handle, auto deleter>
+constexpr bool vka::unique_handle<Handle, deleter, void>::operator!= (null_handle_t) const noexcept
 {
-    return this->m_handle != VK_NULL_HANDLE;
+    return !(*this == VK_NULL_HANDLE);
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr bool vka::unique_handle<Handle, N, void>::operator!= (const unique_handle& src) const noexcept
+template<typename Handle, auto deleter>
+constexpr bool vka::unique_handle<Handle, deleter, void>::operator!= (const unique_handle& src) const noexcept
 {
-    return this->m_handle != src.m_handle;
+    return !(*this == src);
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr vka::unique_handle<Handle, N, void>::operator bool() const noexcept
+template<typename Handle, auto deleter>
+constexpr vka::unique_handle<Handle, deleter, void>::operator bool() const noexcept
 {
-    return this->m_handle != VK_NULL_HANDLE;
+    return static_cast<bool>(this->m_handle);
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr void vka::unique_handle<Handle, N, void>::destroy_handle() noexcept
+template<typename Handle, auto deleter>
+constexpr void vka::unique_handle<Handle, deleter, void>::destroy_handle() noexcept
 {
-    if (this->m_handle != VK_NULL_HANDLE)
-        detail::handle::destroy_f<Handle>(this->m_handle, nullptr);
+    if (static_cast<bool>(this->m_handle))
+        deleter(this->m_handle, nullptr);
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr Handle vka::unique_handle<Handle, N, void>::get() const noexcept
+template<typename Handle, auto deleter>
+constexpr void vka::unique_handle<Handle, deleter, void>::reset_state() noexcept
+{
+    this->m_handle = {}; // sets primitive handles to VK_NULL_HANDLE
+}
+
+template<typename Handle, auto deleter>
+constexpr Handle vka::unique_handle<Handle, deleter, void>::get() const noexcept
 {
     return this->m_handle;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr Handle vka::unique_handle<Handle, N, void>::release() noexcept
+template<typename Handle, auto deleter>
+constexpr Handle vka::unique_handle<Handle, deleter, void>::release() noexcept
 {
     Handle handle = this->m_handle;
-    this->m_handle = VK_NULL_HANDLE;
+    this->reset_state();
     return handle;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr void vka::unique_handle<Handle, N, void>::reset(Handle handle) noexcept
+template<typename Handle, auto deleter>
+constexpr void vka::unique_handle<Handle, deleter, void>::reset(Handle handle) noexcept
 {
     this->destroy_handle();
     this->m_handle = handle;
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-constexpr void vka::unique_handle<Handle, N, void>::destroy() noexcept
+template<typename Handle, auto deleter>
+constexpr void vka::unique_handle<Handle, deleter, void>::destroy() noexcept
 {
     this->destroy_handle();
-    this->m_handle = VK_NULL_HANDLE;
+    this->reset_state();
 }
 
-template<vka::detail::handle::dispatchable_c Handle, uint32_t N>
-void vka::unique_handle<Handle, N, void>::swap(unique_handle& handle) noexcept
+template<typename Handle, auto deleter>
+void vka::unique_handle<Handle, deleter, void>::swap(unique_handle& handle) noexcept
 {
     Handle tmp_handle = this->m_handle;
     this->m_handle = handle.m_handle;

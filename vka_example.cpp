@@ -1,5 +1,5 @@
 /**
-* @file     VulkanApp.cpp
+* @file     vka_example.cpp
 * @brief    Implementation of the testing vulkan application.
 * @author   Github: R-Michi
 * Copyright (c) 2021 by R-Michi
@@ -113,8 +113,7 @@ void VkaExample::vulkan_destroy()
 	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
 
 	this->depth_attachment.destroy();
-	for (VkImageView val : this->swapchain_image_views)
-		vkDestroyImageView(this->device, val, nullptr);
+	this->swapchain_image_views.destroy();
 	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
 
 	vkDestroyDevice(this->device, nullptr);
@@ -178,17 +177,13 @@ void VkaExample::make_application_info()
 void VkaExample::create_instance()
 {
 	std::vector<std::string> layers;
-#ifdef VKA_DEBUG
+#ifdef _DEBUG
 	layers.emplace_back("VK_LAYER_KHRONOS_validation");
 #endif 
 	layers.emplace_back("VK_LAYER_LUNARG_monitor");
 
-	std::vector<std::string> extensions = vka::instance::get_glfw_extensions();
-#ifdef VKA_DEBUG
-	//extensions.push_back("VK_EXT_debug_utils");
-#endif
-
 	size_t idx;
+	std::vector<std::string> extensions = vka::instance::get_glfw_extensions();
 	if ((idx = vka::instance::supports_layers(layers)) != vka::NPOS)
 	{
 		std::string str = "Instance layer \"";
@@ -346,11 +341,8 @@ void VkaExample::create_swapchain()
 	swapchain_create_info.clipped = VK_TRUE;
 	swapchain_create_info.oldSwapchain = this->swapchain;
 
-	for (const VkImageView image_view : this->swapchain_image_views) // NOLINT(*-misplaced-const)
-		vkDestroyImageView(this->device, image_view, nullptr);
-	this->swapchain_image_views.clear();
-
 	VkSwapchainKHR new_swapchain = VK_NULL_HANDLE;
+	this->swapchain_image_views.destroy();
 	const VkResult result = vka::swapchain::create(this->device, swapchain_create_info, new_swapchain, this->swapchain_image_views);
 	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
 	this->swapchain = new_swapchain;
@@ -998,7 +990,7 @@ void VkaExample::update_frame_contents()
 
 	const glm::mat4 model = glm::rotate(glm::mat4(1.0f), static_cast<float>(M_PI * 0.1f * glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	const glm::vec4 pos = { 0.0f, 3.0f, -7.0f, 0.0f };
+	constexpr glm::vec4 pos = { 0.0f, 3.0f, -7.0f, 0.0f };
 	glm::mat4 tmp_view = glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // pitch angle (invert pitch angle)
 	tmp_view = glm::rotate(tmp_view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // yaw angle
 	tmp_view[1] *= -1.0f; // invert y-axis

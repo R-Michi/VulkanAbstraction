@@ -12,7 +12,6 @@
 #pragma once
 
 #include "defs.h"
-#include "constants.h"
-#include "types.h"
+#include "forward/forward.h"
 #include "detail/detail.h"
 #include "core/core.h"

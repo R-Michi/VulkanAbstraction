@@ -30,6 +30,18 @@ set(VKA_GLFW_INCLUDE_DIR "${GLFW_SOURCE_DIR}/include")
 message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
 
 ########################################################################################################################
+######################################################## FORWARD #######################################################
+########################################################################################################################
+
+set(VKA_FORWARD_FILES
+        vka/forward/forward.h
+        vka/forward/constants.h
+        vka/forward/types.h
+        vka/forward/swapchain/swapchain.h
+        vka/forward/swapchain/swapchain.inl
+)
+
+########################################################################################################################
 ##################################################### DETAIL/COMMON ####################################################
 ########################################################################################################################
 
@@ -301,10 +313,7 @@ set(VKA_CORE_HANDLE_FILES
         vka/core/handle/unique_handle.h
         vka/core/handle/unique_handle_parent.inl
         vka/core/handle/unique_handle_no_parent.inl
-        vka/core/handle/unique_handle_static_array.inl
         vka/core/handle/unique_handle_dynamic_array.inl
-        vka/core/handle/handle_guard.h
-        vka/core/handle/handle_guard.inl
 )
 
 ########################################################################################################################
@@ -346,8 +355,7 @@ set(VKA_CORE_FILES
 set(VKA_FILES
         vka/vka.h
         vka/defs.h
-        vka/constants.h
-        vka/types.h
+        ${VKA_FORWARD_FILES}
         ${VKA_DETAIL_FILES}
         ${VKA_CORE_FILES}
 )

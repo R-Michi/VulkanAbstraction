@@ -25,7 +25,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#define VKA_DEBUG
 #define VKA_INCLUDE_GLFW
 #define VKA_INCLUDE_TINYOBJ
 #define VKA_GLFW_ENABLE
@@ -68,7 +67,7 @@ private:
 
 	VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
 	vka::AttachmentImage depth_attachment;
-	std::vector<VkImageView> swapchain_image_views;
+	vka::unique_handle<VkImageView[]> swapchain_image_views;
 	std::vector<VkFramebuffer> swapchain_framebuffers;
 
 	VkRenderPass render_pass;

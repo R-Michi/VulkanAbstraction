@@ -133,10 +133,4 @@ namespace vka
         uint32_t                baseArrayLayer;
         uint32_t                layerCount;
     };
-
-    struct SwapchainFramebuffer
-    {
-        VkImageView view;
-        VkFramebuffer framebuffer;
-    };
 }
