@@ -994,6 +994,7 @@ void VkaExample::update_frame_contents()
 	glm::mat4 tmp_view = glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // pitch angle (invert pitch angle)
 	tmp_view = glm::rotate(tmp_view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // yaw angle
 	tmp_view[1] *= -1.0f; // invert y-axis
+
 	glm::mat4 view = glm::transpose(tmp_view);
 	view[3][0] = -glm::dot(pos, tmp_view[0]);
 	view[3][1] = -glm::dot(pos, tmp_view[1]);

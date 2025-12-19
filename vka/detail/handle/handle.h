@@ -110,6 +110,7 @@ namespace vka::detail::handle
     struct parent                                           { using type = VkDevice;    };
     template<> struct parent<VkInstance>                    { using type = void;        };
     template<> struct parent<VkDevice>                      { using type = void;        };
+    template<> struct parent<VkSurfaceKHR>                  { using type = VkInstance;  };
     template<> struct parent<VkDebugReportCallbackEXT>      { using type = VkInstance;  };
     template<> struct parent<VkDebugUtilsMessengerEXT>      { using type = VkInstance;  };
 
