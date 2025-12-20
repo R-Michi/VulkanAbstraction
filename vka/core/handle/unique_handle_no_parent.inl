@@ -94,9 +94,17 @@ constexpr Handle vka::unique_handle<Handle, deleter, void>::get() const noexcept
 template<typename Handle, auto deleter>
 constexpr Handle vka::unique_handle<Handle, deleter, void>::release() noexcept
 {
-    Handle handle = this->m_handle;
+    Handle cur_handle = this->m_handle;
     this->reset_state();
-    return handle;
+    return cur_handle;
+}
+
+template<typename Handle, auto deleter>
+constexpr Handle vka::unique_handle<Handle, deleter, void>::release_reset(Handle handle) noexcept
+{
+    Handle cur_handle = this->m_handle;
+    this->m_handle = handle;
+    return cur_handle;
 }
 
 template<typename Handle, auto deleter>

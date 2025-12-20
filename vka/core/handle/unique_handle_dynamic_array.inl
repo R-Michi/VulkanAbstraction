@@ -127,9 +127,28 @@ constexpr Parent vka::unique_handle<Handle[], deleter, Parent>::parent() const n
 template<typename Handle, auto deleter, typename Parent>
 constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release() noexcept
 {
-    const Handle* const handles = this->m_handles;
+    const Handle* const cur_handles = this->m_handles;
     this->reset_state();
-    return handles;
+    return cur_handles;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_reset(Handle* handles, uint32_t count)
+{
+    const Handle* const cur_handles = this->m_handles;
+    this->m_handles = handles;
+    this->m_count = count;
+    return cur_handles;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_reset(Parent parent, Handle* handles, uint32_t count)
+{
+    const Handle* const cur_handles = this->m_handles;
+    this->m_parent = parent;
+    this->m_handles = handles;
+    this->m_count = count;
+    return cur_handles;
 }
 
 template<typename Handle, auto deleter, typename Parent>

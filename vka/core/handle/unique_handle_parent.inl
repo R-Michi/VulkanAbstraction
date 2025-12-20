@@ -104,9 +104,26 @@ constexpr Parent vka::unique_handle<Handle, deleter, Parent>::parent() const noe
 template<typename Handle, auto deleter, typename Parent>
 constexpr Handle vka::unique_handle<Handle, deleter, Parent>::release() noexcept
 {
-    Handle handle = this->m_handle;
+    Handle cur_handle = this->m_handle;
     this->reset_state();
-    return handle;
+    return cur_handle;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr Handle vka::unique_handle<Handle, deleter, Parent>::release_reset(Handle handle) noexcept
+{
+    Handle cur_handle = this->m_handle;
+    this->m_handle = handle;
+    return cur_handle;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr Handle vka::unique_handle<Handle, deleter, Parent>::release_reset(Parent parent, Handle handle) noexcept
+{
+    Handle cur_handle = this->m_handle;
+    this->m_parent = parent;
+    this->m_handle = handle;
+    return cur_handle;
 }
 
 template<typename Handle, auto deleter, typename Parent>

@@ -106,6 +106,29 @@ namespace vka
         constexpr Handle release() noexcept;
 
         /**
+         * Releases the current handle from the object and replaces it with a new handle.
+         * @param handle Specifies a handle with which the current handle is replaced. It must either be VK_NULL_HANDLE
+         * or a valid handle.\n
+         * Precondition: The handle must have been created with the same parent handle as stored in this. If the parent
+         * handle stored in this is VK_NULL_HANDLE, the specified handle must also be VK_NULL_HANDLE.
+         * @return Returns the current handle.
+         */
+        constexpr Handle release_reset(Handle handle) noexcept;
+
+        /**
+         * Releases the current handle from the object and replaces it with a new handle and a new associated parent
+         * handle.
+         * @param parent Specifies the parent handle. It must either be VK_NULL_HANDLE or a valid parent which is
+         * associated with 'handle'.\n
+         * Precondition: If this parameter is VK_NULL_HANDLE, 'handle' must be VK_NULL_HANDLE.
+         * @param handle Specifies a handle with which the current handle is replaced. It must either be VK_NULL_HANDLE
+         * or a valid handle.\n
+         * Precondition: If this parameter is a valid handle, 'parent' must be a valid handle.
+         * @return Returns the current handle.
+         */
+        constexpr Handle release_reset(Parent parent, Handle handle) noexcept;
+
+        /**
          * Destroys the current handle and replaces it with a new handle.
          * @param handle Specifies a handle with which the current handle is replaced. It must either be VK_NULL_HANDLE
          * or a valid handle.\n
@@ -119,7 +142,8 @@ namespace vka
          * @param parent Specifies the parent handle. It must either be VK_NULL_HANDLE or a valid parent which is
          * associated with 'handle'.\n
          * Precondition: If this parameter is VK_NULL_HANDLE, 'handle' must be VK_NULL_HANDLE.
-         * @param handle Specifies the handle. It must either be VK_NULL_HANDLE or a valid handle.\n
+         * @param handle Specifies a handle with which the current handle is replaced. It must either be VK_NULL_HANDLE
+         * or a valid handle.\n
          * Precondition: If this parameter is a valid handle, 'parent' must be a valid handle.
          */
         constexpr void reset(Parent parent, Handle handle) noexcept;
@@ -200,6 +224,14 @@ namespace vka
          * @return Returns the current handle.
          */
         constexpr Handle release() noexcept;
+
+        /**
+         * Releases the current handle from the object and replaces it with a new handle.
+         * @param handle Specifies a handle with which the current handle is replaced. It must either be VK_NULL_HANDLE
+         * or a valid handle.
+         * @return Returns the current handle.
+         */
+        constexpr Handle release_reset(Handle handle) noexcept;
 
         /**
          * Destroys the current handle and replaces it with a new handle.
@@ -303,6 +335,39 @@ namespace vka
          * @return Returns the current handles.
          */
         constexpr const Handle* release() noexcept;
+
+        /**
+         * Releases the current handles and the dynamic array from the object and replaces them with a new dynamic array
+         * of handles.
+         * @param handles Specifies a dynamic array with which the current handles are replaced. The array must either
+         * be 'nullptr' or must contain VK_NULL_HANDLE or valid handles.\n
+         * Precondition: The handles must have been created with the same parent handle as stored in this. If the parent
+         * handle stored in this is VK_NULL_HANDLE, 'handles' must either be nullptr or all handles in the array must be
+         * VK_NULL_HANDLE. If this parameter is nullptr, 'count' must also be 0.
+         * @param count Specifies the number of handles.\n
+         * Precondition: If this parameter is greater than 0, 'handles' must be a valid pointer to an array of either
+         * VK_NULL_HANDLE or valid handles.
+         * @return Returns the current handles.
+         */
+        constexpr const Handle* release_reset(Handle* handles, uint32_t count);
+
+        /**
+         * Releases the current handles and the dynamic array from the object and replaces them with a new dynamic array
+         * of handles.
+         * @param parent Specifies the parent handle. It must either be VK_NULL_HANDLE or a valid parent which is
+         * associated with all handles in 'handles'.\n
+         * Precondition: If this parameter is VK_NULL_HANDLE, 'handles' must either be nullptr or all handles in the
+         * array must be VK_NULL_HANDLE.
+         * @param handles Specifies a dynamic array with which the current handles are replaced. The array must either
+         * be 'nullptr' or must contain VK_NULL_HANDLE or valid handles.\n
+         * Precondition: If the array contains valid handles, 'parent' must also be a valid handle. If this parameter is
+         * nullptr, 'count' must also be 0.
+         * @param count Specifies the number of handles.\n
+         * Precondition: If this parameter is greater than 0, 'handles' must be a valid pointer to an array of either
+         * VK_NULL_HANDLE or valid handles.
+         * @return Returns the current handles.
+         */
+        constexpr const Handle* release_reset(Parent parent, Handle* handles, uint32_t count);
 
         /**
          * Destroys the current handles and replaces them with a new dynamic array of handles.
