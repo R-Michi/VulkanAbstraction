@@ -33,13 +33,20 @@ namespace vka
      *
      * If you specify any custom handle-type (which can be a combination of multiple vulkan handles), the default parent
      * is always VkDevice.
+     *
+     * Furthermore, you may want to extend the functionality of this class. For this purpose you are allowed to inherit
+     * from it. But never use it in a context like:
+     *  - unique_handle<Handle>* p = new Derived(...) or
+     *  - function(unique_handle<Handle>& p) and function(object_of_derived)
+     *
+     * unless you know what you are doing because the destructor is not virtual - this is by design!
      */
     template<
         typename Handle,
         auto deleter = detail::handle::destroy_f<detail::handle::remove_array<Handle>>,
         typename Parent = detail::handle::parent_t<detail::handle::remove_array<Handle>>
     >
-    class unique_handle final
+    class unique_handle
     {
         static_assert(detail::handle::copyable_c<Handle>, "Handle type must be copyable.");
         static_assert(detail::handle::copyable_c<Parent>, "Parent handle type must be copyable.");
@@ -143,7 +150,7 @@ namespace vka
 
     /// This specialization does not require a parent handle.
     template<typename Handle, auto deleter>
-    class unique_handle<Handle, deleter, void> final
+    class unique_handle<Handle, deleter, void>
     {
         static_assert(detail::handle::copyable_c<Handle>, "Handle type must be copyable.");
         static_assert(detail::handle::bool_convertable_c<Handle>, "Handle type must be convertable to bool via static_cast.");
