@@ -187,7 +187,7 @@ namespace vka
          * Initialize with a handle.
          * @param handle Specifies the handle. It must either be VK_NULL_HANDLE or a valid handle.
          */
-        explicit constexpr unique_handle(Handle handle = {}) noexcept;
+        explicit constexpr unique_handle(Handle handle) noexcept;
 
         /// Transfers the ownership of the handle in 'src' to 'this'.
         constexpr unique_handle(unique_handle&& src) noexcept;
