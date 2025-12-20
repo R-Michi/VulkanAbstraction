@@ -349,7 +349,7 @@ namespace vka
          * VK_NULL_HANDLE or valid handles.
          * @return Returns the current handles.
          */
-        constexpr const Handle* release_reset(Handle* handles, uint32_t count);
+        constexpr const Handle* release_reset(Handle* handles, uint32_t count) noexcept;
 
         /**
          * Releases the current handles and the dynamic array from the object and replaces them with a new dynamic array
@@ -367,7 +367,7 @@ namespace vka
          * VK_NULL_HANDLE or valid handles.
          * @return Returns the current handles.
          */
-        constexpr const Handle* release_reset(Parent parent, Handle* handles, uint32_t count);
+        constexpr const Handle* release_reset(Parent parent, Handle* handles, uint32_t count) noexcept;
 
         /**
          * Destroys the current handles and replaces them with a new dynamic array of handles.
@@ -380,7 +380,7 @@ namespace vka
          * Precondition: If this parameter is greater than 0, 'handles' must be a valid pointer to an array of either
          * VK_NULL_HANDLE or valid handles.
          */
-        constexpr void reset(Handle* handles, uint32_t count);
+        constexpr void reset(Handle* handles, uint32_t count) noexcept;
 
         /**
          * Destroys the current handles and replaces them with a new dynamic array of handles.
@@ -396,7 +396,7 @@ namespace vka
          * Precondition: If this parameter is greater than 0, 'handles' must be a valid pointer to an array of either
          * VK_NULL_HANDLE or valid handles.
          */
-        constexpr void reset(Parent parent, Handle* handles, uint32_t count);
+        constexpr void reset(Parent parent, Handle* handles, uint32_t count) noexcept;
 
         /// Destroys the current handles and the dynamic array owned by the object. The parent handle is not affected.
         constexpr void destroy() noexcept;

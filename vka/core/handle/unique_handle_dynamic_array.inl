@@ -133,7 +133,7 @@ constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release()
 }
 
 template<typename Handle, auto deleter, typename Parent>
-constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_reset(Handle* handles, uint32_t count)
+constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_reset(Handle* handles, uint32_t count) noexcept
 {
     const Handle* const cur_handles = this->m_handles;
     this->m_handles = handles;
@@ -142,7 +142,7 @@ constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_r
 }
 
 template<typename Handle, auto deleter, typename Parent>
-constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_reset(Parent parent, Handle* handles, uint32_t count)
+constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_reset(Parent parent, Handle* handles, uint32_t count) noexcept
 {
     const Handle* const cur_handles = this->m_handles;
     this->m_parent = parent;
@@ -152,7 +152,7 @@ constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::release_r
 }
 
 template<typename Handle, auto deleter, typename Parent>
-constexpr void vka::unique_handle<Handle[], deleter, Parent>::reset(Handle* handles, uint32_t count)
+constexpr void vka::unique_handle<Handle[], deleter, Parent>::reset(Handle* handles, uint32_t count) noexcept
 {
     this->destroy_handles();
     this->m_handles = handles;
@@ -160,7 +160,7 @@ constexpr void vka::unique_handle<Handle[], deleter, Parent>::reset(Handle* hand
 }
 
 template<typename Handle, auto deleter, typename Parent>
-constexpr void vka::unique_handle<Handle[], deleter, Parent>::reset(Parent parent, Handle* handles, uint32_t count)
+constexpr void vka::unique_handle<Handle[], deleter, Parent>::reset(Parent parent, Handle* handles, uint32_t count) noexcept
 {
     this->destroy_handles();
     this->m_parent = parent;
