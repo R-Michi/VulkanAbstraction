@@ -198,7 +198,7 @@ void vka::Texture::create_mip_levels(VkCommandBuffer cbo) noexcept
 
 void vka::Texture::load(VkCommandBuffer cbo, const Buffer& data, uint32_t layer, uint32_t layer_count, uint32_t level) noexcept
 {
-    if (this->m_state != STATE_INVALID && data.is_valid())
+    if (this->m_state != STATE_INVALID && (bool)data)
     {
         // If we are not in the loading state, change the layout to the required layout
         // for the loading state and set the state to "loading".

@@ -21,17 +21,4 @@ namespace vka::swapchain
      * @return Returns VK_SUCCESS if and only if everything was created successfully.
      */
     VkResult create(VkDevice device, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, unique_handle<VkImageView[]>& image_views);
-
-    /**
-     * Creates the swapchain, its associated image views, as well as framebuffers that reference those image views. If
-     * creating any of the handles fails, nothing is returned by reference and the output parameters are not updated.
-     * @param device Specifies the device to create the swapchain and its corresponding image views.
-     * @param pass Specifies the render-pass from which the framebuffers are created.
-     * @param create_info Specifies the create-info of the swapchain.
-     * @param swapchain Returns the created swapchain handle.
-     * @param fbos Returns all image views created from the swapchain and their associated framebuffers. Note that the
-     * actual image count might be different from the count specified in VkSwapchainCreateInfoKHR::minImageCount.
-     * @return Returns VK_SUCCESS if and only if everything was created successfully.
-     */
-    VkResult create(VkDevice device, VkRenderPass pass, const VkSwapchainCreateInfoKHR& create_info, VkSwapchainKHR& swapchain, unique_handle<SwapchainFramebuffer[]>& fbos);
 }

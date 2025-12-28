@@ -92,9 +92,9 @@ void VkaExample::vulkan_destroy()
 	}
 
 	this->texture.destroy();
-	this->uniform_buffer.destroy();
-	this->index_buffer.destroy();
-	this->vertex_buffer.destroy();
+	this->uniform_buffer = vka::Buffer();
+	this->index_buffer = vka::Buffer();
+	this->vertex_buffer = vka::Buffer();
 	vkFreeCommandBuffers(this->device, this->command_pool, this->swapchain_command_buffers.size(), this->swapchain_command_buffers.data());
 	vkDestroyCommandPool(this->device, this->command_pool, nullptr);
 
@@ -704,7 +704,7 @@ void VkaExample::create_vertex_buffers()
 
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	this->vertex_buffer.create(this->device, this->memory_properties, create_info);
+	this->vertex_buffer = vka::Buffer(this->device, this->memory_properties, create_info);
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->vertex_buffer.copy(cbo.handle(), staging_buffer);
@@ -735,7 +735,7 @@ void VkaExample::create_index_buffers()
 
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	this->index_buffer.create(this->device, this->memory_properties, create_info);
+	this->index_buffer = vka::Buffer(this->device, this->memory_properties, create_info);
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
     this->index_buffer.copy(cbo.handle(), staging_buffer);
@@ -753,7 +753,7 @@ void VkaExample::create_uniform_buffers()
 		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
 		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
 	};
-	this->uniform_buffer.create(this->device, this->memory_properties, create_info);
+	this->uniform_buffer = vka::Buffer(this->device, this->memory_properties, create_info);
 }
 
 void VkaExample::create_textures()

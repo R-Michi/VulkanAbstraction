@@ -37,8 +37,15 @@ set(VKA_FORWARD_FILES
         vka/forward/forward.h
         vka/forward/constants.h
         vka/forward/types.h
-        vka/forward/swapchain/swapchain.h
-        vka/forward/swapchain/swapchain.inl
+)
+
+########################################################################################################################
+##################################################### DETAIL/BUFFER ####################################################
+########################################################################################################################
+
+set(VKA_DETAIL_BUFFER_FILES
+        vka/detail/buffer/buffer.h
+        vka/detail/buffer/buffer.inl
 )
 
 ########################################################################################################################
@@ -143,6 +150,7 @@ set(VKA_DETAIL_MODEL_FILES
 ########################################################################################################################
 
 set(VKA_DETAIL_FILES
+        ${VKA_DETAIL_BUFFER_FILES}
         ${VKA_DETAIL_COMMON_FILES}
         ${VKA_DETAIL_DESCRIPTOR_FILES}
         ${VKA_DETAIL_DEVICE_FILES}
@@ -403,7 +411,7 @@ file(GLOB_RECURSE SHADER_FILES LIST_DIRECTORIES false RELATIVE ${CMAKE_CURRENT_S
 
 # add custom compile command for each shader file
 foreach(SHADER IN ITEMS ${SHADER_FILES})
-    message(STATUS "Found shader file: ${SHADER}")  # print shader file location
+    message(STATUS "[VKA]: Found shader file: ${SHADER}")  # print shader file location
     set(INPUT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}")   # input file path
     set(OUTPUT_SPV "${CMAKE_CURRENT_BINARY_DIR}/${SHADER}.spv") # output file path
     add_custom_command(             # compile command

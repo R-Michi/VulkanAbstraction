@@ -673,3 +673,122 @@ private:
         this->m_count = 0;
     }
 };
+
+
+#if 0
+    template<typename T>
+    struct create_func { static constexpr std::nullptr_t func = nullptr; };
+
+    // core handles
+    template<> struct create_func<VkInstanceCreateInfo>                         { static constexpr auto func = vkCreateInstance;                    };  // parent handle
+    template<> struct create_func<VkInstanceCreateInfo[]>                       { static constexpr auto func = vkCreateInstance;                    };  // parent handle
+    template<> struct create_func<VkDeviceCreateInfo>                           { static constexpr auto func = vkCreateDevice;                      };  // parent handle
+    template<> struct create_func<VkDeviceCreateInfo[]>                         { static constexpr auto func = vkCreateDevice;                      };  // parent handle
+    template<> struct create_func<VkFenceCreateInfo>                            { static constexpr auto func = vkCreateFence;                       };
+    template<> struct create_func<VkFenceCreateInfo[]>                          { static constexpr auto func = vkCreateFence;                       };
+    template<> struct create_func<VkSemaphoreCreateInfo>                        { static constexpr auto func = vkCreateSemaphore;                   };
+    template<> struct create_func<VkSemaphoreCreateInfo[]>                      { static constexpr auto func = vkCreateSemaphore;                   };
+    template<> struct create_func<VkEventCreateInfo>                            { static constexpr auto func = vkCreateEvent;                       };
+    template<> struct create_func<VkEventCreateInfo[]>                          { static constexpr auto func = vkCreateEvent;                       };
+    template<> struct create_func<VkQueryPoolCreateInfo>                        { static constexpr auto func = vkCreateQueryPool;                   };
+    template<> struct create_func<VkQueryPoolCreateInfo[]>                      { static constexpr auto func = vkCreateQueryPool;                   };
+    template<> struct create_func<VkBufferCreateInfo>                           { static constexpr auto func = vkCreateBuffer;                      };
+    template<> struct create_func<VkBufferCreateInfo[]>                         { static constexpr auto func = vkCreateBuffer;                      };
+    template<> struct create_func<VkBufferViewCreateInfo>                       { static constexpr auto func = vkCreateBufferView;                  };
+    template<> struct create_func<VkBufferViewCreateInfo[]>                     { static constexpr auto func = vkCreateBufferView;                  };
+    template<> struct create_func<VkImageCreateInfo>                            { static constexpr auto func = vkCreateImage;                       };
+    template<> struct create_func<VkImageCreateInfo[]>                          { static constexpr auto func = vkCreateImage;                       };
+    template<> struct create_func<VkImageViewCreateInfo>                        { static constexpr auto func = vkCreateImageView;                   };
+    template<> struct create_func<VkImageViewCreateInfo[]>                      { static constexpr auto func = vkCreateImageView;                   };
+    template<> struct create_func<VkShaderModuleCreateInfo>                     { static constexpr auto func = vkCreateShaderModule;                };
+    template<> struct create_func<VkShaderModuleCreateInfo[]>                   { static constexpr auto func = vkCreateShaderModule;                };
+    template<> struct create_func<VkPipelineCacheCreateInfo>                    { static constexpr auto func = vkCreatePipelineCache;               };
+    template<> struct create_func<VkPipelineCacheCreateInfo[]>                  { static constexpr auto func = vkCreatePipelineCache;               };
+    template<> struct create_func<VkGraphicsPipelineCreateInfo>                 { static constexpr auto func = vkCreateGraphicsPipelines;           }; // special handling (pipeline)
+    template<> struct create_func<VkGraphicsPipelineCreateInfo[]>               { static constexpr auto func = vkCreateGraphicsPipelines;           }; // special handling (pipeline)
+    template<> struct create_func<VkComputePipelineCreateInfo>                  { static constexpr auto func = vkCreateComputePipelines;            }; // special handling (pipeline)
+    template<> struct create_func<VkComputePipelineCreateInfo[]>                { static constexpr auto func = vkCreateComputePipelines;            }; // special handling (pipeline)
+    template<> struct create_func<VkPipelineLayoutCreateInfo>                   { static constexpr auto func = vkCreatePipelineLayout;              };
+    template<> struct create_func<VkPipelineLayoutCreateInfo[]>                 { static constexpr auto func = vkCreatePipelineLayout;              };
+    template<> struct create_func<VkSamplerCreateInfo>                          { static constexpr auto func = vkCreateSampler;                     };
+    template<> struct create_func<VkSamplerCreateInfo[]>                        { static constexpr auto func = vkCreateSampler;                     };
+    template<> struct create_func<VkDescriptorSetLayoutCreateInfo>              { static constexpr auto func = vkCreateDescriptorSetLayout;         };
+    template<> struct create_func<VkDescriptorSetLayoutCreateInfo[]>            { static constexpr auto func = vkCreateDescriptorSetLayout;         };
+    template<> struct create_func<VkDescriptorPoolCreateInfo>                   { static constexpr auto func = vkCreateDescriptorPool;              };
+    template<> struct create_func<VkDescriptorPoolCreateInfo[]>                 { static constexpr auto func = vkCreateDescriptorPool;              };
+    template<> struct create_func<VkFramebufferCreateInfo>                      { static constexpr auto func = vkCreateFramebuffer;                 };
+    template<> struct create_func<VkFramebufferCreateInfo[]>                    { static constexpr auto func = vkCreateFramebuffer;                 };
+    template<> struct create_func<VkRenderPassCreateInfo>                       { static constexpr auto func = vkCreateRenderPass;                  };
+    template<> struct create_func<VkRenderPassCreateInfo[]>                     { static constexpr auto func = vkCreateRenderPass;                  };
+    template<> struct create_func<VkCommandPoolCreateInfo>                      { static constexpr auto func = vkCreateCommandPool;                 };
+    template<> struct create_func<VkCommandPoolCreateInfo[]>                    { static constexpr auto func = vkCreateCommandPool;                 };
+    template<> struct create_func<VkSamplerYcbcrConversionCreateInfo>           { static constexpr auto func = vkCreateSamplerYcbcrConversion;      };
+    template<> struct create_func<VkSamplerYcbcrConversionCreateInfo[]>         { static constexpr auto func = vkCreateSamplerYcbcrConversion;      };
+    template<> struct create_func<VkDescriptorUpdateTemplateCreateInfo>         { static constexpr auto func = vkCreateDescriptorUpdateTemplate;    };
+    template<> struct create_func<VkDescriptorUpdateTemplateCreateInfo[]>       { static constexpr auto func = vkCreateDescriptorUpdateTemplate;    };
+    template<> struct create_func<VkRenderPassCreateInfo2>                      { static constexpr auto func = vkCreateRenderPass2;                 };
+    template<> struct create_func<VkRenderPassCreateInfo2[]>                    { static constexpr auto func = vkCreateRenderPass2;                 };
+    template<> struct create_func<VkPrivateDataSlotCreateInfo>                  { static constexpr auto func = vkCreatePrivateDataSlot;             };
+    template<> struct create_func<VkPrivateDataSlotCreateInfo[]>                { static constexpr auto func = vkCreatePrivateDataSlot;             };
+    template<> struct create_func<VkMemoryAllocateInfo>                         { static constexpr auto func = vkAllocateMemory;                    };
+    template<> struct create_func<VkMemoryAllocateInfo[]>                       { static constexpr auto func = vkAllocateMemory;                    };
+
+    // extension handles
+    template<> struct create_func<VkDisplaySurfaceCreateInfoKHR>                { static constexpr auto func = vkCreateDisplayPlaneSurfaceKHR;      };
+    template<> struct create_func<VkDisplaySurfaceCreateInfoKHR[]>              { static constexpr auto func = vkCreateDisplayPlaneSurfaceKHR;      };
+    template<> struct create_func<VkHeadlessSurfaceCreateInfoEXT>               { static constexpr auto func = vkCreateHeadlessSurfaceEXT;          };
+    template<> struct create_func<VkHeadlessSurfaceCreateInfoEXT[]>             { static constexpr auto func = vkCreateHeadlessSurfaceEXT;          };
+    template<> struct create_func<VkSwapchainCreateInfoKHR>                     { static constexpr auto func = vkCreateSwapchainKHR;                }; // special handling for vkCreateSharedSwapchainsKHR
+    template<> struct create_func<VkSwapchainCreateInfoKHR[]>                   { static constexpr auto func = vkCreateSwapchainKHR;                }; // special handling for vkCreateSharedSwapchainsKHR
+    template<> struct create_func<VkVideoSessionCreateInfoKHR>                  { static constexpr auto func = vkCreateVideoSessionKHR;             };
+    template<> struct create_func<VkVideoSessionCreateInfoKHR[]>                { static constexpr auto func = vkCreateVideoSessionKHR;             };
+    template<> struct create_func<VkVideoSessionParametersCreateInfoKHR>        { static constexpr auto func = vkCreateVideoSessionParametersKHR;   };
+    template<> struct create_func<VkVideoSessionParametersCreateInfoKHR[]>      { static constexpr auto func = vkCreateVideoSessionParametersKHR;   };
+    template<> struct create_func<VkAllocationCallbacks>                        { static constexpr auto func = vkCreateDeferredOperationKHR;        }; // special handling (has no create-info)
+    template<> struct create_func<VkAllocationCallbacks[]>                      { static constexpr auto func = vkCreateDeferredOperationKHR;        }; // special handling (has no create-info)
+    template<> struct create_func<VkPipelineBinaryCreateInfoKHR>                { static constexpr auto func = vkCreatePipelineBinariesKHR;         };
+    template<> struct create_func<VkPipelineBinaryCreateInfoKHR[]>              { static constexpr auto func = vkCreatePipelineBinariesKHR;         };
+    template<> struct create_func<VkDebugReportCallbackCreateInfoEXT>           { static constexpr auto func = vkCreateDebugReportCallbackEXT;      };
+    template<> struct create_func<VkDebugReportCallbackCreateInfoEXT[]>         { static constexpr auto func = vkCreateDebugReportCallbackEXT;      };
+    template<> struct create_func<VkCuModuleCreateInfoNVX>                      { static constexpr auto func = vkCreateCuModuleNVX;                 };
+    template<> struct create_func<VkCuModuleCreateInfoNVX[]>                    { static constexpr auto func = vkCreateCuModuleNVX;                 };
+    template<> struct create_func<VkCuFunctionCreateInfoNVX>                    { static constexpr auto func = vkCreateCuFunctionNVX;               };
+    template<> struct create_func<VkCuFunctionCreateInfoNVX[]>                  { static constexpr auto func = vkCreateCuFunctionNVX;               };
+    template<> struct create_func<VkDebugUtilsMessengerCreateInfoEXT>           { static constexpr auto func = vkCreateDebugUtilsMessengerEXT;      };
+    template<> struct create_func<VkDebugUtilsMessengerCreateInfoEXT[]>         { static constexpr auto func = vkCreateDebugUtilsMessengerEXT;      };
+    template<> struct create_func<VkValidationCacheCreateInfoEXT>               { static constexpr auto func = vkCreateValidationCacheEXT;          };
+    template<> struct create_func<VkValidationCacheCreateInfoEXT[]>             { static constexpr auto func = vkCreateValidationCacheEXT;          };
+    template<> struct create_func<VkAccelerationStructureCreateInfoNV>          { static constexpr auto func = vkCreateAccelerationStructureNV;     };
+    template<> struct create_func<VkAccelerationStructureCreateInfoNV[]>        { static constexpr auto func = vkCreateAccelerationStructureNV;     };
+    template<> struct create_func<VkRayTracingPipelineCreateInfoNV>             { static constexpr auto func = vkCreateRayTracingPipelinesNV;       }; // special handling (pipeline)
+    template<> struct create_func<VkRayTracingPipelineCreateInfoNV[]>           { static constexpr auto func = vkCreateRayTracingPipelinesNV;       }; // special handling (pipeline)
+    template<> struct create_func<VkIndirectCommandsLayoutCreateInfoNV>         { static constexpr auto func = vkCreateIndirectCommandsLayoutNV;    };
+    template<> struct create_func<VkIndirectCommandsLayoutCreateInfoNV[]>       { static constexpr auto func = vkCreateIndirectCommandsLayoutNV;    };
+    template<> struct create_func<VkMicromapCreateInfoEXT>                      { static constexpr auto func = vkCreateMicromapEXT;                 };
+    template<> struct create_func<VkMicromapCreateInfoEXT[]>                    { static constexpr auto func = vkCreateMicromapEXT;                 };
+    template<> struct create_func<VkTensorCreateInfoARM>                        { static constexpr auto func = vkCreateTensorARM;                   };
+    template<> struct create_func<VkTensorCreateInfoARM[]>                      { static constexpr auto func = vkCreateTensorARM;                   };
+    template<> struct create_func<VkTensorViewCreateInfoARM>                    { static constexpr auto func = vkCreateTensorViewARM;               };
+    template<> struct create_func<VkTensorViewCreateInfoARM[]>                  { static constexpr auto func = vkCreateTensorViewARM;               };
+    template<> struct create_func<VkOpticalFlowSessionCreateInfoNV>             { static constexpr auto func = vkCreateOpticalFlowSessionNV;        };
+    template<> struct create_func<VkOpticalFlowSessionCreateInfoNV[]>           { static constexpr auto func = vkCreateOpticalFlowSessionNV;        };
+    template<> struct create_func<VkShaderCreateInfoEXT>                        { static constexpr auto func = vkCreateShadersEXT;                  }; // special handling (has count)
+    template<> struct create_func<VkShaderCreateInfoEXT[]>                      { static constexpr auto func = vkCreateShadersEXT;                  }; // special handling (has count)
+    template<> struct create_func<VkDataGraphPipelineCreateInfoARM>             { static constexpr auto func = vkCreateDataGraphPipelinesARM;       }; // special handling (pipeline)
+    template<> struct create_func<VkDataGraphPipelineCreateInfoARM[]>           { static constexpr auto func = vkCreateDataGraphPipelinesARM;       }; // special handling (pipeline)
+    template<> struct create_func<VkDataGraphPipelineSessionCreateInfoARM>      { static constexpr auto func = vkCreateDataGraphPipelineSessionARM; };
+    template<> struct create_func<VkDataGraphPipelineSessionCreateInfoARM[]>    { static constexpr auto func = vkCreateDataGraphPipelineSessionARM; };
+    template<> struct create_func<VkExternalComputeQueueNV>                     { static constexpr auto func = vkCreateExternalComputeQueueNV;      };
+    template<> struct create_func<VkExternalComputeQueueNV[]>                   { static constexpr auto func = vkCreateExternalComputeQueueNV;      };
+    template<> struct create_func<VkIndirectCommandsLayoutCreateInfoEXT>        { static constexpr auto func = vkCreateIndirectCommandsLayoutEXT;   };
+    template<> struct create_func<VkIndirectCommandsLayoutCreateInfoEXT[]>      { static constexpr auto func = vkCreateIndirectCommandsLayoutEXT;   };
+    template<> struct create_func<VkIndirectExecutionSetEXT>                    { static constexpr auto func = vkCreateIndirectExecutionSetEXT;     };
+    template<> struct create_func<VkIndirectExecutionSetEXT[]>                  { static constexpr auto func = vkCreateIndirectExecutionSetEXT;     };
+    template<> struct create_func<VkAccelerationStructureCreateInfoKHR>         { static constexpr auto func = vkCreateAccelerationStructureKHR;    };
+    template<> struct create_func<VkAccelerationStructureCreateInfoKHR[]>       { static constexpr auto func = vkCreateAccelerationStructureKHR;    };
+    template<> struct create_func<VkRayTracingPipelineCreateInfoKHR>            { static constexpr auto func = vkCreateRayTracingPipelinesKHR;      }; // special handling (pipeline)
+    template<> struct create_func<VkRayTracingPipelineCreateInfoKHR[]>          { static constexpr auto func = vkCreateRayTracingPipelinesKHR;      }; // special handling (pipeline)
+
+    template<typename T>
+    constexpr auto create_f = create_func<T>::func;
+#endif

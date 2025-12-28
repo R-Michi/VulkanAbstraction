@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "handle/handle.h"
+#include "buffer/buffer.inl"
 #include "common/common.inl"
 #include "device/device.h"
 #include "error/error.inl"
@@ -18,6 +18,7 @@
 #include "queue/queue.inl"
 #include "texture/texture.h"
 #include "descriptor/descriptor.inl"
+#include "handle/handle.h"
 
 #ifdef VKA_MODEL_LOADING_ENABLE
     #include "model/vka_model.h"
