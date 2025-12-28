@@ -43,6 +43,26 @@ constexpr vka::Buffer::operator bool() const noexcept
     return (bool)this->m_buffer;
 }
 
+constexpr VkDeviceSize vka::Buffer::size() const noexcept
+{
+    return this->m_size;
+}
+
+constexpr VkBuffer vka::Buffer::handle() const noexcept
+{
+    return this->m_buffer.get().buffer;
+}
+
+inline VkDeviceAddress vka::Buffer::device_address() const noexcept
+{
+    const VkBufferDeviceAddressInfo info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+        .pNext = nullptr,
+        .buffer = this->m_buffer.get().buffer
+    };
+    return vkGetBufferDeviceAddress(this->m_buffer.parent(), &info);
+}
+
 inline void* vka::Buffer::map()
 {
     return this->map(0, this->m_size);
@@ -85,14 +105,4 @@ inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, con
     if (region.size == 0)
         final_region.size = src.size() - region.srcOffset;
     vkCmdCopyBuffer(cbo, src.m_buffer.get().buffer, this->m_buffer.get().buffer, 1, &final_region);
-}
-
-constexpr VkDeviceSize vka::Buffer::size() const noexcept
-{
-    return this->m_size;
-}
-
-constexpr VkBuffer vka::Buffer::handle() const noexcept
-{
-    return this->m_buffer.get().buffer;
 }

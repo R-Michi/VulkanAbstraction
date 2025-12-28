@@ -39,6 +39,15 @@ namespace vka
         /// Returns true if the buffer is valid.
         constexpr explicit operator bool() const noexcept;
 
+        /// @return Returns the allocated size in bytes.
+        constexpr VkDeviceSize size() const noexcept;
+
+        /// @return Returns the vulkan VkBuffer handle.
+        constexpr VkBuffer handle() const noexcept;
+
+        /// @return Returns the device address of the buffer.
+        inline VkDeviceAddress device_address() const noexcept;
+
         /**
          * Maps the memory of the whole buffer.
          * @return Returns a pointer to the memory of the mapped buffer. The returned pointer is not nullptr.
@@ -74,12 +83,6 @@ namespace vka
          * @param region Specifies the region of the buffer to copy.
          */
         inline void copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept;
-
-        /// @return Returns the allocated size in bytes.
-        constexpr VkDeviceSize size() const noexcept;
-
-        /// @return Returns the vulkan VkBuffer handle.
-        constexpr VkBuffer handle() const noexcept;
 
         // deleted
         Buffer(const Buffer&) = delete;
