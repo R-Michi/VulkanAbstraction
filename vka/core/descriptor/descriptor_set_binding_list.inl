@@ -48,5 +48,5 @@ inline void vka::DescriptorSetBindingList<S>::push(uint32_t set, VkDescriptorTyp
 template<uint32_t S>
 inline vka::DescriptorLayoutArray<S> vka::DescriptorSetBindingList<S>::create_layouts(VkDevice device, VkDescriptorSetLayoutCreateFlags flags) const
 {
-    return DecriptorLayoutArray<S>(device, *this, flags);
+    return DescriptorLayoutArray<S>(device, *this, flags);
 }

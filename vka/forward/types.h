@@ -86,14 +86,14 @@ namespace vka
     // see documentation of VkBufferCreateInfo and VkMemoryAllocateInfo
     struct BufferCreateInfo
     {
-        void*                   pBufferNext;
+        const void*             pBufferNext;
         VkBufferCreateFlags     bufferFlags;
         VkDeviceSize            bufferSize;
         VkBufferUsageFlags      bufferUsage;
         VkSharingMode           bufferSharingMode;
         uint32_t                bufferQueueFamilyIndexCount;
         const uint32_t*         bufferQueueFamilyIndices;
-        void*                   pMemoryNext;
+        const void*             pMemoryNext;
         VkMemoryPropertyFlags   memoryPropertyFlags;
     };
 
