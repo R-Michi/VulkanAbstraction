@@ -10,7 +10,7 @@
 
 #include "push_constant_class.h"
 
-inline vka::PushConstantView::PushConstantView(const VkPushConstantRange& range, void* data) noexcept :
+inline vka::PushConstantView::PushConstantView(VkPushConstantRange range, void* data) noexcept :
     m_range(range),
     m_data(detail::common::add_vp(data, range.offset))
 {}
@@ -44,7 +44,7 @@ inline const void* vka::PushConstantView::data() const noexcept
 inline void vka::PushConstantView::write(uint32_t offset, uint32_t size, const void* data)
 {
     detail::error::check_range(offset, size, this->m_range.size, MSG_INVALID_RANGE);
-    memcpy(detail::common::add_vp(this->m_data, offset), data, size);
+    memcpy(this->m_data, data, size);
 }
 
 inline void vka::PushConstantView::push(VkCommandBuffer cbo, VkPipelineLayout layout) const noexcept

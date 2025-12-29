@@ -11,16 +11,31 @@
 #include "push_constant_class.h"
 
 template<uint32_t N>
-constexpr vka::PushConstantLayout<N>::PushConstantLayout(uint32_t size) noexcept :
-    m_ranges{}, m_total_size(0), m_max_size(size), m_idx(0)
+constexpr vka::PushConstantLayout<N>::PushConstantLayout() noexcept :
+    m_ranges{},
+    m_total_size(0),
+    m_max_size(MIN_SIZE),
+    m_idx(0)
 {}
 
 template<uint32_t N>
-constexpr void vka::PushConstantLayout<N>::init(uint32_t size) noexcept
+constexpr vka::PushConstantLayout<N>::PushConstantLayout(uint32_t size) noexcept :
+    m_ranges{},
+    m_total_size(0),
+    m_max_size(size),
+    m_idx(0)
+{}
+
+template<uint32_t N>
+constexpr uint32_t vka::PushConstantLayout<N>::size() const noexcept
 {
-    // can only be modified if no ranges have been added yet
-    if (this->m_idx == 0)
-        this->m_max_size = size;
+    return this->m_total_size;
+}
+
+template<uint32_t N>
+constexpr std::array<VkPushConstantRange, N> vka::PushConstantLayout<N>::ranges() const noexcept
+{
+    return this->m_ranges;
 }
 
 template<uint32_t N>
@@ -45,46 +60,17 @@ constexpr void vka::PushConstantLayout<N>::add(uint32_t size, VkShaderStageFlags
     this->m_total_size += size;
 }
 
-// ReSharper disable once CppRedundantInlineSpecifier
-template<uint32_t N>
-inline vka::PushConstants<N> vka::PushConstantLayout<N>::create_push_constants()
-{
-    return PushConstants<N>(*this);
-}
-
-template<uint32_t N>
-constexpr uint32_t vka::PushConstantLayout<N>::count() noexcept
-{
-    return N;
-}
-
-template<uint32_t N>
-constexpr uint32_t vka::PushConstantLayout<N>::size() const noexcept
-{
-    return this->m_total_size;
-}
-
-template<uint32_t N>
-constexpr const VkPushConstantRange* vka::PushConstantLayout<N>::ranges() const noexcept
-{
-    return this->m_ranges.data();
-}
-
-template<uint32_t N>
-constexpr VkPushConstantRange vka::PushConstantLayout<N>::at(uint32_t idx) const
-{
-    return this->m_ranges.at(idx);
-}
-
-template<uint32_t N>
-constexpr VkPushConstantRange vka::PushConstantLayout<N>::operator[] (uint32_t idx) const noexcept
-{
-    return this->m_ranges[idx];
-}
-
 template<uint32_t N>
 constexpr void vka::PushConstantLayout<N>::validate() const
 {
     if (this->m_idx < N) [[unlikely]]
         detail::error::throw_runtime_error(MSG_UNUSED);
+}
+
+
+// ReSharper disable once CppRedundantInlineSpecifier
+template<uint32_t N>
+inline vka::PushConstants<N> vka::PushConstantLayout<N>::create_push_constants()
+{
+    return PushConstants<N>(*this);
 }

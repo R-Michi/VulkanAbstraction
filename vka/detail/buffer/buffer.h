@@ -7,7 +7,7 @@ namespace vka::detail::buffer
         VkBuffer buffer;
         VkDeviceMemory memory;
 
-        constexpr explicit operator bool() const { return memory != VK_NULL_HANDLE; }
+        explicit constexpr operator bool() const { return memory != VK_NULL_HANDLE; }
     };
 
     /// Destroys the buffer and frees the memory.

@@ -23,7 +23,7 @@ namespace vka::detail::common
      * @return Returns the corresponding format-feature bit.
      */
     constexpr VkFormatFeatureFlagBits iu2ff_bit(VkImageUsageFlagBits image_usage) noexcept;
-
+    
     /**
      * @brief Adds an offset to a void-pointer.
      * @param p Specifies the void-pointer.
@@ -31,4 +31,5 @@ namespace vka::detail::common
      * @return Returns 'p + x'.
      */
     inline void* add_vp(void* p, uintptr_t x) noexcept;
+    inline const void* add_cvp(const void* p, uintptr_t x) noexcept;
 } // namespace vka::detail::common

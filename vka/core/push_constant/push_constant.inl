@@ -12,69 +12,58 @@
 #include "push_constant_class.h"
 
 template<uint32_t N>
-inline vka::PushConstants<N>::PushConstants() noexcept :
-    m_layout(nullptr)
+constexpr vka::PushConstants<N>::PushConstants() noexcept :
+    m_ranges{}
 {}
 
 template<uint32_t N>
 inline vka::PushConstants<N>::PushConstants(const PushConstantLayout<N>& layout) :
-    m_layout(&layout),
+    m_ranges(layout.ranges()),
     m_buff(layout.size())
 {}
 
 template<uint32_t N>
-inline vka::PushConstants<N>::PushConstants(PushConstants&& src) noexcept :
-    m_layout(src.m_layout),
-    m_buff(std::move(src.m_buff))
-{}
-
-template<uint32_t N>
-inline vka::PushConstants<N>& vka::PushConstants<N>::operator= (PushConstants&& src) noexcept
+constexpr vka::PushConstants<N>::operator bool() const noexcept
 {
-    this->m_layout = src.m_layout;
-    this->m_buff = std::move(src.m_buff);
-    return *this;
+    return !this->m_buff.empty();
 }
 
 template<uint32_t N>
-inline void vka::PushConstants<N>::create(const PushConstantLayout<N>& layout)
+inline vka::PushConstantView vka::PushConstants<N>::operator[] (uint32_t idx) noexcept
 {
-    if (this->m_buff.empty())
-    {
-        this->m_layout = &layout;
-        this->m_buff.allocate(layout.size());
-    }
+    return PushConstantView(this->m_ranges[idx], this->m_buff.data());
 }
 
 template<uint32_t N>
-inline void vka::PushConstants<N>::destroy() noexcept
+inline vka::PushConstantView vka::PushConstants<N>::at(uint32_t idx)
 {
-    this->m_buff.free();
+    if (this->m_buff.empty()) [[unlikely]]
+        detail::error::throw_runtime_error(MSG_ACCESS);
+    return PushConstantView(this->m_ranges.at(idx), this->m_buff.data());
+}
+
+template<uint32_t N>
+constexpr uint32_t vka::PushConstants<N>::count() noexcept
+{
+    return N;
+}
+
+template<uint32_t N>
+constexpr uint32_t vka::PushConstants<N>::size() const noexcept
+{
+    return this->m_buff.size();
+}
+
+template<uint32_t N>
+constexpr const VkPushConstantRange* vka::PushConstants<N>::ranges() const noexcept
+{
+    return this->m_ranges.data();
 }
 
 template<uint32_t N>
 inline void vka::PushConstants<N>::push(VkCommandBuffer cbo, VkPipelineLayout layout) const noexcept
 {
-    for (uint32_t i = 0; i < N; i++)
-        vkCmdPushConstants(cbo, layout, *(this->m_layout)[i].stageFlags, *(this->m_layout)[i].offset, *(this->m_layout)[i].size);
+    for (uint32_t i = 0; !this->m_buff.empty() && i < N; i++)
+        PushConstantView(this->m_ranges[i], this->m_buff.data()).push(cbo, layout);
 }
 
-template<uint32_t N>
-inline vka::PushConstantView vka::PushConstants<N>::at(uint32_t idx) const
-{
-    if (this->m_buff.empty()) [[unlikely]]
-        detail::error::throw_runtime_error(MSG_ACCESS);
-    return PushConstantView(this->m_layout->at(idx), this->m_buff.data());
-}
-
-template<uint32_t N>
-inline vka::PushConstantView vka::PushConstants<N>::operator[] (uint32_t idx) const noexcept
-{
-    return PushConstantView(*(this->m_layout)[idx], this->m_buff.data());
-}
-
-template<uint32_t N>
-inline bool vka::PushConstants<N>::is_valid() const noexcept
-{
-    return !this->m_buff.empty();
-}

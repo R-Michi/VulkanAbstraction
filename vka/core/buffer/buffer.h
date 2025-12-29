@@ -37,7 +37,7 @@ namespace vka
         constexpr Buffer& operator= (Buffer&& src) noexcept;
 
         /// Returns true if the buffer is valid.
-        constexpr explicit operator bool() const noexcept;
+        explicit constexpr operator bool() const noexcept;
 
         /// @return Returns the allocated size in bytes.
         constexpr VkDeviceSize size() const noexcept;
