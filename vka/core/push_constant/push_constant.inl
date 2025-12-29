@@ -64,6 +64,9 @@ template<uint32_t N>
 inline void vka::PushConstants<N>::push(VkCommandBuffer cbo, VkPipelineLayout layout) const noexcept
 {
     for (uint32_t i = 0; !this->m_buff.empty() && i < N; i++)
-        PushConstantView(this->m_ranges[i], this->m_buff.data()).push(cbo, layout);
+    {
+        const void* ptr = detail::common::add_cvp(this->m_buff.data(), this->m_ranges[i].offset);
+        vkCmdPushConstants(cbo, layout, this->m_ranges[i].stageFlags, this->m_ranges[i].offset, this->m_ranges[i].size, ptr);
+    }
 }
 
