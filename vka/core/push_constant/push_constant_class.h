@@ -90,14 +90,20 @@ namespace vka
          */
         explicit constexpr PushConstantLayout(uint32_t size) noexcept;
 
+        /// @return Returns the number of push constant ranges.
+        static constexpr uint32_t count() noexcept;
+
         /**
          * This is the size of memory a PushConstant object will allocate.
          * @return Returns the total size of all ranges combined.
          */
         constexpr uint32_t size() const noexcept;
 
-        /// @returns Returns the push constant ranges.
-        constexpr std::array<VkPushConstantRange, N> ranges() const noexcept;
+        /// @return Returns the push constant ranges.
+        constexpr const VkPushConstantRange* ranges() const noexcept;
+
+        /// @returns Returns the std::array of push constant ranges.
+        constexpr std::array<VkPushConstantRange, N> ranges_array() const noexcept;
 
         /**
          * Adds a push constant range to the layout.

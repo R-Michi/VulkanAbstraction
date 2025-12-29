@@ -27,13 +27,25 @@ constexpr vka::PushConstantLayout<N>::PushConstantLayout(uint32_t size) noexcept
 {}
 
 template<uint32_t N>
+constexpr uint32_t vka::PushConstantLayout<N>::count() noexcept
+{
+    return N;
+}
+
+template<uint32_t N>
 constexpr uint32_t vka::PushConstantLayout<N>::size() const noexcept
 {
     return this->m_total_size;
 }
 
 template<uint32_t N>
-constexpr std::array<VkPushConstantRange, N> vka::PushConstantLayout<N>::ranges() const noexcept
+constexpr const VkPushConstantRange* vka::PushConstantLayout<N>::ranges() const noexcept
+{
+    return this->m_ranges.data();
+}
+
+template<uint32_t N>
+constexpr std::array<VkPushConstantRange, N> vka::PushConstantLayout<N>::ranges_array() const noexcept
 {
     return this->m_ranges;
 }

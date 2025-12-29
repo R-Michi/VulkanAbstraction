@@ -18,7 +18,7 @@ constexpr vka::PushConstants<N>::PushConstants() noexcept :
 
 template<uint32_t N>
 inline vka::PushConstants<N>::PushConstants(const PushConstantLayout<N>& layout) :
-    m_ranges(layout.ranges()),
+    m_ranges(layout.ranges_array()),
     m_buff(layout.size())
 {}
 
