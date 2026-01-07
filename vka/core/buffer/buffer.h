@@ -10,9 +10,11 @@
 
 namespace vka
 {
+    /// Simplifies creating buffers in vulkan.
     class Buffer
     {
-        using BufferMemory = detail::buffer::Handle;
+        using BufferHandle = detail::buffer::Handle;
+
     public:
         /// Default initialization = empty buffer.
         constexpr Buffer() noexcept;
@@ -25,18 +27,24 @@ namespace vka
          * @throw std::runtime_error Is thrown, if creating the buffer, allocating the memory or binding the memory
          * failed.
          */
-        explicit Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
+        explicit inline Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
-        /// Moves a buffer object. A currently held buffer is destroyed.
+        /**
+         * Moves a buffer object. A currently valid buffer is destroyed. DO NOT use the source buffer after a move! This
+         * may lead to unexpected or even undefined behavior.
+         */
         constexpr Buffer(Buffer&& src) noexcept;
 
         /// Unmaps the memory if mapped.
         constexpr ~Buffer();
 
-        /// Moves a buffer object. A currently held buffer is destroyed.
+        /**
+         * Moves a buffer object. A currently valid buffer is destroyed. DO NOT use the source buffer after a move! This
+         * may lead to unexpected or even undefined behavior.
+         */
         constexpr Buffer& operator= (Buffer&& src) noexcept;
 
-        /// Returns true if the buffer is valid.
+        /// @return Returns true whether the buffer is valid.
         explicit constexpr operator bool() const noexcept;
 
         /// @return Returns the allocated size in bytes.
@@ -44,6 +52,9 @@ namespace vka
 
         /// @return Returns the vulkan VkBuffer handle.
         constexpr VkBuffer handle() const noexcept;
+
+        /// @return Reruns the parent handle.
+        constexpr VkDevice parent() const noexcept;
 
         /// @return Returns the device address of the buffer.
         inline VkDeviceAddress device_address() const noexcept;
@@ -70,7 +81,7 @@ namespace vka
         /**
          * Records the commands to copy the whole buffer.\n
          * For correct usage see the vulkan documentation of vkCmdCopyBuffer.
-         * @param cbo Specifies a valid command buffer in which the copy command is recorded.
+         * @param cbo Specifies the command buffer in which the copy command is recorded.
          * @param src Specifies the buffer to copy.
          */
         inline void copy(VkCommandBuffer cbo, const Buffer& src) noexcept;
@@ -78,7 +89,7 @@ namespace vka
         /**
          * Records the commands to copy a specific region of the buffer.\n
          * For correct usage see the vulkan documentation of vkCmdCopyBuffer.
-         * @param cbo Specifies a valid command buffer in which the copy command is recorded.
+         * @param cbo Specifies the command buffer in which the copy command is recorded.
          * @param src Specifies the buffer to copy.
          * @param region Specifies the region of the buffer to copy.
          */
@@ -89,12 +100,12 @@ namespace vka
         Buffer& operator= (const Buffer&) = delete;
 
     private:
-        static constexpr char BUFFER_CREATE_FAILED[] = "[vka::Buffer::create]: Failed to create buffer handle.";
-        static constexpr char ALLOC_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to allocate memory.";
-        static constexpr char BIND_MEMORY_FAILED[] = "[vka::Buffer::create]: Failed to bind memory to buffer.";
-        static constexpr char MAP_MEMORY_FAILED[] = "[vka::Buffer::map]: Failed to map memory of buffer";
+        static constexpr const char* BUFFER_CREATE_FAILED = "[vka::Buffer]: Failed to create buffer handle.";
+        static constexpr const char* ALLOC_MEMORY_FAILED = "[vka::Buffer]: Failed to allocate memory.";
+        static constexpr const char* BIND_MEMORY_FAILED = "[vka::Buffer]: Failed to bind memory to buffer.";
+        static constexpr const char* MAP_MEMORY_FAILED = "[vka::Buffer]: Failed to map memory of buffer";
 
-        unique_handle<BufferMemory> m_buffer;
+        unique_handle<BufferHandle> m_buffer;
         VkDeviceSize m_size;
         bool m_map_status;
 
@@ -102,6 +113,6 @@ namespace vka
         constexpr void unmap_memory() const noexcept;
 
         /// Creates the buffer and its associated memory.
-        static BufferMemory create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
+        static BufferHandle create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
     };
 }

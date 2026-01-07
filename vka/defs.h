@@ -5,7 +5,6 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-
 #pragma once
 
 #include <array>
@@ -13,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
+#include <memory>
 
 /// --------------------------------------------------- Requirements ---------------------------------------------------
 
@@ -24,12 +24,12 @@
 /// ------------------------------------------------- Hardware features ------------------------------------------------
 
 /// detects X86 64-bit architecture
-#if defined(__x86_64) || defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__) || defined(_M_X64)
     #define VKA_X86_64
 #endif
 
 /// detects X86 32-bit architecture
-#if defined(i386) || defined(__i386) || defined(__i386__) || defined(_M_IX86)
+#if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
     #define VKA_X86_32
 #endif
 
@@ -38,12 +38,17 @@
     #define VKA_X86
 #endif
 
+/// ---------------------------------------- Hardware feature dependent includes ---------------------------------------
+
+#ifdef VKA_X86
+    #include <x86intrin.h>
+#endif
+
 /// --------------------------------------------------- User defines ---------------------------------------------------
 
 /**
- * @brief USER DEFINE: VKA_INCLUDE_GLFW includes the GLFW library.\n
- * @brief USER DEFINE: VKA_GLFW_ENABLE enables all functions that use the GLFW library. GLFW must be included externally
- * before including vka.h or by defining VKA_INCLUDE_GLFW.
+ * USER DEFINE: VKA_INCLUDE_GLFW includes the GLFW library.\n
+ * USER DEFINE: VKA_GLFW_ENABLE enables all functions that use the GLFW library.
  */
 #if defined(VKA_GLFW_ENABLE) && defined(VKA_INCLUDE_GLFW)
     #include <GLFW/glfw3.h>
@@ -66,7 +71,7 @@
  * @brief USER DEFINE: VKA_STB_IMAGE_LOAD_ENABLE enables texture functions to load images into memory. stb_image.h must
  * be included externally before including vka.h or by defining VKA_INCLUDE_STB_IMAGE.
  */
-#if defined(VKA_STB_IMAGE_LOAD_ENABLE) && defined(VKA_INCLUDE_STB_IMAGE)
+#if defined(VKA_STB_ENABLE) && defined(VKA_INCLUDE_STB)
     #ifdef __clang__
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wempty-body"

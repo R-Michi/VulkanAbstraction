@@ -177,6 +177,7 @@ namespace vka::detail::handle
 
     // custom handles
     template<> struct destroy_func<buffer::Handle>                  { static constexpr auto func = buffer::destroy;                         };
+    template<> struct destroy_func<texture::Handle>                 { static constexpr auto func = texture::destroy;                        };
 
     template<typename T>
     constexpr auto destroy_f = destroy_func<T>::func;

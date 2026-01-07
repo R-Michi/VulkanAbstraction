@@ -125,7 +125,7 @@ namespace vka::detail::format
     };
 }
 
-constexpr size_t vka::detail::format::format_lut_offset(VkFormat format)
+constexpr uint32_t vka::detail::format::format_lut_offset(VkFormat format)
 {
     const uint32_t i_format = static_cast<uint32_t>(format);
 
@@ -142,4 +142,26 @@ constexpr size_t vka::detail::format::format_lut_offset(VkFormat format)
 
     // if (i_format <= 184)
     return 0;
+}
+
+constexpr size_t vka::detail::format::format_sizeof(VkFormat format) noexcept
+{
+    return SIZE_LOOKUP[static_cast<uint32_t>(format) - format_lut_offset(format)];
+}
+
+constexpr size_t vka::detail::format::format_sizeof10(VkFormat format) noexcept
+{
+    const uint32_t i_format = static_cast<uint32_t>(format);
+    return i_format <= 184 ? SIZE_LOOKUP[i_format] : NSIZE;
+}
+
+constexpr size_t vka::detail::format::format_countof(VkFormat format) noexcept
+{
+    return COUNT_LOOKUP[static_cast<uint32_t>(format) - format_lut_offset(format)];
+}
+
+constexpr size_t vka::detail::format::format_countof10(VkFormat format) noexcept
+{
+    const uint32_t i_format = static_cast<uint32_t>(format);
+    return i_format <= 184 ? COUNT_LOOKUP[i_format] : NSIZE;
 }

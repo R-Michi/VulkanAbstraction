@@ -11,25 +11,12 @@
 
 #pragma once
 
-#ifdef __clang__
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wempty-body"
-    #pragma clang diagnostic ignored "-Wparentheses-equality"
-		#include <stb_image.h>
-#pragma clang diagnostic pop
-#else
-	#include <stb_image.h>
-#endif
-
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
 
-#define VKA_INCLUDE_GLFW
 #define VKA_INCLUDE_TINYOBJ
-#define VKA_GLFW_ENABLE
 #define VKA_MODEL_LOADING_ENABLE
-#define VKA_STB_IMAGE_LOAD_ENABLE
 
 #include <vka/vka.h>
 

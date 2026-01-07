@@ -9,12 +9,6 @@
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
-/**
- * @brief Checks if one combination of memory property flags is supported.
- * @param properties Specifies the memory properties.
- * @param flags Specifies the required flags.
- * @return Returns true if the flags are supported.
- */
 static bool has_memory_property(const VkPhysicalDeviceMemoryProperties& properties, VkMemoryPropertyFlags flags) noexcept
 {
     for (uint32_t i = 0; i < properties.memoryTypeCount; i++)
@@ -25,13 +19,6 @@ static bool has_memory_property(const VkPhysicalDeviceMemoryProperties& properti
     return false;
 }
 
-/**
- * @brief Checks if one combination of queue flags is supported.
- * @param properties Specifies the queue family properties.
- * @param queue_family_count Specifies the number of properties.
- * @param flags Specifies the required flags.
- * @return Returns true if the flags are supported.
- */
 static bool has_queue_flag(const VkQueueFamilyProperties* properties, uint32_t queue_family_count, VkQueueFlags flags) noexcept
 {
     for (uint32_t i = 0; i < queue_family_count; i++)

@@ -97,34 +97,6 @@ namespace vka
         VkMemoryPropertyFlags   memoryPropertyFlags;
     };
 
-    // see documentation of VkImageCreateInfo and VkSamplerCreateInfo
-    struct TextureCreateInfo
-    {
-        VkImageCreateFlags      imageFlags;
-        VkImageType             imageType;
-        VkFormat                imageFormat;
-        VkExtent3D              imageExtent;
-        uint32_t                imageArrayLayers;
-        uint32_t                imageQueueFamilyIndexCount;
-        const uint32_t*         imageQueueFamilyIndices;
-        VkFilter                samplerMagFilter;
-        VkFilter                samplerMinFilter;
-        VkSamplerMipmapMode     samplerMipmapMode;
-        VkSamplerAddressMode    samplerAddressModeU;
-        VkSamplerAddressMode    samplerAddressModeV;
-        VkSamplerAddressMode    samplerAddressModeW;
-        float                   samplerLodBias;
-        uint32_t                samplerAnisotropyEnable;
-        float                   samplerMaxAnisotropy;
-        uint32_t                samplerCompareEnable;
-        VkCompareOp             samplerCompareOp;
-        float                   samplerMinLod;
-        float                   samplerMaxLod;
-        VkBorderColor           samplerBorderColor;
-        uint32_t                samplerUnnormalizedCoordinates;
-        bool                    generateMipMap;
-    };
-
     // image view create-info for texture, see documentation of VkImageViewCreateInfo
     struct TextureViewCreateInfo
     {
@@ -134,5 +106,49 @@ namespace vka
         VkComponentMapping      components;
         uint32_t                baseArrayLayer;
         uint32_t                layerCount;
+    };
+
+    // see documentation of VkImageCreateInfo and VkSamplerCreateInfo
+    struct TextureCreateInfo
+    {
+        VkImageCreateFlags              imageFlags;
+        VkImageType                     imageType;
+        VkFormat                        imageFormat;
+        VkExtent3D                      imageExtent;
+        uint32_t                        imageArrayLayers;
+        uint32_t                        imageQueueFamilyIndexCount;
+        const uint32_t*                 imageQueueFamilyIndices;
+        VkFilter                        samplerMagFilter;
+        VkFilter                        samplerMinFilter;
+        VkSamplerMipmapMode             samplerMipmapMode;
+        VkSamplerAddressMode            samplerAddressModeU;
+        VkSamplerAddressMode            samplerAddressModeV;
+        VkSamplerAddressMode            samplerAddressModeW;
+        float                           samplerLodBias;
+        uint32_t                        samplerAnisotropyEnable;
+        float                           samplerMaxAnisotropy;
+        uint32_t                        samplerCompareEnable;
+        VkCompareOp                     samplerCompareOp;
+        float                           samplerMinLod;
+        float                           samplerMaxLod;
+        VkBorderColor                   samplerBorderColor;
+        uint32_t                        samplerUnnormalizedCoordinates;
+        uint32_t                        viewCount;
+        const TextureViewCreateInfo*    views;
+        bool                            generateMipMap;
+        VkCommandBuffer                 commandBuffer;
+    };
+
+    /**
+     * Contains information for staging buffers of texture loaders.
+     * - <c>queueFamilyIndex</c>: Specifies the queue family of the staging buffer.
+     * - <c>memoryPropertyFlags</c>: Specify memory property flags that are mappable.
+     * - <c>memoryProperties</c>: Specifies the memory properties of the used device.
+     */
+    struct TextureLoadInfo
+    {
+        uint32_t                                queueFamilyIndex;
+        VkMemoryPropertyFlags                   memoryPropertyFlags;
+        const VkPhysicalDeviceMemoryProperties* memoryProperties;
     };
 }

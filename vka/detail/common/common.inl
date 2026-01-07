@@ -63,12 +63,46 @@ constexpr VkFormatFeatureFlagBits vka::detail::common::iu2ff_bit(VkImageUsageFla
     return static_cast<VkFormatFeatureFlagBits>(0);
 }
 
-inline void* vka::detail::common::add_vp(void* p, uintptr_t x) noexcept
+constexpr void* vka::detail::common::add_vp(void* p, uintptr_t x) noexcept
 {
     return static_cast<char*>(p) + x;
 }
 
-inline const void* vka::detail::common::add_cvp(const void* p, uintptr_t x) noexcept
+constexpr const void* vka::detail::common::add_cvp(const void* p, uintptr_t x) noexcept
 {
     return static_cast<const char*>(p) + x;
+}
+
+constexpr bool vka::detail::common::cmpeq_extent(VkExtent2D a, VkExtent2D b) noexcept
+{
+    return a.width == b.width && a.height == b.height;
+}
+
+constexpr bool vka::detail::common::cmpeq_extent(VkExtent3D a, VkExtent3D b) noexcept
+{
+    return a.width == b.width && a.height == b.height && a.depth == b.depth;
+}
+
+inline uint32_t vka::detail::common::ilog2(uint32_t x) noexcept
+{
+#ifdef VKA_X86
+    unsigned long y;    // BSF instruction finds the last '1' bit, and its position is the log2(x) of an integer value.
+    return _BitScanReverse(&y, x) == 0 ? 0xFFFFFFFF : y;
+#else
+    uint32_t bit = 0xFFFFFFFF;
+    while (x > 0)
+    {
+        x >>= 1;    // logic right shift, shifts in zeros
+        ++bit;
+    }
+    return bit;
+#endif
+}
+
+inline uint32_t vka::detail::common::max_ilog2(VkExtent3D extent) noexcept
+{
+    // find maximum of the 3 struct-components
+    uint32_t m = extent.width > extent.height ? extent.width : extent.height;
+    m = extent.depth > m ? extent.depth : m;
+    return ilog2(m); // a > b -> log(a) > log(b)
 }

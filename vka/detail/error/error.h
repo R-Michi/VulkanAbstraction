@@ -13,16 +13,20 @@
 namespace vka::detail::error
 {
     /// @brief Throws a std::invalid_argument exception with a message.
-    [[noreturn]] void throw_invalid_argument(const char* msg);
+    [[noreturn]]
+    void throw_invalid_argument(const char* msg);
 
     /// @brief Throws an std::runtime_error exception with a message.
-    [[noreturn]] void throw_runtime_error(const char* msg);
+    [[noreturn]]
+    void throw_runtime_error(const char* msg);
 
     /// @brief Throws a std::out_of_range exception with a message.
-    [[noreturn]] void throw_out_of_range(const char* msg);
+    [[noreturn]]
+    void throw_out_of_range(const char* msg);
 
     /// @brief Throws a std::bad_alloc exception with a message.
-    [[noreturn]] void throw_bad_alloc();
+    [[noreturn]]
+    void throw_bad_alloc();
 
     /// @brief Checks if a pointer to dynamic memory is a nullptr and throws a std::bad_alloc exception.
     inline void check_memory(const void* mem);

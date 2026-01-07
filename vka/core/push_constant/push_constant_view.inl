@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "push_constant_class.h"
+#include "push_constant_top.h"
 
 inline vka::PushConstantView::PushConstantView(VkPushConstantRange range, void* data) noexcept :
     m_range(range),

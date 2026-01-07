@@ -9,16 +9,9 @@
 #include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
-vka::Buffer::Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info) :
-    m_buffer(device , create_buffer(device, properties, create_info)),
-    m_size(create_info.bufferSize),
-    m_map_status(false)
+vka::Buffer::BufferHandle vka::Buffer::create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
 {
-    check_result(vkBindBufferMemory(device, this->m_buffer.get().buffer, this->m_buffer.get().memory, 0), BIND_MEMORY_FAILED);
-}
-
-vka::Buffer::BufferMemory vka::Buffer::create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
-{
+    // create buffer
     const VkBufferCreateInfo buffer_ci = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = create_info.pBufferNext,
@@ -30,14 +23,15 @@ vka::Buffer::BufferMemory vka::Buffer::create_buffer(VkDevice device, const VkPh
         .pQueueFamilyIndices = create_info.bufferQueueFamilyIndices
     };
     VkBuffer buffer;
-    VkResult result = vkCreateBuffer(device, &buffer_ci, nullptr, &buffer);
-    if (is_error(result)) [[unlikely]]
-        detail::error::throw_runtime_error(BUFFER_CREATE_FAILED);
+    check_result(vkCreateBuffer(device, &buffer_ci, nullptr, &buffer), BUFFER_CREATE_FAILED);
+    unique_handle buffer_guard(device, buffer);
+
 
     // query memory requirements
     VkMemoryRequirements requirements;
     vkGetBufferMemoryRequirements(device, buffer, &requirements);
 
+    // allocate memory
     const VkMemoryAllocateInfo memory_ai = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
         .pNext = create_info.pMemoryNext,
@@ -45,12 +39,9 @@ vka::Buffer::BufferMemory vka::Buffer::create_buffer(VkDevice device, const VkPh
         .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, create_info.memoryPropertyFlags)
     };
     VkDeviceMemory memory;
-    result = vkAllocateMemory(device, &memory_ai, nullptr, &memory);
-    if (is_error(result)) [[unlikely]]
-    {
-        // One handle has been created successfully which must be destroyed.
-        vkDestroyBuffer(device, buffer, nullptr);
-        detail::error::throw_runtime_error(ALLOC_MEMORY_FAILED);
-    }
-    return { buffer, memory };
+    check_result(vkAllocateMemory(device, &memory_ai, nullptr, &memory), ALLOC_MEMORY_FAILED);
+    unique_handle memory_guard(device, memory);
+    check_result(vkBindBufferMemory(device, buffer, memory, 0), BIND_MEMORY_FAILED);
+
+    return { buffer_guard.release(), memory_guard.release() };
 }

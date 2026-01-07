@@ -90,3 +90,40 @@ inline void vka::common::cvt_stdstr2ccpv(const std::vector<std::string>& std_in,
         ccp_out[i] = std_in[i].c_str();
 }
 
+constexpr VkExtent3D vka::common::mip_extent(VkExtent3D extent, uint32_t level) noexcept
+{
+    if (level == 0) return extent;
+    const uint32_t tmpx = extent.width >> level;
+    const uint32_t tmpy = extent.height >> level;
+    const uint32_t tmpz = extent.depth >> level;
+    return {
+        tmpx < 1 ? 1 : tmpx,
+        tmpy < 1 ? 1 : tmpy,
+        tmpz < 1 ? 1 : tmpz
+    };
+}
+
+constexpr VkExtent3D vka::common::next_mip_extent(VkExtent3D extent) noexcept
+{
+    const uint32_t tmpx = extent.width >> 1;
+    const uint32_t tmpy = extent.height >> 1;
+    const uint32_t tmpz = extent.depth >> 1;
+    return {
+        tmpx < 1 ? 1 : tmpx,
+        tmpy < 1 ? 1 : tmpy,
+        tmpz < 1 ? 1 : tmpz
+    };
+}
+
+constexpr VkOffset3D vka::common::next_mip_extent(VkOffset3D extent) noexcept
+{
+    const int32_t tmpx = extent.x >> 1;
+    const int32_t tmpy = extent.y >> 1;
+    const int32_t tmpz = extent.z >> 1;
+    return {
+        tmpx < 1 ? 1 : tmpx,
+        tmpy < 1 ? 1 : tmpy,
+        tmpz < 1 ? 1 : tmpz
+    };
+}
+

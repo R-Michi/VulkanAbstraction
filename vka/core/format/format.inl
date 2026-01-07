@@ -59,23 +59,21 @@ consteval vka::DepthFormatArray vka::format::get_depth_stencil() noexcept
 
 constexpr size_t vka::format_sizeof(VkFormat format) noexcept
 {
-    return detail::format::SIZE_LOOKUP[static_cast<size_t>(format) - detail::format::format_lut_offset(format)];
+    return detail::format::format_sizeof(format);
 }
 
-constexpr size_t vka::format_sizeof2(VkFormat format) noexcept
+constexpr size_t vka::format_sizeof10(VkFormat format) noexcept
 {
-    const uint32_t i_format = static_cast<uint32_t>(format);
-    return i_format <= 184 ? detail::format::SIZE_LOOKUP[i_format] : NSIZE;
+    return detail::format::format_sizeof10(format);
 }
 
 constexpr size_t vka::format_countof(VkFormat format) noexcept
 {
-    return detail::format::COUNT_LOOKUP[static_cast<size_t>(format) - detail::format::format_lut_offset(format)];
+    return detail::format::format_countof(format);
 }
 
-constexpr size_t vka::format_countof2(VkFormat format) noexcept
+constexpr size_t vka::format_countof10(VkFormat format) noexcept
 {
-    const uint32_t i_format = static_cast<uint32_t>(format);
-    return i_format <= 184 ? detail::format::COUNT_LOOKUP[i_format] : NSIZE;
+    return detail::format::format_countof10(format);
 }
 

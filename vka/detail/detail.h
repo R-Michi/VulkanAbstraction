@@ -16,7 +16,7 @@
 #include "instance/instance.h"
 #include "push_constant/push_constant.inl"
 #include "queue/queue.inl"
-#include "texture/texture.h"
+#include "texture/texture.inl"
 #include "descriptor/descriptor.inl"
 #include "handle/handle.h"
 

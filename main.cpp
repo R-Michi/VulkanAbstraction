@@ -18,6 +18,48 @@
 
 int main()
 {
+    // test for compiler errors
+#if 0
+    constexpr VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    constexpr float data[4] = { 0xFF, 0x00, 0x00, 0xFF };
+    constexpr VkExtent3D extent3D = { 100, 100, 100 };
+    constexpr VkExtent2D extent2D = { 100, 100 };
+    constexpr const char* filename = "test.png";
+
+    vka::TextureComponentMerger<format> merger1(data, format, extent3D);
+    vka::TextureComponentMerger<format> merger2(data, 3, extent3D);
+    vka::TextureComponentMerger<format> merger3(filename);
+    vka::TextureComponentMerger merger4 = std::move(merger3);
+    merger3 = std::move(merger2);
+    const float* tmp1 = merger1.data();
+    VkExtent3D tmp2 = merger1.extent();
+    merger1.load(data, format);
+    merger1.load(data, 3);
+    merger1.load(filename);
+
+    vka::Texture3DMerger<format> merger3D1(data, format, extent2D);
+    vka::Texture3DMerger<format> merger3D2(data, 3, extent2D);
+    vka::Texture3DMerger<format> merger3D3(filename);
+    vka::Texture3DMerger merger3D4 = std::move(merger3D3);
+    merger3 = std::move(merger2);
+    tmp1 = merger1.data();
+    tmp2 = merger1.extent();
+    merger1.load(data, format);
+    merger1.load(data, 3);
+    merger1.load(filename);
+
+    vka::TextureLoader<format> loader1(data, format, extent3D);
+    vka::TextureLoader<format> loader2(data, 3, extent3D);
+    vka::TextureLoader<format> loader3(filename);
+    vka::TextureLoader loader4 = std::move(loader3);
+    merger3 = std::move(merger2);
+    tmp1 = merger1.data();
+    tmp2 = merger1.extent();
+    merger1.load(data, format);
+    merger1.load(data, 3);
+    merger1.load(filename);
+#endif
+
     VkaExample app;
     try
     {

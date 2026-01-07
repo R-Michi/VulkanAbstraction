@@ -22,7 +22,7 @@
 #include "shader/shader.inl"
 #include "surface/surface.h"
 #include "swapchain/swapchain.h"
-#include "texture/texture.inl"
+#include "texture/texture.h"
 #include "descriptor/descriptor.h"
 
 #ifdef VKA_MODEL_LOADING_ENABLE

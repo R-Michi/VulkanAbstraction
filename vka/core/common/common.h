@@ -131,5 +131,12 @@ namespace vka
          * @note The function name stands for "convert std::string to const char pointer vector"
          */
         inline void cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out, size_t buff_size = NSIZE) noexcept;
+
+        /// Calculates the extent of a given mip-map level.
+        constexpr VkExtent3D mip_extent(VkExtent3D extent, uint32_t level) noexcept;
+
+        /// Calculates the size of the next mip-map level.
+        constexpr VkExtent3D next_mip_extent(VkExtent3D extent) noexcept;
+        constexpr VkOffset3D next_mip_extent(VkOffset3D extent) noexcept;
     }
 }

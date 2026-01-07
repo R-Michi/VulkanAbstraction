@@ -15,6 +15,12 @@ constexpr vka::Buffer::Buffer() noexcept :
     m_map_status(false)
 {}
 
+inline vka::Buffer::Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info) :
+    m_buffer(device , create_buffer(device, properties, create_info)),
+    m_size(create_info.bufferSize),
+    m_map_status(false)
+{}
+
 constexpr vka::Buffer::Buffer(Buffer&& src) noexcept :
     m_buffer(std::move(src.m_buffer)),
     m_size(src.m_size),
@@ -51,6 +57,11 @@ constexpr VkDeviceSize vka::Buffer::size() const noexcept
 constexpr VkBuffer vka::Buffer::handle() const noexcept
 {
     return this->m_buffer.get().buffer;
+}
+
+constexpr VkDevice vka::Buffer::parent() const noexcept
+{
+    return this->m_buffer.parent();
 }
 
 inline VkDeviceAddress vka::Buffer::device_address() const noexcept

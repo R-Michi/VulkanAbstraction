@@ -24,10 +24,14 @@ find_program(SPIRV_OPT REQUIRED NAMES "spirv-opt" PATHS "$ENV{VULKAN_SDK}/Bin")
 # glfw library
 if (NOT TARGET glfw)
     find_path(VKA_SUBMODULE_GLFW NAMES glfw PATHS ${VulkanAbstraction_SOURCE_DIR}/lib REQUIRED)
-    add_subdirectory(${VulkanAbstraction_SOURCE_DIR}/lib/glfw)
+    add_subdirectory(${VKA_SUBMODULE_GLFW}/glfw)
 endif ()
 set(VKA_GLFW_INCLUDE_DIR "${GLFW_SOURCE_DIR}/include")
 message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
+
+# lib directory
+set(VKA_LIB_DIR "${VulkanAbstraction_SOURCE_DIR}/lib")
+message(STATUS "[VKA]: Library directory: ${VKA_LIB_DIR}")
 
 ########################################################################################################################
 ######################################################## FORWARD #######################################################
@@ -128,6 +132,7 @@ set(VKA_DETAIL_QUEUE_FILES
 
 set(VKA_DETAIL_TEXTURE_FILES
         vka/detail/texture/texture.h
+        vka/detail/texture/texture.inl
 )
 
 ########################################################################################################################
@@ -283,9 +288,13 @@ set(VKA_CORE_SHADER_FILES
 ########################################################################################################################
 
 set(VKA_CORE_TEXTURE_FILES
-        vka/core/texture/texture.h
+        vka/core/texture/texture_top.h
         vka/core/texture/texture.inl
         vka/core/texture/texture.cpp
+        vka/core/texture/component_merger.inl
+        vka/core/texture/3d_merger.inl
+        vka/core/texture/loader.inl
+        vka/core/texture/texture.h
 )
 
 ########################################################################################################################
@@ -306,7 +315,7 @@ set(VKA_CORE_DESCRIPTOR_FILES
 ########################################################################################################################
 
 set(VKA_CORE_PUSH_CONSTANT_FILES
-        vka/core/push_constant/push_constant_class.h
+        vka/core/push_constant/push_constant_top.h
         vka/core/push_constant/push_constant.inl
         vka/core/push_constant/push_constant_layout.inl
         vka/core/push_constant/push_constant_view.inl
@@ -373,14 +382,13 @@ set(VKA_FILES
 ########################################################################################################################
 
 add_library(vka STATIC ${VKA_FILES})
-target_link_libraries(vka Vulkan::Headers)
-target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR})
+target_link_libraries(vka PRIVATE Vulkan::Headers)
+target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR} PRIVATE ${VKA_LIB_DIR})
 
 add_library(vka_glfw STATIC ${VKA_FILES})
 target_compile_options(vka_glfw PRIVATE -DVKA_GLFW_ENABLE -DVKA_INCLUDE_GLFW)
 target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
-target_include_directories(vka_glfw PRIVATE ${VKA_GLFW_INCLUDE_DIR})
-target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR})
+target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR} PRIVATE ${VKA_GLFW_INCLUDE_DIR} ${VKA_LIB_DIR})
 
 ########################################################################################################################
 ############################################### VKA GLFW EXTENSION FILES ###############################################
@@ -391,15 +399,22 @@ add_executable(vka_example
         main.cpp
         vka_example.h
         vka_example.cpp
+        ${VKA_FILES}
+)
+target_compile_options(vka_example PRIVATE
+        -DVKA_GLFW_ENABLE
+        -DVKA_INCLUDE_GLFW
+        -DVKA_STB_ENABLE
+        -DVKA_INCLUDE_STB
 )
 target_link_libraries(vka_example PRIVATE
         Vulkan::Vulkan
         glfw
-        vka_glfw
 )
 target_include_directories(vka_example PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/lib"
+        ${VKA_LIB_DIR}/glm
+        ${VKA_LIB_DIR}
+        ${VKA_INCLUDE_DIR}
 )
 
 # find all shader files that end with ".vert" and ".frag"

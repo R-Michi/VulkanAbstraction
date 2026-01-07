@@ -91,7 +91,7 @@ void VkaExample::vulkan_destroy()
 		vkDestroySemaphore(this->device, this->sem_rendering_done[i], nullptr);
 	}
 
-	this->texture.destroy();
+	this->texture = vka::Texture();
 	this->uniform_buffer = vka::Buffer();
 	this->index_buffer = vka::Buffer();
 	this->vertex_buffer = vka::Buffer();
@@ -758,18 +758,44 @@ void VkaExample::create_uniform_buffers()
 
 void VkaExample::create_textures()
 {
-	VkExtent3D size;
-	const void* const data[2] = {
-		vka::Texture::load_image<uint8_t, 4>("../../../assets/textures/texture.png", size),
-		vka::Texture::load_image<uint8_t, 4>("../../../assets/textures/texture2.jpeg", size)
-	};
+	constexpr uint8_t color[3] = { 255, 255, 255 };
+	vka::TextureLoader<VK_FORMAT_R8G8B8A8_UINT> loader("../../../assets/textures/texture.png");
+	loader.load("../../../assets/textures/texture2.jpeg");
+	loader.load(color, 3);
 
+	const vka::CommandBufferOTS cbo(this->device, this->command_pool);
+	constexpr vka::TextureViewCreateInfo views[3] = {
+		{
+			.flags = 0,
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = VK_FORMAT_R8G8B8A8_UNORM,
+			.components = {},
+			.baseArrayLayer = 0,
+			.layerCount = 1
+		},
+		{
+			.flags = 0,
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = VK_FORMAT_R8G8B8A8_UNORM,
+			.components = {},
+			.baseArrayLayer = 1,
+			.layerCount = 1
+		},
+		{
+			.flags = 0,
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = VK_FORMAT_R8G8B8A8_UNORM,
+			.components = {},
+			.baseArrayLayer = 2,
+			.layerCount = 1
+		}
+	};
 	const vka::TextureCreateInfo create_info = {
 		.imageFlags = 0,
 		.imageType = VK_IMAGE_TYPE_2D,
 		.imageFormat = VK_FORMAT_R8G8B8A8_UNORM,
-		.imageExtent = size,
-		.imageArrayLayers = 2,
+		.imageExtent = loader.extent(),
+		.imageArrayLayers = 3,
 		.imageQueueFamilyIndexCount = 1,
 		.imageQueueFamilyIndices = &this->graphics_queue.family_index,
 		.samplerMagFilter = VK_FILTER_NEAREST,
@@ -784,33 +810,25 @@ void VkaExample::create_textures()
 		.samplerCompareEnable = VK_FALSE,
 		.samplerCompareOp = VK_COMPARE_OP_ALWAYS,
 		.samplerMinLod = 0.0f,
-		.samplerMaxLod = (float)vka::Texture::level_count(size) - 1,	// max LOD = highest mip-level index = mip-level count - 1
+		.samplerMaxLod = vka::Texture::max_lod(loader.extent()),
 		.samplerBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
 		.samplerUnnormalizedCoordinates = VK_FALSE,
-		.generateMipMap = true
+		.viewCount = 3,
+		.views = views,
+		.generateMipMap = true,
+		.commandBuffer = cbo.handle()
+	};
+	const vka::TextureLoadInfo stage_info = {
+		.queueFamilyIndex = this->graphics_queue.family_index,
+		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		.memoryProperties = &this->memory_properties
 	};
 
-	vka::TextureViewCreateInfo view = {
-		.flags = 0,
-		.viewType = VK_IMAGE_VIEW_TYPE_2D,
-		.format = VK_FORMAT_R8G8B8A8_UNORM,
-		.components = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY },
-		.baseArrayLayer = 0,
-		.layerCount = 1
-	};
-
-	this->texture.create(this->device, this->memory_properties, create_info);
-
-	this->texture.create_view(view);
-	view.baseArrayLayer = 1;
-	this->texture.create_view(view);
-
-	const vka::Buffer staging_buffer = this->texture.stage(data, this->memory_properties, this->graphics_queue.family_index, 2);
-
-    const vka::CommandBufferOTS cbo(this->device, this->command_pool);
-    this->texture.load(cbo.handle(), staging_buffer, 0, 2);
-    this->texture.finish(cbo.handle(), VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	vka::Texture tex(this->device, this->memory_properties, create_info);
+	vka::Buffer staging = tex.load(cbo.handle(), loader, stage_info, 0);
+    tex.finish(cbo.handle(), VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     cbo.end_wait(this->graphics_queue.queue);
+	this->texture = std::move(tex);
 }
 
 void VkaExample::create_descriptors()

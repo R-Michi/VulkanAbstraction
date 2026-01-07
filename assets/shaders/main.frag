@@ -9,5 +9,5 @@ layout (set = 0, binding = 0) uniform sampler2D tex;
 
 void main()
 {
-	res_color = texture(tex, frag_tex_coord) * vec4(frag_normal, 1.0f);
+	res_color = vec4(texture(tex, frag_tex_coord).xyz * frag_normal, 1.0f);
 }
