@@ -470,6 +470,8 @@ namespace vka
          */
         void load(VkCommandBuffer cbo, const Buffer& data, uint32_t layer, uint32_t count = 1, uint32_t level = 0) noexcept;
 
+#ifdef VKA_STB_ENABLE
+
         /**
          * Loads the data of a <c>TextureComponentMerger</c> object into the texture.
          * @param cbo Specifies the command buffer in which the load command is recorded.
@@ -509,6 +511,8 @@ namespace vka
         template<VkFormat F> requires detail::texture::is_loader_format<F>
         [[nodiscard]]
         Buffer load(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level = 0);
+
+#endif
 
         /**
          * Finishes the texture creation and creates the mip-map (if mip-map creation is activated). This operation must

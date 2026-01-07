@@ -80,6 +80,8 @@ constexpr VkImageView vka::Texture::view(uint32_t idx) const
     return this->m_texture.get().views[idx];
 }
 
+#ifdef VKA_STB_ENABLE
+
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 [[nodiscard]]
 vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const TextureComponentMerger<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level)
@@ -112,6 +114,8 @@ vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const TextureLoader<F>& load
     this->load(cbo, staging, layer, loader.layer_count(), level);
     return staging;
 }
+
+#endif
 
 inline uint32_t vka::Texture::mip_level_count(const TextureCreateInfo& create_info) noexcept
 {
