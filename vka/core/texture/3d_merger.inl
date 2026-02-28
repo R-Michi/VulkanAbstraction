@@ -111,7 +111,7 @@ template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 void vka::Texture3DMerger<F>::load(const char* path)
 {
     int32_t width, height, components;
-    std::unique_ptr<component_t[]> data = load_f(path, &width, &height, &components, 0);
+    std::unique_ptr<component_t[]> data(load_f(path, &width, &height, &components, 0));
     const VkExtent2D extent = { (uint32_t)width, (uint32_t)height };
 
     if (data == nullptr) [[unlikely]]
