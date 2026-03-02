@@ -84,34 +84,34 @@ constexpr VkImageView vka::Texture::view(uint32_t idx) const
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 [[nodiscard]]
-vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const TextureComponentMerger<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level)
+vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const TextureMerger<F>& merger, TextureLoadInfo info, uint32_t layer, uint32_t level)
 {
-    const VkExtent3D extent = loader.extent();
+    const VkExtent3D extent = merger.extent();
     const VkDeviceSize size = extent.width * extent.height * extent.width * format_sizeof(F);
-    Buffer staging = stage(this->m_texture.parent(), loader.data(), size, info);
+    Buffer staging = stage(this->m_texture.parent(), merger.data(), size, info);
     this->load(cbo, staging, layer, 1, level);
     return staging;
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 [[nodiscard]]
-vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const Texture3DMerger<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level)
+vka::Buffer vka::Texture::load2D(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level)
 {
-    const VkExtent3D extent = loader.extent();
-    const VkDeviceSize size = extent.width * extent.height * extent.depth * format_sizeof(F);
-    Buffer staging = stage(this->m_texture.parent(), loader.data(), size, info);
-    this->load(cbo, staging, layer, 1, level);
-    return staging;
-}
-
-template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-[[nodiscard]]
-vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level)
-{
-    const VkExtent3D extent = loader.extent();
-    const VkDeviceSize size = extent.width * extent.height * extent.depth * loader.layer_count() * format_sizeof(F);
+    const VkExtent2D extent = loader.extent2D();
+    const VkDeviceSize size = extent.width * extent.height * loader.layer_count() * format_sizeof(F);
     Buffer staging = stage(this->m_texture.parent(), loader.data(), size, info);
     this->load(cbo, staging, layer, loader.layer_count(), level);
+    return staging;
+}
+
+template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
+[[nodiscard]]
+vka::Buffer vka::Texture::load3D(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t level)
+{
+    const VkExtent3D extent = loader.extent3D();
+    const VkDeviceSize size = extent.width * extent.height * extent.depth * format_sizeof(F);
+    Buffer staging = stage(this->m_texture.parent(), loader.data(), size, info);
+    this->load(cbo, staging, 0, 1, level);
     return staging;
 }
 

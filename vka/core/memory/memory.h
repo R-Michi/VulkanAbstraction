@@ -10,8 +10,8 @@
 
 namespace vka::memory
 {
-    /**
-     * @brief Searches for a supported memory-type index.
+    /**Searches for a supported memory-type index.
+     * @brief
      * @param properties Specifies the memory properties of a physical device.
      * @param bits Specifies the memory-type bit mask.
      * @param req_flags Specifies the required memory property flags.

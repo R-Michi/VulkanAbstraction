@@ -291,8 +291,7 @@ set(VKA_CORE_TEXTURE_FILES
         vka/core/texture/texture_top.h
         vka/core/texture/texture.inl
         vka/core/texture/texture.cpp
-        vka/core/texture/component_merger.inl
-        vka/core/texture/3d_merger.inl
+        vka/core/texture/merger.inl
         vka/core/texture/loader.inl
         vka/core/texture/texture.h
 )

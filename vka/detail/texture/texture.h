@@ -6,6 +6,7 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+// ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
 namespace vka::detail::texture
@@ -86,6 +87,10 @@ namespace vka::detail::texture
 
     /// Destroys the texture handle.
     inline void destroy(VkDevice device, const Handle& handle, const VkAllocationCallbacks* allocator);
+
+    /// Loads an image from a file.
+    template<VkFormat F>
+    inline std::unique_ptr<loader_format_t<F>[]> load(const char* path, VkExtent2D& extent, uint32_t& components);
 
     /// Copies image data from src to dst.
     template<VkFormat F>

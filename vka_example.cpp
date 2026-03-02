@@ -790,11 +790,13 @@ void VkaExample::create_textures()
 			.layerCount = 1
 		}
 	};
+
+	const VkExtent2D extent = loader.extent2D();
 	const vka::TextureCreateInfo create_info = {
 		.imageFlags = 0,
 		.imageType = VK_IMAGE_TYPE_2D,
 		.imageFormat = VK_FORMAT_R8G8B8A8_UNORM,
-		.imageExtent = loader.extent(),
+		.imageExtent = { extent.width, extent.height, 1 },
 		.imageArrayLayers = 3,
 		.imageQueueFamilyIndexCount = 1,
 		.imageQueueFamilyIndices = &this->graphics_queue.family_index,
@@ -810,7 +812,7 @@ void VkaExample::create_textures()
 		.samplerCompareEnable = VK_FALSE,
 		.samplerCompareOp = VK_COMPARE_OP_ALWAYS,
 		.samplerMinLod = 0.0f,
-		.samplerMaxLod = vka::Texture::max_lod(loader.extent()),
+		.samplerMaxLod = vka::Texture::max_lod(loader.extent3D()),
 		.samplerBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
 		.samplerUnnormalizedCoordinates = VK_FALSE,
 		.viewCount = 3,
@@ -825,7 +827,7 @@ void VkaExample::create_textures()
 	};
 
 	vka::Texture tex(this->device, this->memory_properties, create_info);
-	vka::Buffer staging = tex.load(cbo.handle(), loader, stage_info, 0);
+	vka::Buffer staging = tex.load2D(cbo.handle(), loader, stage_info, 0);
     tex.finish(cbo.handle(), VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     cbo.end_wait(this->graphics_queue.queue);
 	this->texture = std::move(tex);

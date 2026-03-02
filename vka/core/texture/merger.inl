@@ -4,35 +4,33 @@
 #include "texture_top.h"
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-vka::TextureComponentMerger<F>::TextureComponentMerger(const component_t* data, VkFormat format, VkExtent3D extent) :
+inline vka::TextureMerger<F>::TextureMerger(VkExtent3D extent) :
     m_data(new component_t[alloc_size(extent)]{}),
     m_extent(extent),
     m_component_idx(0)
+{}
+
+template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
+vka::TextureMerger<F>::TextureMerger(const component_t* data, VkFormat format, VkExtent3D extent) : TextureMerger(extent)
 {
     this->copy_image(data, format_countof(format));
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-vka::TextureComponentMerger<F>::TextureComponentMerger(const component_t* color, uint32_t comp, VkExtent3D extent) :
-    m_data(new component_t[alloc_size(extent)]{}),
-    m_extent(extent),
-    m_component_idx(0)
+vka::TextureMerger<F>::TextureMerger(const component_t* color, uint32_t comp, VkExtent3D extent) : TextureMerger(extent)
 {
     this->fill_image(color, comp);
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-vka::TextureComponentMerger<F>::TextureComponentMerger(const char* path) :
+vka::TextureMerger<F>::TextureMerger(const char* path) :
     m_data(nullptr),
     m_extent{},
     m_component_idx(0)
 {
-    int32_t width, height, components;
-    std::unique_ptr<component_t[]> data(loader_f(path, &width, &height, &components, 0));
-    const VkExtent3D extent = { (uint32_t)width, (uint32_t)height, 1 };
-
-    if (data == nullptr) [[unlikely]]
-        detail::error::throw_invalid_argument(MSG_INVALID_PATH);
+    VkExtent2D tmp_extent; uint32_t components;
+    std::unique_ptr<component_t[]> data =  detail::texture::load<F>(path, tmp_extent, components);
+    const VkExtent3D extent = { tmp_extent.width, tmp_extent.height, 1 };
 
     this->m_data = new component_t[alloc_size(extent)]{};
     this->m_extent = extent;
@@ -40,7 +38,7 @@ vka::TextureComponentMerger<F>::TextureComponentMerger(const char* path) :
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline vka::TextureComponentMerger<F>::TextureComponentMerger(TextureComponentMerger&& src) noexcept :
+inline vka::TextureMerger<F>::TextureMerger(TextureMerger&& src) noexcept :
     m_data(src.m_data),
     m_extent(src.m_extent),
     m_component_idx(0)
@@ -49,13 +47,13 @@ inline vka::TextureComponentMerger<F>::TextureComponentMerger(TextureComponentMe
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline vka::TextureComponentMerger<F>::~TextureComponentMerger()
+inline vka::TextureMerger<F>::~TextureMerger()
 {
     delete[] this->m_data;
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline vka::TextureComponentMerger<F>& vka::TextureComponentMerger<F>::operator= (TextureComponentMerger&& src) noexcept
+inline vka::TextureMerger<F>& vka::TextureMerger<F>::operator= (TextureMerger&& src) noexcept
 {
     delete[] this->m_data;
     this->m_data = src.m_data;
@@ -66,43 +64,45 @@ inline vka::TextureComponentMerger<F>& vka::TextureComponentMerger<F>::operator=
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline const vka::TextureComponentMerger<F>::component_t* vka::TextureComponentMerger<F>::data() const noexcept
+inline const vka::TextureMerger<F>::component_t* vka::TextureMerger<F>::data() const noexcept
 {
     return this->m_data;
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline VkExtent3D vka::TextureComponentMerger<F>::extent() const noexcept
+inline VkExtent3D vka::TextureMerger<F>::extent() const noexcept
 {
     return this->m_extent;
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-void vka::TextureComponentMerger<F>::load(const component_t* data, VkFormat format) noexcept
+inline VkDeviceSize vka::TextureMerger<F>::size() const noexcept
+{
+    return alloc_size(this->m_extent);
+}
+
+template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
+void vka::TextureMerger<F>::load(const component_t* data, VkFormat format) noexcept
 {
     if (this->m_component_idx < format_countof(F))
         this->copy_image(data, format_countof(format));
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-void vka::TextureComponentMerger<F>::load(const component_t* color, uint32_t comp) noexcept
+void vka::TextureMerger<F>::load(const component_t* color, uint32_t comp) noexcept
 {
     if (this->m_component_idx < format_countof(F))
         this->fill_image(color, comp);
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-void vka::TextureComponentMerger<F>::load(const char* path)
+void vka::TextureMerger<F>::load(const char* path)
 {
     if (this->m_component_idx < format_countof(F))
     {
-        int32_t width, height, components;
-        std::unique_ptr<component_t[]> data(loader_f(path, &width, &height, &components, 0));
-        const VkExtent3D extent = { (uint32_t)width, (uint32_t)height, 1 };
-
-        if (data == nullptr) [[unlikely]]
-            detail::error::throw_invalid_argument(MSG_INVALID_PATH);
-        if (!detail::common::cmpeq_extent(this->m_extent, extent)) [[unlikely]]
+        VkExtent2D extent; uint32_t components;
+        std::unique_ptr<component_t[]> data =  detail::texture::load<F>(path, extent, components);
+        if (!detail::common::cmpeq_extent(this->m_extent, extent) || this->m_extent.depth != 1) [[unlikely]]
             detail::error::throw_runtime_error(MSG_EXTENT_MISSMATCH);
 
         this->copy_image(data.get(), components);
@@ -110,7 +110,7 @@ void vka::TextureComponentMerger<F>::load(const char* path)
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline void vka::TextureComponentMerger<F>::copy_image(const component_t* data, uint32_t img_comp) noexcept
+inline void vka::TextureMerger<F>::copy_image(const component_t* data, uint32_t img_comp) noexcept
 {
     const uint64_t px_count = (uint64_t)this->m_extent.width * this->m_extent.height * this->m_extent.depth;
     detail::texture::copy_image<F>(this->m_data, data, px_count, img_comp, this->m_component_idx);
@@ -118,7 +118,7 @@ inline void vka::TextureComponentMerger<F>::copy_image(const component_t* data, 
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline void vka::TextureComponentMerger<F>::fill_image(const component_t* color, uint32_t img_comp) noexcept
+inline void vka::TextureMerger<F>::fill_image(const component_t* color, uint32_t img_comp) noexcept
 {
     const uint64_t px_count = (uint64_t)this->m_extent.width * this->m_extent.height * this->m_extent.depth;
     detail::texture::fill_image<F>(this->m_data, color, px_count, img_comp, this->m_component_idx);
@@ -126,7 +126,7 @@ inline void vka::TextureComponentMerger<F>::fill_image(const component_t* color,
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-constexpr size_t vka::TextureComponentMerger<F>::alloc_size(VkExtent3D extent) noexcept
+constexpr size_t vka::TextureMerger<F>::alloc_size(VkExtent3D extent) noexcept
 {
-    return format_countof(F) * extent.width * extent.height * extent.depth;
+    return format_sizeof(F) * extent.width * extent.height * extent.depth;
 }

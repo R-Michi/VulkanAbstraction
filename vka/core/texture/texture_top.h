@@ -17,59 +17,63 @@ namespace vka
      * Helper class to load and merge 2D images from a file or 3D images from memory into a single image. Every time
      * <c>load()</c> is called, the components of the current image are appended to the already existing components of
      * the texture. The specified format caps the total number of components that can be attached. Excess components are
-     * cut off. Unused components are filled with zeros. The extent of all images must be the same. The first image
-     * loaded defines the texture's extent.
+     * cut off. Unused components are filled with zeros.
      *
      * @tparam F Specifies the format of the loader. If an image has a different format data-type than the loader,
      * loading this image results in undefined behavior or even a crash! The texture must be created with a format that
      * has the same number of components as the loader's format!
      */
     template<VkFormat F> requires detail::texture::is_loader_format<F>
-    class TextureComponentMerger
+    class TextureMerger
     {
         using component_t = detail::texture::loader_format_t<F>;
-        static constexpr auto loader_f = detail::texture::loader_f<F>;
 
     public:
         /**
-         * Loads the first image from memory.
-         * @param data Specifies the data of the image to load. Must at least contain\n
-         * <c>extent.width * extent.height * extent.depth * format_countof(F)</c> elements or\n
-         * <c>extent.width * extent.height * extent.depth * format_sizeof(F)</c> bytes.
-         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
-         * @param extent Specifies the extent of the image. This extent is used as the extent of the texture.
+         * Initializes the merger with the extent of the generated texture.
+         * @param extent Specifies the extent of the texture.
          */
-        explicit TextureComponentMerger(const component_t* data, VkFormat format, VkExtent3D extent);
+        explicit inline TextureMerger(VkExtent3D extent);
+
+        /**
+         * Loads an image from memory.
+         * @param data Specifies the data of the image to load. Must at least contain\n
+         * <c>extent.width * extent.height * extent.depth * format_countof(format)</c> elements or\n
+         * <c>extent.width * extent.height * extent.depth * format_sizeof(format)</c> bytes.
+         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
+         * @param extent Specifies the extent of the image. This extent is used as the extent of the generated texture.
+         */
+        explicit TextureMerger(const component_t* data, VkFormat format, VkExtent3D extent);
 
         /**
          * Loads a single color into the image.
          * @param color Specifies the color. Must at least contain <c>comp</c> elements.
          * @param comp Specifies the number of components the color has.
-         * @param extent Specifies the extent of the image. This extent is used as the extent of the texture.
+         * @param extent Specifies the extent of the image. This extent is used as the extent of the generated texture.
          */
-        explicit TextureComponentMerger(const component_t* color, uint32_t comp, VkExtent3D extent);
+        explicit TextureMerger(const component_t* color, uint32_t comp, VkExtent3D extent);
 
         /**
-         * Loads the first image from a file. Its extent is used as the extent of the texture.
+         * Loads an image from a file. Its extent is used as the extent of the generated texture.
          * @param path Specifies the path to the image file.
          * @throw std::invalid_argument Is thrown if the file could not be found.
          */
-        explicit TextureComponentMerger(const char* path);
+        explicit TextureMerger(const char* path);
 
         /**
          * Moves the texture merger. DO NOT use the source buffer after a move! This may lead to unexpected or even
          * undefined behavior.
          */
-        inline TextureComponentMerger(TextureComponentMerger&& src) noexcept;
+        inline TextureMerger(TextureMerger&& src) noexcept;
 
         /// Destroys the texture merger.
-        inline ~TextureComponentMerger();
+        inline ~TextureMerger();
 
         /**
          * Moves the texture merger. DO NOT use the source buffer after a move! This may lead to unexpected or even
          * undefined behavior.
          */
-        inline TextureComponentMerger& operator= (TextureComponentMerger&& src) noexcept;
+        inline TextureMerger& operator= (TextureMerger&& src) noexcept;
 
         /// @return Returns the raw image data.
         inline const component_t* data() const noexcept;
@@ -77,24 +81,27 @@ namespace vka
         /// @return Returns the extent of the image.
         inline VkExtent3D extent() const noexcept;
 
+        /// @return Returns the allocated size in bytes.
+        inline VkDeviceSize size() const noexcept;
+
         /**
-         * Loads the first image from memory. The loaded extent is defined by the first loaded image (constructor).
+         * Loads an image from memory. The extent is defined by one of the constructors.
          * @param data Specifies the data of the image to load. Must at least contain\n
-         * <c>extent.width * extent.height * extent.depth * format_countof(F)</c> elements or\n
-         * <c>extent.width * extent.height * extent.depth * format_sizeof(F)</c> bytes.
+         * <c>extent.width * extent.height * extent.depth * format_countof(format)</c> elements or\n
+         * <c>extent.width * extent.height * extent.depth * format_sizeof(format)</c> bytes.
          * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
          */
         void load(const component_t* data, VkFormat format) noexcept;
 
         /**
-         * Loads a single color into the image. The loaded extent is defined by the first loaded image (constructor).
+         * Loads a single color into the image. The extent is defined by one of the constructors.
          * @param color Specifies the color. Must at least contain <c>comp</c> elements.
          * @param comp Specifies the number of components the color has.
          */
         void load(const component_t* color, uint32_t comp) noexcept;
 
         /**
-         * Loads an image from a file.
+         * Loads an image from a file. The extent is defined by one of the constructors.
          * @param path Specifies the path to the image file.
          * @throw std::invalid_argument Is thrown if the file could not be found.
          * @throw std::runtime_error Is thrown if the extent of the image does not match the extent of the texture.
@@ -102,12 +109,11 @@ namespace vka
         void load(const char* path);
 
         // Deleted:
-        TextureComponentMerger(const TextureComponentMerger&) = delete;
-        TextureComponentMerger& operator= (const TextureComponentMerger&) = delete;
+        TextureMerger(const TextureMerger&) = delete;
+        TextureMerger& operator= (const TextureMerger&) = delete;
 
     private:
-        static constexpr const char* MSG_EXTENT_MISSMATCH = "[vka::TextureComponentMerger]: Extent of loaded image does not match the extent of the texture.";
-        static constexpr const char* MSG_INVALID_PATH = "[vka::TextureComponentMerger]: Cannot find path to the image file.";
+        static constexpr const char* MSG_EXTENT_MISSMATCH = "[vka::TextureMerger]: Extent of loaded image does not match the extent of the texture.";
 
         component_t* m_data;
         VkExtent3D m_extent;
@@ -124,137 +130,13 @@ namespace vka
     };
 
     /**
-     * Helper class to load 2D images from a file or from memory and to construct a 3D texture out of them. Every time
-     * <c>load()</c> is called, the depth of the texture is expanded by <c>1</c>. The depth indices correspond to the
-     * order in which the images were loaded, starting at <c>0</c>. The extent of all images must be the same. The first
-     * image loaded defines the texture's extent.
-     *
-     * @tparam F Specifies the format of the loader. If an image has a different format data-type than the loader,
-     * loading this image results in undefined behavior or even a crash! If an image has more components than specified,
-     * only the first <c>format_countof(F)</c> components are loaded. If an image has fewer components than specified,
-     * the remaining components are filled with <c>zeros</c>. The texture must be created with a format that has the
-     * same number of components as the loader's format!
-     */
-    template<VkFormat F> requires detail::texture::is_loader_format<F>
-    class Texture3DMerger
-    {
-        using component_t = detail::texture::loader_format_t<F>;
-        static constexpr auto load_f = detail::texture::loader_f<F>;
-
-    public:
-        /**
-         * Loads the first image from memory.
-         * @param data Specifies the data of the image to load. Must at least contain\n
-         * <c>extent.width * extent.height * extent.depth * format_countof(F)</c> elements or\n
-         * <c>extent.width * extent.height * extent.depth * format_sizeof(F)</c> bytes.
-         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
-         * @param extent Specifies the extent of the image. This extent is used as the extent of the texture.
-         * @param expected_depth Specifies the expected depth. This pre-allocates enough memory.
-         */
-        explicit Texture3DMerger(const component_t* data, VkFormat format, VkExtent2D extent, uint32_t expected_depth = 1);
-
-        /**
-         * Loads a single color into the image.
-         * @param color Specifies the color. Must at least contain <c>comp</c> elements.
-         * @param comp Specifies the number of components the color has.
-         * @param extent Specifies the extent of the image. This extent is used as the extent of the texture.
-         * @param expected_depth Specifies the expected depth. This pre-allocates enough memory.
-         */
-        explicit Texture3DMerger(const component_t* color, uint32_t comp, VkExtent2D extent, uint32_t expected_depth = 1);
-
-        /**
-         * Loads the first image from a file. Its extent is used as the extent of the texture.
-         * @param path Specifies the path to the image file.
-         * @throw std::invalid_argument Is thrown if the file could not be found.
-         * @param expected_depth Specifies the expected depth. This pre-allocates enough memory.
-         */
-        explicit Texture3DMerger(const char* path, uint32_t expected_depth = 1);
-
-        /**
-         * Moves the texture merger. DO NOT use the source buffer after a move! This may lead to unexpected or even
-         * undefined behavior.
-         */
-        inline Texture3DMerger(Texture3DMerger&& src) noexcept;
-
-        /// Destroys the texture merger.
-        inline ~Texture3DMerger();
-
-        /**
-         * Moves the texture merger. DO NOT use the source buffer after a move! This may lead to unexpected or even
-         * undefined behavior.
-         */
-        inline Texture3DMerger& operator= (Texture3DMerger&& src) noexcept;
-
-        /// @return Returns the raw image data.
-        inline const component_t* data() const noexcept;
-
-        /// @return Returns the extent of the image. Also includes the depth.
-        inline VkExtent3D extent() const noexcept;
-
-        /// @return Returns the resulting depth.
-        inline uint32_t depth() const noexcept;
-
-        /**
-         * Loads the first image from memory. The loaded extent is defined by the first loaded image (constructor).
-         * @param data Specifies the data of the image to load. Must at least contain\n
-         * <c>extent.width * extent.height * extent.depth * format_countof(F)</c> elements or\n
-         * <c>extent.width * extent.height * extent.depth * format_sizeof(F)</c> bytes.
-         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
-         */
-        void load(const component_t* data, VkFormat format) noexcept;
-
-        /**
-         * Loads a single color into the image. The loaded extent is defined by the first loaded image (constructor).
-         * @param color Specifies the color. Must at least contain <c>comp</c> elements.
-         * @param comp Specifies the number of components the color has.
-         */
-        void load(const component_t* color, uint32_t comp) noexcept;
-
-        /**
-         * Loads an image from a file.
-         * @param path Specifies the path to the image file.
-         * @throw std::invalid_argument Is thrown if the file could not be found.
-         * @throw std::runtime_error Is thrown if the extent of the image does not match the extent of the texture.
-         */
-        void load(const char* path);
-
-        // Deleted:
-        Texture3DMerger(const Texture3DMerger&) = delete;
-        Texture3DMerger& operator= (const Texture3DMerger&) = delete;
-
-    private:
-        static constexpr const char* MSG_EXTENT_MISSMATCH = "[vka::Texture3DMerger]: Extent of loaded image does not match the extent of the texture.";
-        static constexpr const char* MSG_INVALID_PATH = "[vka::Texture3DMerger]: Cannot find path to the image file.";
-
-        component_t* m_data;
-        uint32_t m_alloc_depth;
-        VkExtent2D m_extent;
-        uint32_t m_depth;
-
-        /// Grows the image buffer.
-        void grow();
-
-        /// Copies the image data to the buffer.
-        inline void copy_image(const component_t* data, uint32_t img_comp) noexcept;
-
-        /// Fills an image with a single color.
-        inline void fill_image(const component_t* color, uint32_t img_comp) noexcept;
-
-        /// Calculates the allocation size for the image buffer.
-        static constexpr size_t alloc_size(VkExtent2D extent, uint32_t depth) noexcept;
-
-        /// Calculates the initial number of layers to allocate.
-        static constexpr uint32_t alloc_depth(uint32_t expected_depth) noexcept;
-
-        /// Calculates the growth factor of the image buffer measured in layers.
-        static constexpr uint32_t grow_factor(uint32_t depth) noexcept;
-    };
-
-    /**
-     * Helper class to load 2D images from a file or 3D images from memory. Every time <c>load()</c> is called, a new
+     * Helper class to load 2D images from files or a 3D image from memory. Every time <c>load()</c> is called, a new
      * image layer is added to the texture, resulting in an array of images. The layer indices correspond to the order
      * in which the images were loaded, starting at <c>0</c>. The extent of all images must be the same. The first image
-     * loaded defines the texture's extent.
+     * loaded defines the texture's extent. 3D-images are equivalent to arrays of 2D-images. Therefore, when loading a
+     * 3D-image from memory in the constructor, the <c>depth</c> component of the extent can also be interpreted as the
+     * layer count of a 2D-image array. Vice versa, when loading/stacking multiple 2D-images, the resulting texture can
+     * be interpreted as a 3D-image.
      *
      * Possible loader formats:
      *
@@ -286,36 +168,65 @@ namespace vka
     class TextureLoader
     {
         using component_t = detail::texture::loader_format_t<F>;
-        static constexpr auto load_f = detail::texture::loader_f<F>;
 
     public:
         /**
-         * Loads the first image from memory.
-         * @param data Specifies the data of the image to load. Must at least contain\n
-         * <c>extent.width * extent.height * extent.depth * format_countof(F)</c> elements or\n
-         * <c>extent.width * extent.height * extent.depth * format_sizeof(F)</c> bytes.
-         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
-         * @param extent Specifies the extent of the image. This extent is used as the extent of the texture.
-         * @param expected_layers Specifies the expected depth. This pre-allocates enough memory.
+         * Initializes the loader with the extent of the generated texture and gives an estimate about the number of
+         * array layers.
+         * @param extent Specifies the extent of the texture.
+         * @param estimated_layers Optionally specifies an estimate of how many array layers this texture will contain.
+         * This parameter is useful for pre-allocation.
          */
-        explicit TextureLoader(const component_t* data, VkFormat format, VkExtent3D extent, uint32_t expected_layers = 1);
+        explicit inline TextureLoader(VkExtent2D extent, uint32_t estimated_layers = 1) noexcept;
 
         /**
-         * Loads a single color into the image.
+         * Loads a 2D-image from memory.
+         * @param data Specifies the data of the image to load. Must at least contain\n
+         * <c>extent.width * extent.height * format_countof(format)</c> elements or\n
+         * <c>extent.width * extent.height * format_sizeof(format)</c> bytes.
+         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
+         * @param extent Specifies the extent of the image. This extent is used as the extent of the generated texture.
+         * @param estimated_layers Optionally specifies an estimate of how many array layers this texture will contain.
+         * This parameter is useful for pre-allocation.
+         */
+        explicit TextureLoader(const component_t* data, VkFormat format, VkExtent2D extent, uint32_t estimated_layers = 1);
+
+        /**
+         * Loads a 3D-image from memory.
+         * @param data Specifies the data of the image to load. Must at least contain\n
+         * <c>extent.width * extent.height * extent.depth * format_countof(format)</c> elements or\n
+         * <c>extent.width * extent.height * extent.depth * format_sizeof(format)</c> bytes.
+         * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
+         * @param extent Specifies the extent of the texture.
+         */
+        explicit TextureLoader(const component_t* data, VkFormat format, VkExtent3D extent);
+
+        /**
+         * Loads a single color into the 2D-image.
          * @param color Specifies the color. Must at least contain <c>comp</c> elements.
          * @param comp Specifies the number of components the color has.
-         * @param extent Specifies the extent of the image. This extent is used as the extent of the texture.
-         * @param expected_layers Specifies the expected depth. This pre-allocates enough memory.
+         * @param extent Specifies the extent of the image. This extent is used as the extent of the generated texture.
+         * @param estimated_layers Optionally specifies an estimate of how many array layers this texture will contain.
+         * This parameter is useful for pre-allocation.
          */
-        explicit TextureLoader(const component_t* color, uint32_t comp, VkExtent3D extent, uint32_t expected_layers = 1);
+        explicit TextureLoader(const component_t* color, uint32_t comp, VkExtent2D extent, uint32_t estimated_layers = 1);
 
         /**
-         * Loads the first image from a file. Its extent is used as the extent of the texture.
+         * Loads a single color into the 3D-image.
+         * @param color Specifies the color. Must at least contain <c>comp</c> elements.
+         * @param comp Specifies the number of components the color has.
+         * @param extent Specifies the extent of the texture.
+         */
+        explicit TextureLoader(const component_t* color, uint32_t comp, VkExtent3D extent);
+
+        /**
+         * Loads a 2D-image from a file. Its extent is used as the extent of the generated texture.
          * @param path Specifies the path to the image file.
          * @throw std::invalid_argument Is thrown if the file could not be found.
-         * @param expected_layers Specifies the expected depth. This pre-allocates enough memory.
+         * @param estimated_layers Optionally specifies an estimate of how many array layers this texture will contain.
+         * This parameter is useful for pre-allocation.
          */
-        explicit TextureLoader(const char* path, uint32_t expected_layers = 1);
+        explicit TextureLoader(const char* path, uint32_t estimated_layers = 1);
 
         /**
          * Moves the texture loader. DO NOT use the source buffer after a move! This may lead to unexpected or even
@@ -335,30 +246,43 @@ namespace vka
         /// @return Returns the raw image data.
         inline const component_t* data() const noexcept;
 
-        /// @return Returns the extent of the image.
-        inline VkExtent3D extent() const noexcept;
+        /**
+         * Interprets the texture as an array of 2D-images.
+         * @return Returns the extent of the 2D-texture array.
+         */
+        inline VkExtent2D extent2D() const noexcept;
 
-        /// @return Returns the current number of layers.
+        /**
+         * Interprets the texture as a 3D-image.
+         * @return Returns the extent of the 3D-texture. The field <c>extent.depth</c> corresponds to
+         * <c>layer_count()</c>.
+         */
+        inline VkExtent3D extent3D() const noexcept;
+
+        /**
+         * Interprets the texture as an array of 2D-images.
+         * @return Returns the current number of layers. Corresponds to <c>extent.depth</c>.
+         */
         inline uint32_t layer_count() const noexcept;
 
         /**
-         * Loads the first image from memory. The loaded extent is defined by the first loaded image (constructor).
+         * Loads a 2D-image from memory. The extent is defined by one of the constructors.
          * @param data Specifies the data of the image to load. Must at least contain\n
-         * <c>extent.width * extent.height * extent.depth * format_countof(F)</c> elements or\n
-         * <c>extent.width * extent.height * extent.depth * format_sizeof(F)</c> bytes.
+         * <c>extent.width * extent.height * format_countof(format)</c> elements or\n
+         * <c>extent.width * extent.height * format_sizeof(format)</c> bytes.
          * @param format Specifies the format of the image expressed in a vulkan <c>VkFormat</c>.
          */
         void load(const component_t* data, VkFormat format) noexcept;
 
         /**
-         * Loads a single color into the image. The loaded extent is defined by the first loaded image (constructor).
+         * Loads a single color into the 2D-image. The extent is defined by one of the constructors.
          * @param color Specifies the color. Must at least contain <c>comp</c> elements.
          * @param comp Specifies the number of components the color has.
          */
         void load(const component_t* color, uint32_t comp) noexcept;
 
         /**
-         * Loads an image from a file.
+         * Loads a 2D-image from a file. The extent is defined by one of the constructors.
          * @param path Specifies the path to the image file.
          * @throw std::invalid_argument Is thrown if the file could not be found.
          * @throw std::runtime_error Is thrown if the extent of the image does not match the extent of the texture.
@@ -371,31 +295,39 @@ namespace vka
 
     private:
         static constexpr const char* MSG_EXTENT_MISSMATCH = "[vka::TextureLoader]: Extent of loaded image does not match the extent of the texture.";
-        static constexpr const char* MSG_INVALID_PATH = "[vka::TextureLoader]: Cannot find path to the image file.";
 
         component_t* m_data;
-        uint32_t m_alloc_layers;
         VkExtent3D m_extent;
-        uint32_t m_layer_count;
+        uint32_t m_alloc_layers;
+
+        /// Initialization constructor.
+        explicit inline TextureLoader(VkExtent3D extent) noexcept;
 
         /// Grows the image buffer.
         void grow();
 
-        /// Copies the image data to the buffer.
-        inline void copy_image(const component_t* data, uint32_t img_comp) noexcept;
+        /// Copies the 2D-image data to the buffer.
+        inline void copy_image2D(const component_t* data, uint32_t img_comp) noexcept;
 
-        /// Fills an image with a single color.
-        inline void fill_image(const component_t* color, uint32_t img_comp) noexcept;
+        /// Copies the 3D-image data to the buffer.
+        inline void copy_image3D(const component_t* data, uint32_t img_comp) noexcept;
+
+        /// Fills a 2D-image with a single color.
+        inline void fill_image2D(const component_t* color, uint32_t img_comp) noexcept;
+
+        /// Fills a 3D-image with a single color.
+        inline void fill_image3D(const component_t* color, uint32_t img_comp) noexcept;
 
         /// Calculates the allocation size for the image buffer.
-        static constexpr size_t alloc_size(VkExtent3D extent, uint32_t layer_count) noexcept;
+        static constexpr size_t alloc_size(VkExtent3D extent) noexcept;
 
         /// Calculates the initial number of layers to allocate.
-        static constexpr uint32_t alloc_layers(uint32_t expected_layers) noexcept;
+        static constexpr uint32_t alloc_layers(uint32_t estimated_layers) noexcept;
 
         /// Calculates the growth factor of the image buffer measured in layers.
         static constexpr uint32_t grow_factor(uint32_t layer_count) noexcept;
     };
+
 #endif
 
     /// Simplifies creating textures in vulkan.
@@ -473,33 +405,22 @@ namespace vka
 #ifdef VKA_STB_ENABLE
 
         /**
-         * Loads the data of a <c>TextureComponentMerger</c> object into the texture.
+         * Loads the data of a <c>TextureMerger</c> object into the texture.
          * @param cbo Specifies the command buffer in which the load command is recorded.
-         * @param loader Specifies the <c>TextureComponentMerger</c> whose data should be uploaded.
+         * @param merger Specifies the <c>TextureMerger</c> whose data should be uploaded.
          * @param info Provides information for the staging buffer.
-         * @param layer Specifies the target array layer. Only this layer is affected.
+         * @param layer Specifies the target array layer. Only this layer is affected. If the texture is a 3D-image, the
+         * parameter <c>layer</c> must be <c>0</c>.
          * @param level Specifies the target mip-map level. You can load the mip levels yourself.
          * @return Returns the staging buffer.
          */
         template<VkFormat F> requires detail::texture::is_loader_format<F>
         [[nodiscard]]
-        Buffer load(VkCommandBuffer cbo, const TextureComponentMerger<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level = 0);
+        Buffer load(VkCommandBuffer cbo, const TextureMerger<F>& merger, TextureLoadInfo info, uint32_t layer, uint32_t level = 0);
 
         /**
-         * Loads the data of a <c>Texture3DMerger</c> object into the texture.
-         * @param cbo Specifies the command buffer in which the load command is recorded.
-         * @param loader Specifies the <c>Texture3DMerger</c> whose data should be uploaded.
-         * @param info Provides information for the staging buffer.
-         * @param layer Specifies the target array layer. Only this layer is affected.
-         * @param level Specifies the target mip-map level. You can load the mip levels yourself.
-         * @return Returns the staging buffer.
-         */
-        template<VkFormat F> requires detail::texture::is_loader_format<F>
-        [[nodiscard]]
-        Buffer load(VkCommandBuffer cbo, const Texture3DMerger<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level = 0);
-
-        /**
-         * Loads the data of a <c>TextureLoader</c> object into the texture.
+         * Loads the data of a <c>TextureLoader</c> object into the texture. The data is interpreted as an array of
+         * 2D-images.
          * @param cbo Specifies the command buffer in which the load command is recorded.
          * @param loader Specifies the <c>TextureLoader</c> whose data should be uploaded.
          * @param info Provides information for the staging buffer.
@@ -510,7 +431,19 @@ namespace vka
          */
         template<VkFormat F> requires detail::texture::is_loader_format<F>
         [[nodiscard]]
-        Buffer load(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level = 0);
+        Buffer load2D(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level = 0);
+
+        /**
+         * Loads the data of a <c>TextureLoader</c> object into the texture. The data is interpreted as a 3D-image.
+         * @param cbo Specifies the command buffer in which the load command is recorded.
+         * @param loader Specifies the <c>TextureLoader</c> whose data should be uploaded.
+         * @param info Provides information for the staging buffer.
+         * @param level Specifies the target mip-map level. You can load the mip levels yourself.
+         * @return Returns the staging buffer.
+         */
+        template<VkFormat F> requires detail::texture::is_loader_format<F>
+        [[nodiscard]]
+        Buffer load3D(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t level = 0);
 
 #endif
 

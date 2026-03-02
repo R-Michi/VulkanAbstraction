@@ -73,14 +73,9 @@ constexpr const void* vka::detail::common::add_cvp(const void* p, uintptr_t x) n
     return static_cast<const char*>(p) + x;
 }
 
-constexpr bool vka::detail::common::cmpeq_extent(VkExtent2D a, VkExtent2D b) noexcept
+constexpr bool vka::detail::common::cmpeq_extent(VkExtent3D a, VkExtent2D b) noexcept
 {
     return a.width == b.width && a.height == b.height;
-}
-
-constexpr bool vka::detail::common::cmpeq_extent(VkExtent3D a, VkExtent3D b) noexcept
-{
-    return a.width == b.width && a.height == b.height && a.depth == b.depth;
 }
 
 inline uint32_t vka::detail::common::ilog2(uint32_t x) noexcept

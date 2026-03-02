@@ -1,5 +1,6 @@
 #pragma once
 
+// ReSharper disable CppRedundantInlineSpecifier
 #include "texture.h"
 
 inline void vka::detail::texture::destroy(VkDevice device, const Handle& handle, const VkAllocationCallbacks* allocator)
@@ -29,6 +30,19 @@ consteval uint8_t vka::detail::texture::format_type_id(VkFormat format) noexcept
     if (is_format_contained(format, LOADER_FORMAT_U16, 4)) return 1;
     if (is_format_contained(format, LOADER_FORMAT_FLOAT, 4)) return 2;
     return 0xFF;
+}
+
+template<VkFormat F>
+inline std::unique_ptr<vka::detail::texture::loader_format_t<F>[]> vka::detail::texture::load(const char* path, VkExtent2D& extent, uint32_t& components)
+{
+    int32_t width, height, comp;
+    loader_format_t<F>* const data = loader_f<F>(path, &width, &height, &comp, 0);
+    if (data == nullptr) [[unlikely]]
+        error::throw_invalid_argument("[vka::detail::texture::load]: Cannot find path to the image file");
+
+    extent = { (uint32_t)width, (uint32_t)height };
+    components = (uint32_t)comp;
+    return std::unique_ptr<loader_format_t<F>[]>(data);
 }
 
 template<VkFormat F>

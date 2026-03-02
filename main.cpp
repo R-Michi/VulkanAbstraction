@@ -26,10 +26,10 @@ int main()
     constexpr VkExtent2D extent2D = { 100, 100 };
     constexpr const char* filename = "test.png";
 
-    vka::TextureComponentMerger<format> merger1(data, format, extent3D);
-    vka::TextureComponentMerger<format> merger2(data, 3, extent3D);
-    vka::TextureComponentMerger<format> merger3(filename);
-    vka::TextureComponentMerger merger4 = std::move(merger3);
+    vka::TextureMerger<format> merger1(data, format, extent3D);
+    vka::TextureMerger<format> merger2(data, 3, extent3D);
+    vka::TextureMerger<format> merger3(filename);
+    vka::TextureMerger merger4 = std::move(merger3);
     merger3 = std::move(merger2);
     const float* tmp1 = merger1.data();
     VkExtent3D tmp2 = merger1.extent();

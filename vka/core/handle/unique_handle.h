@@ -52,6 +52,7 @@ namespace vka
         static_assert(detail::handle::copyable_c<Parent>, "Parent handle type must be copyable.");
         static_assert(detail::handle::bool_convertable_c<Handle>, "Handle type must be convertable to bool via static_cast.");
         static_assert(detail::handle::destroy_func_c<decltype(deleter)>, "Invalid deleter function for the specified handle.");
+
     public:
         /// Default initialization.
         constexpr unique_handle() noexcept;

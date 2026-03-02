@@ -30,11 +30,8 @@ namespace vka::detail::common
     /// Adds an offset to a const void-pointer.
     constexpr const void* add_cvp(const void* p, uintptr_t x) noexcept;
 
-    /// Compares two VkExtent2D types for equality.
-    constexpr bool cmpeq_extent(VkExtent2D a, VkExtent2D b) noexcept;
-
-    /// Compares two VkExtent3D types for equality.
-    constexpr bool cmpeq_extent(VkExtent3D a, VkExtent3D b) noexcept;
+    /// Compares (width, height) of a VkExtent3D with a VkExtent2D for equality.
+    constexpr bool cmpeq_extent(VkExtent3D a, VkExtent2D b) noexcept;
 
     /// Computes the integer base 2 logarithm.
     inline uint32_t ilog2(uint32_t x) noexcept;
