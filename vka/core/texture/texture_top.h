@@ -248,9 +248,9 @@ namespace vka
 
         /**
          * Interprets the texture as an array of 2D-images.
-         * @return Returns the extent of the 2D-texture array.
+         * @return Returns the extent of the 2D-textures. The third component <c>extent.depth</c> is <c>1</c>.
          */
-        inline VkExtent2D extent2D() const noexcept;
+        inline VkExtent3D extent2D() const noexcept;
 
         /**
          * Interprets the texture as a 3D-image.
@@ -261,7 +261,7 @@ namespace vka
 
         /**
          * Interprets the texture as an array of 2D-images.
-         * @return Returns the current number of layers. Corresponds to <c>extent.depth</c>.
+         * @return Returns the current number of array layers. Corresponds to <c>extent3D().depth</c>.
          */
         inline uint32_t layer_count() const noexcept;
 

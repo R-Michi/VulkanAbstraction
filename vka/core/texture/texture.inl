@@ -97,7 +97,7 @@ template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 [[nodiscard]]
 vka::Buffer vka::Texture::load2D(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t layer, uint32_t level)
 {
-    const VkExtent2D extent = loader.extent2D();
+    const VkExtent3D extent = loader.extent2D();
     const VkDeviceSize size = extent.width * extent.height * loader.layer_count() * format_sizeof(F);
     Buffer staging = stage(this->m_texture.parent(), loader.data(), size, info);
     this->load(cbo, staging, layer, loader.layer_count(), level);

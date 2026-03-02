@@ -791,12 +791,11 @@ void VkaExample::create_textures()
 		}
 	};
 
-	const VkExtent2D extent = loader.extent2D();
 	const vka::TextureCreateInfo create_info = {
 		.imageFlags = 0,
 		.imageType = VK_IMAGE_TYPE_2D,
 		.imageFormat = VK_FORMAT_R8G8B8A8_UNORM,
-		.imageExtent = { extent.width, extent.height, 1 },
+		.imageExtent = loader.extent2D(),
 		.imageArrayLayers = 3,
 		.imageQueueFamilyIndexCount = 1,
 		.imageQueueFamilyIndices = &this->graphics_queue.family_index,
@@ -812,7 +811,7 @@ void VkaExample::create_textures()
 		.samplerCompareEnable = VK_FALSE,
 		.samplerCompareOp = VK_COMPARE_OP_ALWAYS,
 		.samplerMinLod = 0.0f,
-		.samplerMaxLod = vka::Texture::max_lod(loader.extent3D()),
+		.samplerMaxLod = vka::Texture::max_lod(loader.extent2D()),
 		.samplerBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
 		.samplerUnnormalizedCoordinates = VK_FALSE,
 		.viewCount = 3,

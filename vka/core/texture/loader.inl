@@ -93,9 +93,9 @@ inline const vka::TextureLoader<F>::component_t* vka::TextureLoader<F>::data() c
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline VkExtent2D vka::TextureLoader<F>::extent2D() const noexcept
+inline VkExtent3D vka::TextureLoader<F>::extent2D() const noexcept
 {
-    return { this->m_extent.width, this->m_extent.height };
+    return { this->m_extent.width, this->m_extent.height, 1 };
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
@@ -157,8 +157,8 @@ void vka::TextureLoader<F>::grow()
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 inline void vka::TextureLoader<F>::copy_image2D(const component_t* data, uint32_t img_comp) noexcept
 {
-    const uint64_t px_count = (uint64_t)this->m_extent.width * this->m_extent.height * this->m_extent.depth;
-    const size_t offset = format_countof(F) * px_count;
+    const uint64_t px_count = (uint64_t)this->m_extent.width * this->m_extent.height;
+    const size_t offset = format_countof(F) * this->m_extent.depth * px_count;
     detail::texture::copy_image<F>(this->m_data + offset, data, px_count, img_comp, 0);
     ++this->m_extent.depth;
 }
@@ -173,8 +173,8 @@ inline void vka::TextureLoader<F>::copy_image3D(const component_t* data, uint32_
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 inline void vka::TextureLoader<F>::fill_image2D(const component_t* color, uint32_t img_comp) noexcept
 {
-    const uint64_t px_count = (uint64_t)this->m_extent.width * this->m_extent.height * this->m_extent.depth;
-    const size_t offset = format_countof(F) * px_count;
+    const uint64_t px_count = (uint64_t)this->m_extent.width * this->m_extent.height;
+    const size_t offset = format_countof(F) * this->m_extent.depth * px_count;
     detail::texture::fill_image<F>(this->m_data + offset, color, px_count, img_comp, 0);
     ++this->m_extent.depth;
 }
