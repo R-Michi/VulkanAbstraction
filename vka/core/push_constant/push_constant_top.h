@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-// ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
 namespace vka

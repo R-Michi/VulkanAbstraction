@@ -12,21 +12,21 @@
 
 constexpr vka::Buffer::Buffer() noexcept :
     m_size(0),
-    m_map_status(false)
+    m_map(nullptr)
 {}
 
 inline vka::Buffer::Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info) :
-    m_buffer(device , create_buffer(device, properties, create_info)),
+    m_buffer(device, create_buffer(device, properties, create_info)),
     m_size(create_info.bufferSize),
-    m_map_status(false)
+    m_map(nullptr)
 {}
 
 constexpr vka::Buffer::Buffer(Buffer&& src) noexcept :
     m_buffer(std::move(src.m_buffer)),
     m_size(src.m_size),
-    m_map_status(src.m_map_status)
+    m_map(src.m_map)
 {
-    src.m_map_status = false;
+    src.m_map = nullptr;
 }
 
 constexpr vka::Buffer::~Buffer()
@@ -39,8 +39,8 @@ constexpr vka::Buffer& vka::Buffer::operator= (Buffer&& src) noexcept
     this->unmap_memory();
     this->m_buffer = std::move(src.m_buffer);
     this->m_size = src.m_size;
-    this->m_map_status = src.m_map_status;
-    src.m_map_status = false;
+    this->m_map = src.m_map;
+    src.m_map = nullptr;
     return *this;
 }
 
@@ -74,32 +74,30 @@ inline VkDeviceAddress vka::Buffer::device_address() const noexcept
     return vkGetBufferDeviceAddress(this->m_buffer.parent(), &info);
 }
 
-inline void* vka::Buffer::map()
+constexpr void* vka::Buffer::map()
 {
     return this->map(0, this->m_size);
 }
 
-inline void* vka::Buffer::map(VkDeviceSize offset, VkDeviceSize size)
+constexpr void* vka::Buffer::map(VkDeviceSize offset, VkDeviceSize size)
 {
-    void* data;
-    check_result(
-        vkMapMemory(this->m_buffer.parent(), this->m_buffer.get().memory, offset, size, 0, &data),
-        MAP_MEMORY_FAILED
-    );
-    this->m_map_status = true;
-    return data;
+    if (!this->m_buffer || this->m_map != nullptr)
+        return this->m_map;
+
+    check_result(vkMapMemory(this->m_buffer.parent(), this->m_buffer.get().memory, offset, size, 0, &this->m_map), MAP_MEMORY_FAILED);
+    return this->m_map;
 }
 
 constexpr void vka::Buffer::unmap_memory() const noexcept
 {
-    if (this->m_map_status)
+    if (this->m_map != nullptr)
         vkUnmapMemory(this->m_buffer.parent(), this->m_buffer.get().memory);
 }
 
-inline void vka::Buffer::unmap() noexcept
+constexpr void vka::Buffer::unmap() noexcept
 {
     this->unmap_memory();
-    this->m_map_status = false;
+    this->m_map = nullptr;
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -112,8 +110,5 @@ inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 // ReSharper disable once CppMemberFunctionMayBeConst
 inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept
 {
-    VkBufferCopy final_region = region;
-    if (region.size == 0)
-        final_region.size = src.size() - region.srcOffset;
-    vkCmdCopyBuffer(cbo, src.m_buffer.get().buffer, this->m_buffer.get().buffer, 1, &final_region);
+    vkCmdCopyBuffer(cbo, src.m_buffer.get().buffer, this->m_buffer.get().buffer, 1, &region);
 }

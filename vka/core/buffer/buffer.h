@@ -64,7 +64,7 @@ namespace vka
          * @return Returns a pointer to the memory of the mapped buffer. The returned pointer is not nullptr.
          * @throw std::runtime_error Is thrown if mapping the buffer failed.
          */
-        inline void* map();
+        constexpr void* map();
 
         /**
          * Maps a specific region of the memory.
@@ -73,10 +73,10 @@ namespace vka
          * @return Returns a pointer to the memory of the mapped buffer. The returned pointer is not nullptr.
          * @throw std::runtime_error Is thrown if mapping the buffer failed.
          */
-        inline void* map(VkDeviceSize offset, VkDeviceSize size);
+        constexpr void* map(VkDeviceSize offset, VkDeviceSize size);
 
         /// Unmaps the memory.
-        inline void unmap() noexcept;
+        constexpr void unmap() noexcept;
 
         /**
          * Records the commands to copy the whole buffer.\n
@@ -107,7 +107,7 @@ namespace vka
 
         unique_handle<BufferHandle> m_buffer;
         VkDeviceSize m_size;
-        bool m_map_status;
+        void* m_map;
 
         /// Unmaps the memory without resetting the status.
         constexpr void unmap_memory() const noexcept;
