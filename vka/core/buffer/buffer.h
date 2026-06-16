@@ -79,21 +79,61 @@ namespace vka
         constexpr void unmap() noexcept;
 
         /**
-         * Records the commands to copy the whole buffer.\n
-         * For correct usage see the vulkan documentation of vkCmdCopyBuffer.
+         * Records the command to copy the whole buffer. For correct usage see the vulkan documentation of
+         * <c>vkCmdCopyBuffer</c>.
          * @param cbo Specifies the command buffer in which the copy command is recorded.
          * @param src Specifies the buffer to copy.
          */
         inline void copy(VkCommandBuffer cbo, const Buffer& src) noexcept;
 
         /**
-         * Records the commands to copy a specific region of the buffer.\n
-         * For correct usage see the vulkan documentation of vkCmdCopyBuffer.
+         * Records the command to copy a specific region of the buffer. For correct usage see the vulkan documentation
+         * of <c>vkCmdCopyBuffer</c>.
          * @param cbo Specifies the command buffer in which the copy command is recorded.
          * @param src Specifies the buffer to copy.
-         * @param region Specifies the region of the buffer to copy.
+         * @param region Specifies the copy region.
          */
         inline void copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept;
+
+        /**
+         * Records the command to update the whole buffer. For correct usage see the vulkan documentation of
+         * <c>vkCmdUpdateBuffer</c>.
+         * @param cbo Specifies the command buffer in which the update command is recorded.
+         * @param data Specifies the data to copy. Must point to memory which is at least as large as the buffer.
+         * @note The data which is copied into the buffer is directly recorded into the command buffer. Using this
+         * functionality is only recommended for small copy sizes (e.g. for small uniform buffers).
+         */
+        inline void update(VkCommandBuffer cbo, const void* data) noexcept;
+
+        /**
+         * Records the command to update a specific region of the buffer. For correct usage see the vulkan documentation
+         * of <c>vkCmdUpdateBuffer</c>.
+         * @param cbo Specifies the command buffer in which the update command is recorded.
+         * @param data Specifies the data to copy. Must point to memory which is at least <c>size</c> bytes large.
+         * @param offset Specifies the byte offset in the destination buffer.
+         * @param size Specifies the number of bytes to update.
+         * @note The data which is copied into the buffer is directly recorded into the command buffer. Using this
+         * functionality is only recommended for small copy sizes (e.g. for small uniform buffers).
+         */
+        inline void update_region(VkCommandBuffer cbo, const void* data, VkDeviceSize offset, VkDeviceSize size) noexcept;
+
+        /**
+         * Records the command to fill the whole buffer with a single value. For correct usage see the vulkan
+         * documentation of <c>vkCmdFillBuffer</c>. This command behaves like <c>memset</c>.
+         * @param cbo Specifies the command buffer in which the fill command is recorded.
+         * @param value Specifies the value with which the buffer is filled.
+         */
+        inline void fill(VkCommandBuffer cbo, uint32_t value) noexcept;
+
+        /**
+         * Records the command to fill a specific region of the buffer with a single value. For correct usage see the
+         * vulkan documentation of <c>vkCmdFillBuffer</c>. This command behaves like <c>memset</c>.
+         * @param cbo Specifies the command buffer in which the fill command is recorded.
+         * @param value Specifies the value with which the buffer is filled.
+         * @param offset Specifies the byte offset in the destination buffer.
+         * @param size Specifies the number of bytes to fill.
+         */
+        inline void fill_region(VkCommandBuffer cbo, uint32_t value, VkDeviceSize offset, VkDeviceSize size) noexcept;
 
         // deleted
         Buffer(const Buffer&) = delete;

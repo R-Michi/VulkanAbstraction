@@ -103,7 +103,7 @@ constexpr void vka::Buffer::unmap() noexcept
 // ReSharper disable once CppMemberFunctionMayBeConst
 inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 {
-    const VkBufferCopy region = { 0, 0, src.m_size };
+    const VkBufferCopy region = { 0, 0, this->m_size };
     vkCmdCopyBuffer(cbo, src.m_buffer.get().buffer, this->m_buffer.get().buffer, 1, &region);
 }
 
@@ -111,4 +111,28 @@ inline void vka::Buffer::copy(VkCommandBuffer cbo, const Buffer& src) noexcept
 inline void vka::Buffer::copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept
 {
     vkCmdCopyBuffer(cbo, src.m_buffer.get().buffer, this->m_buffer.get().buffer, 1, &region);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+inline void vka::Buffer::update(VkCommandBuffer cbo, const void* data) noexcept
+{
+    vkCmdUpdateBuffer(cbo, this->m_buffer.get().buffer, 0, this->m_size, data);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+inline void vka::Buffer::update_region(VkCommandBuffer cbo, const void* data, VkDeviceSize offset, VkDeviceSize size) noexcept
+{
+    vkCmdUpdateBuffer(cbo, this->m_buffer.get().buffer, offset, size, data);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+inline void vka::Buffer::fill(VkCommandBuffer cbo, uint32_t value) noexcept
+{
+    vkCmdFillBuffer(cbo, this->m_buffer.get().buffer, 0, this->m_size, value);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+inline void vka::Buffer::fill_region(VkCommandBuffer cbo, uint32_t value, VkDeviceSize offset, VkDeviceSize size) noexcept
+{
+    vkCmdFillBuffer(cbo, this->m_buffer.get().buffer, offset, size, value);
 }
