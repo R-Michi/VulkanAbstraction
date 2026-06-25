@@ -11,8 +11,6 @@
 
 namespace vka
 {
-#ifdef VKA_STB_ENABLE
-
     /**
      * Helper class to load and merge 2D images from a file or 3D images from memory into a single image. Every time
      * <c>load()</c> is called, the components of the current image are appended to the already existing components of
@@ -328,8 +326,6 @@ namespace vka
         static constexpr uint32_t grow_factor(uint32_t layer_count) noexcept;
     };
 
-#endif
-
     /// Simplifies creating textures in vulkan.
     class Texture
     {
@@ -402,8 +398,6 @@ namespace vka
          */
         void load(VkCommandBuffer cbo, const Buffer& data, uint32_t layer, uint32_t count = 1, uint32_t level = 0) noexcept;
 
-#ifdef VKA_STB_ENABLE
-
         /**
          * Loads the data of a <c>TextureMerger</c> object into the texture.
          * @param cbo Specifies the command buffer in which the load command is recorded.
@@ -444,8 +438,6 @@ namespace vka
         template<VkFormat F> requires detail::texture::is_loader_format<F>
         [[nodiscard]]
         Buffer load3D(VkCommandBuffer cbo, const TextureLoader<F>& loader, TextureLoadInfo info, uint32_t level = 0);
-
-#endif
 
         /**
          * Finishes the texture creation and creates the mip-map (if mip-map creation is activated). This operation must

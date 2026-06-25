@@ -18,14 +18,12 @@ namespace vka::detail::texture
     template<> struct loader_format_type<1> { using type = uint16_t; };
     template<> struct loader_format_type<2> { using type = float;    };
 
-#ifdef VKA_STB_ENABLE
     /// Maps form format type-ID to the load function for the format.
     template<uint8_t FID> requires (FID <= 2)
     struct loader_function {};
     template<> struct loader_function<0>    { static constexpr auto func = stbi_load;    };
     template<> struct loader_function<1>    { static constexpr auto func = stbi_load_16; };
     template<> struct loader_function<2>    { static constexpr auto func = stbi_loadf;   };
-#endif
 
     /// Specifies all uint8_t formats for the texture loader.
     static constexpr VkFormat LOADER_FORMAT_U8[4] = {
@@ -67,11 +65,9 @@ namespace vka::detail::texture
     template<VkFormat F>
     using loader_format_t = loader_format_type<format_type_id(F)>::type;
 
-#ifdef VKA_STB_ENABLE
     /// Loader function for the format.
     template<VkFormat F>
     constexpr auto loader_f = loader_function<format_type_id(F)>::func;
-#endif
 
     /// Defines the texture handle which is used as a custom handle in unique_handle. Parent: VkDevice.
     struct Handle

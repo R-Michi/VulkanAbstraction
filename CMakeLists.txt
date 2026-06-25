@@ -15,23 +15,41 @@ set(VKA_COMPILE_WARNINGS -Walloca -Wall)
 add_compile_options(${VKA_COMPILE_WARNINGS})
 
 # Useful variables
-set(VKA_INCLUDE_DIR ${VulkanAbstraction_SOURCE_DIR}) # use: #include <vka/vka.h>
+set(VKA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}) # use: #include <vka/vka.h>
+set(VKA_LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+message(STATUS "[VKA]: Include directory: ${VKA_INCLUDE_DIR}")
+message(STATUS "[VKA]: Library directory: ${VKA_LIBRARY_DIR}")
 
 # find vulkan library package
-find_package(Vulkan REQUIRED)
+find_package(Vulkan COMPONENTS glslangValidator REQUIRED)
 find_program(SPIRV_OPT REQUIRED NAMES "spirv-opt" PATHS "$ENV{VULKAN_SDK}/Bin")
 
-# glfw library
+# Include GLFW as a submodule in this project. However, GLFW may already exist. If this is the case, do not include it a
+# second time.
 if (NOT TARGET glfw)
-    find_path(VKA_SUBMODULE_GLFW NAMES glfw PATHS ${VulkanAbstraction_SOURCE_DIR}/lib REQUIRED)
-    add_subdirectory(${VKA_SUBMODULE_GLFW}/glfw)
+    add_subdirectory(${VKA_LIBRARY_DIR}/glfw)
+
+    # If GLFW still does not exist, it was not found.
+    # Use \"git submodule update --init --recursive\" if submodules have not been initialized yet or change the
+    # directory to the VulkanAbstraction submodule and use \"git submodule update --init\" here if submodules were not
+    # initialized recursively. Considering the VulkanAbstraction library is included as a submodule in a different
+    # project.
+    if (NOT TARGET glfw)
+        message(FATAL_ERROR "[VKA]: GLFW not found.")
+    endif ()
+    message(STATUS "[VKA]: Included GLFW as a submodule.")
 endif ()
-set(VKA_GLFW_INCLUDE_DIR "${GLFW_SOURCE_DIR}/include")
 message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
 
-# lib directory
-set(VKA_LIB_DIR "${VulkanAbstraction_SOURCE_DIR}/lib")
-message(STATUS "[VKA]: Library directory: ${VKA_LIB_DIR}")
+# Include STB image. STB image is a header-only library which has an implementation part. It must be compiled into one
+# translation unit (.c / .cpp) unsing #define STB_IMAGE_IMPLEMENTATION. Since this is not its own project where all its
+# files compile into one static library, we have to embed it in the VulkanAbstraction library. Otherwise, we would have
+# an external dependency when using the VulkanAbstraction library.
+set(VKA_STB_FILES
+        lib/stb/stb.h
+        lib/stb/stb_image.h
+        lib/stb/implementation.cpp
+)
 
 ########################################################################################################################
 ######################################################## FORWARD #######################################################
@@ -374,47 +392,39 @@ set(VKA_FILES
         ${VKA_FORWARD_FILES}
         ${VKA_DETAIL_FILES}
         ${VKA_CORE_FILES}
+        ${VKA_STB_FILES}
 )
 
 ########################################################################################################################
 ####################################################### LIBRARIES ######################################################
 ########################################################################################################################
 
+# Vulkan abstraction without using GLFW
 add_library(vka STATIC ${VKA_FILES})
-target_link_libraries(vka PRIVATE Vulkan::Headers)
-target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR} PRIVATE ${VKA_LIB_DIR})
+target_link_libraries(vka PUBLIC Vulkan::Vulkan)
+target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR})
 
+# Vulkan abstraction with GLFW. If this target is linked, all GLFW features are automatically activated.
+# To remove dependencies GLFW and Vulkan are automatically linked when linking this target.
 add_library(vka_glfw STATIC ${VKA_FILES})
-target_compile_options(vka_glfw PRIVATE -DVKA_GLFW_ENABLE -DVKA_INCLUDE_GLFW)
-target_link_libraries(vka_glfw PRIVATE Vulkan::Headers)
-target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR} PRIVATE ${VKA_GLFW_INCLUDE_DIR} ${VKA_LIB_DIR})
+target_compile_options(vka_glfw PUBLIC -DVKA_GLFW_ENABLE)
+target_link_libraries(vka_glfw PUBLIC Vulkan::Vulkan glfw)
+target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR})
 
 ########################################################################################################################
 ############################################### VKA GLFW EXTENSION FILES ###############################################
 ########################################################################################################################
 
-# compile and link executable
-add_executable(vka_example
+set(VKA_EXAMPLE_FILES
         main.cpp
         vka_example.h
         vka_example.cpp
-        ${VKA_FILES}
 )
-target_compile_options(vka_example PRIVATE
-        -DVKA_GLFW_ENABLE
-        -DVKA_INCLUDE_GLFW
-        -DVKA_STB_ENABLE
-        -DVKA_INCLUDE_STB
-)
-target_link_libraries(vka_example PRIVATE
-        Vulkan::Vulkan
-        glfw
-)
-target_include_directories(vka_example PRIVATE
-        ${VKA_LIB_DIR}/glm
-        ${VKA_LIB_DIR}
-        ${VKA_INCLUDE_DIR}
-)
+
+# compile and link executable
+add_executable(vka_example ${VKA_EXAMPLE_FILES})
+target_link_libraries(vka_example PRIVATE vka_glfw)
+target_include_directories(vka_example PRIVATE ${VKA_LIBRARY_DIR}/glm ${VKA_LIBRARY_DIR})
 
 # find all shader files that end with ".vert" and ".frag"
 # More shader stages can be added, if required.

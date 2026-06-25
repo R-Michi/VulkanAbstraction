@@ -13,12 +13,11 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <memory>
+#include <vulkan/vulkan.h>
+#include "../lib/stb/stb.h"
 
-/// --------------------------------------------------- Requirements ---------------------------------------------------
-
-/// Vulkan must be included before vka.
-#ifndef VULKAN_H_
-    #error [VKA]: vulkan.h must be included before including vka.h.
+#ifdef VKA_GLFW_ENABLE
+    #include <GLFW/glfw3.h>
 #endif
 
 /// ------------------------------------------------- Hardware features ------------------------------------------------
@@ -47,17 +46,10 @@
 /// --------------------------------------------------- User defines ---------------------------------------------------
 
 /**
- * USER DEFINE: VKA_INCLUDE_GLFW includes the GLFW library.\n
- * USER DEFINE: VKA_GLFW_ENABLE enables all functions that use the GLFW library.
- */
-#if defined(VKA_GLFW_ENABLE) && defined(VKA_INCLUDE_GLFW)
-    #include <GLFW/glfw3.h>
-#endif
-
-/**
  * @brief USER DEFINE: VKA_INCLUDE_TINYOBJ includes the tiny-object-loader library\n
  * @brief USER DEFINE: VKA_MODEL_LOADING_ENABLE enables the model loading module. The tiny-object-loader library must be
  * included externally before including vka.h or by defining VKA_INCLUDE_TINYOBJ.
+ * TODO: This is old code
  */
 #if defined(VKA_MODEL_LOADING_ENABLE) && defined(VKA_INCLUDE_TINYOBJ)
     #ifdef VKA_MODEL_USE_DOUBLE
@@ -67,23 +59,8 @@
 #endif
 
 /**
- * @brief USER DEFINE: VKA_INCLUDE_STB_IMAGE includes stb_image.h.\n
- * @brief USER DEFINE: VKA_STB_IMAGE_LOAD_ENABLE enables texture functions to load images into memory. stb_image.h must
- * be included externally before including vka.h or by defining VKA_INCLUDE_STB_IMAGE.
- */
-#if defined(VKA_STB_ENABLE) && defined(VKA_INCLUDE_STB)
-    #ifdef __clang__
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wempty-body"
-            #include <stb_image.h>
-        #pragma clang diagnostic pop
-    #else
-        #include <stb_image.h>
-    #endif
-#endif
-
-/**
  * @brief VKA_MODEL_USE_DOUBLE forces the tiny-object library to use double as the default data type instead of float.
  * Can only be activated if the tiny-object-loader library is included and model loading is activated.
+ * TODO: This is old code
  */
 // USE: #define VKA_MODEL_USE_DOUBLE

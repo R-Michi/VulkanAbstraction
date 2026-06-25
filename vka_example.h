@@ -11,13 +11,9 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
-#include <vector>
-
 #define VKA_INCLUDE_TINYOBJ
 #define VKA_MODEL_LOADING_ENABLE
-
+#include <glm/glm.hpp>
 #include <vka/vka.h>
 
 class VkaExample
