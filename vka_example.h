@@ -71,8 +71,8 @@ private:
 	vka::Texture texture;
 
     VkDescriptorPool dpool;
-    vka::DescriptorLayoutArray<1> descriptor_layouts;
-	vka::DescriptorSetArray<1> descriptors;
+    vka::DescriptorLayouts descriptor_layouts;
+	vka::DescriptorSets descriptors;
 
 	VkSemaphore sem_img_available[SWAPCHAIN_IMAGE_COUNT];
 	VkSemaphore sem_rendering_done[SWAPCHAIN_IMAGE_COUNT];

@@ -8,17 +8,18 @@
 
 #pragma once
 
-#include "buffer/buffer.inl"
 #include "common/common.inl"
-#include "device/device.h"
 #include "error/error.inl"
 #include "format/format.inl"
 #include "instance/instance.h"
-#include "push_constant/push_constant.inl"
+#include "device/device.h"
 #include "queue/queue.inl"
+#include "buffer/buffer.inl"
+#include "attachment/attachment.inl"
 #include "texture/texture.inl"
 #include "descriptor/descriptor.inl"
 #include "handle/handle.h"
+#include "push_constant/push_constant.inl"
 
 #ifdef VKA_MODEL_LOADING_ENABLE
     #include "model/vka_model.h"

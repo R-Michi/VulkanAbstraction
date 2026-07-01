@@ -8,34 +8,34 @@
 
 #pragma once
 
-#include "push_constant_top.h"
+#include "top.h"
 
-inline vka::PushConstantView::PushConstantView(VkPushConstantRange range, void* data) noexcept :
+constexpr vka::PushConstantView::PushConstantView(VkPushConstantRange range, void* data) noexcept :
     m_range(range),
     m_data(detail::common::add_vp(data, range.offset))
 {}
 
-inline VkShaderStageFlags vka::PushConstantView::stages() const noexcept
+constexpr VkShaderStageFlags vka::PushConstantView::stages() const noexcept
 {
     return this->m_range.stageFlags;
 }
 
-inline uint32_t vka::PushConstantView::size() const noexcept
+constexpr uint32_t vka::PushConstantView::size() const noexcept
 {
     return this->m_range.size;
 }
 
-inline uint32_t vka::PushConstantView::offset() const noexcept
+constexpr uint32_t vka::PushConstantView::offset() const noexcept
 {
     return this->m_range.offset;
 }
 
-inline void* vka::PushConstantView::data() noexcept
+constexpr void* vka::PushConstantView::data() noexcept
 {
     return this->m_data;
 }
 
-inline const void* vka::PushConstantView::data() const noexcept
+constexpr const void* vka::PushConstantView::data() const noexcept
 {
     return this->m_data;
 }

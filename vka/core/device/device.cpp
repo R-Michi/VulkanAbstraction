@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
 std::vector<VkPhysicalDevice> vka::device::get(VkInstance instance)
@@ -22,9 +21,9 @@ std::vector<VkPhysicalDevice> vka::device::get(VkInstance instance)
 }
 
 bool vka::device::check_requirements(
-    const PhysicalDeviceRequirements& requirements,
     [[maybe_unused]] VkInstance instance,
     VkPhysicalDevice device,
+    const PhysicalDeviceRequirements& requirements,
     VkPhysicalDeviceProperties* prop,
     VkPhysicalDeviceMemoryProperties* mem_prop
 ) noexcept
@@ -80,7 +79,7 @@ uint32_t vka::device::find(
 {
     for(size_t i = 0; i < devices.size(); i++)
     {
-        if (check_requirements(requirements, instance, devices[i], prop, mem_prop))
+        if (check_requirements(instance, devices[i], requirements, prop, mem_prop))
             return i;
     }
     return NPOS;

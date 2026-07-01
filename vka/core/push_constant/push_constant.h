@@ -8,6 +8,6 @@
 
 #pragma once
 
+#include "view.inl"
+#include "layout.inl"
 #include "push_constant.inl"
-#include "push_constant_layout.inl"
-#include "push_constant_view.inl"

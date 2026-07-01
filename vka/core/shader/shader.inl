@@ -10,66 +10,27 @@
 
 #include "shader.h"
 
-inline vka::Shader::Shader() noexcept :
-    m_device(VK_NULL_HANDLE),
-    m_module(VK_NULL_HANDLE)
-{}
-
-inline vka::Shader::Shader(VkDevice device, const std::string& path) :
-    m_device(device),
-    m_module(VK_NULL_HANDLE)
+constexpr vka::Shader::operator bool() const noexcept
 {
-    this->internal_create(path);
+    return (bool)this->m_module;
 }
 
-inline vka::Shader::Shader(Shader&& src) noexcept :
-    m_device(src.m_device),
-    m_module(src.m_module)
+constexpr VkDevice vka::Shader::parent() const noexcept
 {
-    src.m_module = VK_NULL_HANDLE;
+    return this->m_module.parent();
 }
 
-inline vka::Shader& vka::Shader::operator= (Shader&& src) noexcept
+constexpr VkShaderModule vka::Shader::handle() const noexcept
 {
-    // destroy 'this' shader, if it has been created, otherwise this function does nothing
-    this->destroy_handles();
-    this->m_device = src.m_device;
-    this->m_module = src.m_module;
-    src.m_module = VK_NULL_HANDLE;
-    return *this;
+    return this->m_module.get();
 }
 
-inline vka::Shader::~Shader()
+constexpr void vka::Shader::destroy() noexcept
 {
-    this->destroy_handles();
-}
-
-inline void vka::Shader::create(VkDevice device, const std::string& path)
-{
-    if (!this->is_valid())
-    {
-        this->m_device = device;
-        this->internal_create(path);
-    }
-}
-
-inline void vka::Shader::destroy() noexcept
-{
-    this->destroy_handles();
     this->m_module = VK_NULL_HANDLE;
 }
 
-inline VkShaderModule vka::Shader::handle() const noexcept
-{
-    return this->m_module;
-}
-
-inline bool vka::Shader::is_valid() const noexcept
-{
-    return (this->m_module != VK_NULL_HANDLE);
-}
-
-inline VkPipelineShaderStageCreateInfo vka::Shader::make_stage(
+constexpr VkPipelineShaderStageCreateInfo vka::Shader::make_stage(
     VkShaderStageFlagBits stage,
     VkPipelineShaderStageCreateFlags flags,
     const char* entry_point,
@@ -81,7 +42,7 @@ inline VkPipelineShaderStageCreateInfo vka::Shader::make_stage(
         .pNext = nullptr,
         .flags = flags,
         .stage = stage,
-        .module = this->m_module,
+        .module = this->m_module.get(),
         .pName = entry_point,
         .pSpecializationInfo = specialization
     };

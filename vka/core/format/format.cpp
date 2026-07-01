@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
 bool vka::format::supports_feature2(VkPhysicalDevice device, VkFormat format, VkImageTiling tiling, VkFormatFeatureFlags format_feature) noexcept

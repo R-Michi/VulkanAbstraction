@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
 bool vka::instance::supports_layer(std::string_view layer_name, VkLayerProperties* properties) noexcept

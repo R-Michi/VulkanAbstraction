@@ -11,22 +11,21 @@
 namespace vka::queue
 {
     /**
-     * @brief Queries all queue families (actually their properties) from a physical device.
-     * @param device Specifies a valid physical device.
+     * Queries the properties of all queue families from a physical device.
+     * @param device Physical device to query the properties from.
      * @return Returns a vector containing all queue family properties.
      */
     std::vector<VkQueueFamilyProperties> properties(const VkPhysicalDevice& device);
 
     /**
-     * @brief Searches for queue family which supports the requirements for the program.
-     * @param queue_families Specifies all available queue family properties.
-     * @param requirements Specifies the requirements for the program.
-     * @param priority Specifies a priority for the search operation.\n
-     *  - VKA_QUEUE_FAMILY_PRIORITY_FIRST Chooses the first queue family that meets the requirements.\n
-     *  - VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL Chooses the queue family which has the least number of additional queue\n
-     *  family flags to those specified in the filter, if multiple queue families meet the requirements. In other words,
-     *  if multiple queue families satisfy the requirements, the queue family with the "least power" is chosen.
-     * @return Returns the index of the found queue family or vka::NPOS if no queue family could be found.
+     * Searches for queue family which supports the specified requirements.
+     * @param queue_families All available queue family properties.
+     * @param requirements Specifies the requirements.
+     * @param priority Priority for the search operation:
+     * - <c>VKA_QUEUE_FAMILY_PRIORITY_FIRST</c> Chooses the first queue family that meets the requirements
+     * - <c>VKA_QUEUE_FAMILY_PRIORITY_OPTIMAL</c> Chooses the queue family which has the least number of additional
+     *  queue family flags.
+     * @return Returns the index of the found queue family or <c>vka::NPOS</c> if no queue family was found.
      */
     uint32_t find(const std::vector<VkQueueFamilyProperties>& queue_families, const QueueFamilyRequirements& requirements, QueueFamilyPriority priority) noexcept;
 }

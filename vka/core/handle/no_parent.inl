@@ -122,7 +122,7 @@ constexpr void vka::unique_handle<Handle, deleter, void>::destroy() noexcept
 }
 
 template<typename Handle, auto deleter>
-void vka::unique_handle<Handle, deleter, void>::swap(unique_handle& handle) noexcept
+constexpr void vka::unique_handle<Handle, deleter, void>::swap(unique_handle& handle) noexcept
 {
     Handle tmp_handle = this->m_handle;
     this->m_handle = handle.m_handle;

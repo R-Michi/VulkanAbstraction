@@ -11,10 +11,10 @@
 namespace vka::detail::queue
 {
     /**
-     * @brief Checks all queue family requirements.
-     * @param requirements Specifies the requirements.
-     * @param properties Specifies the properties of the queue family.
-     * @return Returns true if all requirements are satisfied.
+     * Checks requirements for a queue family.
+     * @param requirements Requirements to check for.
+     * @param properties Properties of the queue family to check.
+     * @return Returns <c>true</c> if all requirements are satisfied.
      */
     inline bool check_requirements(QueueFamilyRequirements requirements, const VkQueueFamilyProperties& properties) noexcept;
 } // namespace vka::detail::queue

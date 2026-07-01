@@ -9,7 +9,7 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
-#include "texture_top.h"
+#include "top.h"
 
 constexpr vka::Texture::Texture() noexcept :
     m_extent{0, 0, 0},
@@ -48,14 +48,19 @@ constexpr uint32_t vka::Texture::level_count() const noexcept
     return this->m_level_count;
 }
 
-constexpr uint32_t vka::Texture::level_count(VkExtent3D extent) noexcept
+inline uint32_t vka::Texture::level_count(VkExtent3D extent) noexcept
 {
     return detail::common::max_ilog2(extent) + 1;
 }
 
-constexpr float vka::Texture::max_lod(VkExtent3D extent) noexcept
+inline float vka::Texture::max_lod(VkExtent3D extent) noexcept
 {
     return (float)detail::common::max_ilog2(extent);
+}
+
+constexpr VkDevice vka::Texture::parent() const noexcept
+{
+    return this->m_texture.parent();
 }
 
 constexpr VkImage vka::Texture::image() const noexcept
@@ -66,11 +71,6 @@ constexpr VkImage vka::Texture::image() const noexcept
 constexpr VkSampler vka::Texture::sampler() const noexcept
 {
     return this->m_texture.get().sampler;
-}
-
-constexpr VkDevice vka::Texture::parent() const noexcept
-{
-    return this->m_texture.parent();
 }
 
 constexpr VkImageView vka::Texture::view(uint32_t idx) const

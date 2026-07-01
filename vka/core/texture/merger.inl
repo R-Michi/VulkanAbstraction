@@ -1,10 +1,10 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
-#include "texture_top.h"
+#include "top.h"
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline vka::TextureMerger<F>::TextureMerger(VkExtent3D extent) :
+vka::TextureMerger<F>::TextureMerger(VkExtent3D extent) :
     m_data(new component_t[alloc_size(extent)]{}),
     m_extent(extent),
     m_component_idx(0)
@@ -126,7 +126,7 @@ inline void vka::TextureMerger<F>::fill_image(const component_t* color, uint32_t
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-constexpr size_t vka::TextureMerger<F>::alloc_size(VkExtent3D extent) noexcept
+inline size_t vka::TextureMerger<F>::alloc_size(VkExtent3D extent) noexcept
 {
     return format_sizeof(F) * extent.width * extent.height * extent.depth;
 }

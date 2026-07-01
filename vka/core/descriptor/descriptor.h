@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "descriptor_inline.inl"
-#include "descriptor_set_binding_list.inl"
-#include "descriptor_layout_array.inl"
-#include "descriptor_set_array.inl"
+#include "binding_list.inl"
+#include "layout.inl"
+#include "set.inl"
+#include "update.inl"

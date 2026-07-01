@@ -6,20 +6,14 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
-void vka::AttachmentImage::destroy_handles() const noexcept
-{
-    if (this->m_view != VK_NULL_HANDLE)
-        vkDestroyImageView(this->m_device, this->m_view, nullptr);
-    if (this->m_memory != VK_NULL_HANDLE)
-        vkFreeMemory(this->m_device, this->m_memory, nullptr);
-    if (this->m_image != VK_NULL_HANDLE)
-        vkDestroyImage(this->m_device, this->m_image, nullptr);
-}
+vka::AttachmentImage::AttachmentImage(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info) :
+    m_image(create_attachment(device, properties, create_info)),
+    m_extent(create_info.imageExtent)
+{}
 
-void vka::AttachmentImage::internal_create(const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info)
+vka::unique_handle<vka::AttachmentImage::AttachmentHandle> vka::AttachmentImage::create_attachment(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info)
 {
     // create image
     const VkImageCreateInfo image_ci = {
@@ -39,11 +33,13 @@ void vka::AttachmentImage::internal_create(const VkPhysicalDeviceMemoryPropertie
         .pQueueFamilyIndices = create_info.imageQueueFamilyIndices,
         .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
     };
-    check_result(vkCreateImage(this->m_device, &image_ci, nullptr, &this->m_image), IMAGE_CREATE_FAILED);
+    VkImage image;
+    check_result(vkCreateImage(device, &image_ci, nullptr, &image), IMAGE_CREATE_FAILED);
+    unique_handle image_guard(device, image);
 
     // query memory requirements
     VkMemoryRequirements requirements;
-    vkGetImageMemoryRequirements(this->m_device, this->m_image, &requirements);
+    vkGetImageMemoryRequirements(device, image, &requirements);
 
     // allocate memory for the image
     const VkMemoryAllocateInfo memory_ai = {
@@ -52,15 +48,17 @@ void vka::AttachmentImage::internal_create(const VkPhysicalDeviceMemoryPropertie
         .allocationSize = requirements.size,
         .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
     };
-    check_result(vkAllocateMemory(this->m_device, &memory_ai, nullptr, &this->m_memory), ALLOC_MEMORY_FAILED);
-    check_result(vkBindImageMemory(this->m_device, this->m_image, this->m_memory, 0), BIND_MEMORY_FAILED);
+    VkDeviceMemory memory;
+    check_result(vkAllocateMemory(device, &memory_ai, nullptr, &memory), ALLOC_MEMORY_FAILED);
+    unique_handle memory_guard(device, memory);
+    check_result(vkBindImageMemory(device, image, memory, 0), BIND_MEMORY_FAILED);
 
     // create image view from image
     const VkImageViewCreateInfo view_ci = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .image = this->m_image,
+        .image = image,
         .viewType = VK_IMAGE_VIEW_TYPE_2D,
         .format = create_info.viewFormat,
         .components = create_info.viewComponentMapping,
@@ -72,5 +70,13 @@ void vka::AttachmentImage::internal_create(const VkPhysicalDeviceMemoryPropertie
             .layerCount = 1
         }
     };
-    check_result(vkCreateImageView(this->m_device, &view_ci, nullptr, &this->m_view), VIEW_CREATE_FAILED);
+    VkImageView view;
+    check_result(vkCreateImageView(device, &view_ci, nullptr, &view), VIEW_CREATE_FAILED);
+
+    const AttachmentHandle handle = {
+        .image = image_guard.release(),
+        .memory = memory_guard.release(),
+        .view = view
+    };
+    return unique_handle(device, handle);
 }

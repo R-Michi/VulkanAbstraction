@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <memory>
+#include <fstream>
 #include <vulkan/vulkan.h>
 #include "../lib/stb/stb.h"
 

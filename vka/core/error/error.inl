@@ -10,12 +10,12 @@
 
 #include "error.h"
 
-inline bool vka::is_error(VkResult res) noexcept
+constexpr bool vka::is_error(VkResult res) noexcept
 {
     return static_cast<int32_t>(res) < 0;
 }
 
-inline void vka::check_result(VkResult res, const char* msg)
+constexpr void vka::check_result(VkResult res, const char* msg)
 {
     if (is_error(res)) [[unlikely]]
         detail::error::throw_runtime_error(msg);

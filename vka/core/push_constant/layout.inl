@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "push_constant_top.h"
+#include "top.h"
 
 template<uint32_t N>
 constexpr vka::PushConstantLayout<N>::PushConstantLayout() noexcept :
@@ -45,19 +45,6 @@ constexpr const VkPushConstantRange* vka::PushConstantLayout<N>::ranges() const 
 }
 
 template<uint32_t N>
-constexpr std::array<VkPushConstantRange, N> vka::PushConstantLayout<N>::ranges_array() const noexcept
-{
-    return this->m_ranges;
-}
-
-template<uint32_t N>
-constexpr uint32_t vka::PushConstantLayout<N>::round_size(uint32_t s) noexcept
-{
-    // equivalent to '(s - 1) / 4 * 4 + 4'
-    return s == 0 ? 0 : (((s - 1) >> 2) << 2) + 4;
-}
-
-template<uint32_t N>
 constexpr void vka::PushConstantLayout<N>::add(uint32_t size, VkShaderStageFlags stages)
 {
     if (this->m_idx >= N) [[unlikely]]
@@ -68,7 +55,7 @@ constexpr void vka::PushConstantLayout<N>::add(uint32_t size, VkShaderStageFlags
     if (new_size > this->m_max_size) [[unlikely]]
         detail::error::throw_runtime_error(MSG_SIZE);
 
-    m_ranges[this->m_idx++] = { stages, this->m_total_size, size };
+    this->m_ranges[this->m_idx++] = { stages, this->m_total_size, size };
     this->m_total_size += size;
 }
 
@@ -79,10 +66,15 @@ constexpr void vka::PushConstantLayout<N>::validate() const
         detail::error::throw_runtime_error(MSG_UNUSED);
 }
 
-
-// ReSharper disable once CppRedundantInlineSpecifier
 template<uint32_t N>
-inline vka::PushConstants<N> vka::PushConstantLayout<N>::create_push_constants()
+constexpr vka::PushConstants<N> vka::PushConstantLayout<N>::create_push_constants()
 {
     return PushConstants<N>(*this);
+}
+
+template<uint32_t N>
+constexpr uint32_t vka::PushConstantLayout<N>::round_size(uint32_t s) noexcept
+{
+    // equivalent to '(s - 1) / 4 * 4 + 4'
+    return s == 0 ? 0 : (((s - 1) >> 2) << 2) + 4;
 }

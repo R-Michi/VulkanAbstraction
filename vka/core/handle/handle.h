@@ -1,5 +1,5 @@
 #pragma once
 
-#include "unique_handle_parent.inl"
-#include "unique_handle_no_parent.inl"
-#include "unique_handle_dynamic_array.inl"
+#include "parent.inl"
+#include "no_parent.inl"
+#include "dynamic_array.inl"

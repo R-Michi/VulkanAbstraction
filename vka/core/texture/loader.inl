@@ -1,17 +1,17 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
-#include "texture_top.h"
+#include "top.h"
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline vka::TextureLoader<F>::TextureLoader(VkExtent3D extent) noexcept :
+vka::TextureLoader<F>::TextureLoader(VkExtent3D extent) noexcept :
     m_data(new component_t[alloc_size(extent)]{}),
     m_extent(extent),
     m_alloc_layers(extent.depth)
 {}
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-inline vka::TextureLoader<F>::TextureLoader(VkExtent2D extent, uint32_t estimated_layers) noexcept :
+vka::TextureLoader<F>::TextureLoader(VkExtent2D extent, uint32_t estimated_layers) noexcept :
     m_data(new component_t[alloc_size({ extent.width, extent.height, alloc_layers(estimated_layers) })]{}),
     m_extent({ extent.width, extent.height, 0 }),
     m_alloc_layers(alloc_layers(estimated_layers))
@@ -187,19 +187,19 @@ inline void vka::TextureLoader<F>::fill_image3D(const component_t* color, uint32
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-constexpr size_t vka::TextureLoader<F>::alloc_size(VkExtent3D extent) noexcept
+inline size_t vka::TextureLoader<F>::alloc_size(VkExtent3D extent) noexcept
 {
     return format_sizeof(F) * extent.width * extent.height * extent.depth;
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-constexpr uint32_t vka::TextureLoader<F>::alloc_layers(uint32_t estimated_layers) noexcept
+inline uint32_t vka::TextureLoader<F>::alloc_layers(uint32_t estimated_layers) noexcept
 {
     return estimated_layers < 1 ? 1 : estimated_layers;
 }
 
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
-constexpr uint32_t vka::TextureLoader<F>::grow_factor(uint32_t layer_count) noexcept
+inline uint32_t vka::TextureLoader<F>::grow_factor(uint32_t layer_count) noexcept
 {
     const uint32_t factor = (layer_count * 3) >> 1; // x1.5
     return factor < 1 ? 1 : factor;

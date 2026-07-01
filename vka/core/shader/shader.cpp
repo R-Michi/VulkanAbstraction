@@ -6,17 +6,13 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
-#include <fstream>
 
-void vka::Shader::destroy_handles() const noexcept
-{
-    if (this->m_module != VK_NULL_HANDLE)
-        vkDestroyShaderModule(this->m_device, this->m_module, nullptr);
-}
+vka::Shader::Shader(VkDevice device, const std::string& path) :
+    m_module(create_shader_module(device, path))
+{}
 
-void vka::Shader::internal_create(const std::string& path)
+vka::unique_handle<VkShaderModule> vka::Shader::create_shader_module(VkDevice device, const std::string& path)
 {
     // read a shader file
     std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -40,5 +36,8 @@ void vka::Shader::internal_create(const std::string& path)
         .codeSize = file_size,
         .pCode = reinterpret_cast<uint32_t*>(code.get()) // shader code size is always a multiple of 4, it's ok to cast from char* to uint32_t*
     };
-    check_result(vkCreateShaderModule(this->m_device, &ci, nullptr, &this->m_module), SHADER_CREATE_FAILED);
+
+    VkShaderModule shader_module;
+    check_result(vkCreateShaderModule(device, &ci, nullptr, &shader_module), SHADER_CREATE_FAILED);
+    return unique_handle(device, shader_module);
 }

@@ -11,40 +11,41 @@
 namespace vka::detail::device
 {
     /**
-     * @brief Checks if all combinations of memory property flags are supported.
-     * @param properties Specifies the memory properties.
-     * @param flags Specifies the required flags.
-     * @param count Specifies the number of flags.
-     * @return Returns true if all flags are supported.
+     * Checks if all combinations of memory property flags are supported.
+     * @param properties Memory properties of the physical device.
+     * @param flags Required memory property flags.
+     * @param count Number of entries the array <c>flags</c> contains.
+     * @return Returns <c>true</c> if all flags are supported.
      */
     bool check_memory_properties(const VkPhysicalDeviceMemoryProperties& properties, const VkMemoryPropertyFlags* flags, uint32_t count) noexcept;
 
     /**
-     * @brief Checks if all combinations of queue flags are supported.
-     * @param properties Specifies the queue family properties.
-     * @param queue_family_count Specifies the number of properties.
-     * @param flags Specifies the required flags.
-     * @param count Specifies the number of flags.
-     * @return Returns true if all flags are supported.
+     * Checks if all combinations of queue flags are supported.
+     * @param properties Queue family properties of the physical device.
+     * @param queue_family_count Number of queue families. For every queue family there must be an entry in the
+     * <c>properties</c> array.
+     * @param flags Required queue flags.
+     * @param count Number of entries the array <c>flags</c> contains.
+     * @return Returns <c>true</c> if all flags are supported.
      */
     bool check_queue_flags(const VkQueueFamilyProperties* properties, uint32_t queue_family_count, const VkQueueFlags* flags, uint32_t count) noexcept;
 
 #ifdef VKA_GLFW_ENABLE
     /**
-     * @brief Checks if any queue family has surface support.
-     * @param instance Specifies the vulkan instance.
-     * @param device Specifies the physical device.
-     * @param queue_family_count Specifies the number of queue families.
-     * @return Returns true if surfaces are supported.
+     * Checks if any queue family has surface support.
+     * @param instance Vulkan instance.
+     * @param device Physical device for which to check surface support.
+     * @param queue_family_count Number of queue families of the physical device.
+     * @return Returns <c>true</c> if surfaces are supported.
      */
     bool check_surface_support(VkInstance instance, VkPhysicalDevice device, uint32_t queue_family_count) noexcept;
 #endif
 
     /**
-     * @brief Checks if the device name has a specific sequence.
-     * @param properties Specifies the physical device properties containing the device name.
-     * @param sequence Specifies the sequence the device name has to contain.
-     * @return Returns true if it contains the specified sequence.
+     * Checks if the device name has a specific sequence.
+     * @param properties Physical device properties containing the device name.
+     * @param sequence Sequence the device name has to contain.
+     * @return Returns <c>true</c> if the name contains the specified sequence.
      */
     bool check_sequence(const VkPhysicalDeviceProperties& properties, const char* sequence) noexcept;
 } // namespace vka::detail::device

@@ -24,22 +24,23 @@ message(STATUS "[VKA]: Library directory: ${VKA_LIBRARY_DIR}")
 find_package(Vulkan COMPONENTS glslangValidator REQUIRED)
 find_program(SPIRV_OPT REQUIRED NAMES "spirv-opt" PATHS "$ENV{VULKAN_SDK}/Bin")
 
-# Include GLFW as a submodule in this project. However, GLFW may already exist. If this is the case, do not include it a
-# second time.
+# GLFW may already exist. If this is the case, it is not included a second time.
 if (NOT TARGET glfw)
-    add_subdirectory(${VKA_LIBRARY_DIR}/glfw)
-
-    # If GLFW still does not exist, it was not found.
-    # Use \"git submodule update --init --recursive\" if submodules have not been initialized yet or change the
-    # directory to the VulkanAbstraction submodule and use \"git submodule update --init\" here if submodules were not
-    # initialized recursively. Considering the VulkanAbstraction library is included as a submodule in a different
-    # project.
-    if (NOT TARGET glfw)
-        message(FATAL_ERROR "[VKA]: GLFW not found.")
+    # If GLFW does not exist already, it is included by this project. However, GLFW is not a requirement because this
+    # library has two versions: one with GLFW and one without GLFW enabled. If GLFW still cannot be found, the version
+    # of the library with GLFW enabled is not available.
+    find_path(VKA_GLFW_PATH NAMES CMakeLists.txt PATHS ${VKA_LIBRARY_DIR}/glfw)
+    if (VKA_GLFW_PATH)
+        add_subdirectory(${VKA_GLFW_PATH})
+        message(STATUS "[VKA]: Included GLFW as a submodule.")
     endif ()
-    message(STATUS "[VKA]: Included GLFW as a submodule.")
 endif ()
-message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
+
+if (TARGET glfw)
+    message(STATUS "[VKA]: Detected GLFW: ${GLFW_SOURCE_DIR}")
+else ()
+    message(WARNING "[VKA]: GLFW was not detected. Library \"vka_glfw\" is not available.")
+endif ()
 
 # Include STB image. STB image is a header-only library which has an implementation part. It must be compiled into one
 # translation unit (.c / .cpp) unsing #define STB_IMAGE_IMPLEMENTATION. Since this is not its own project where all its
@@ -62,299 +63,36 @@ set(VKA_FORWARD_FILES
 )
 
 ########################################################################################################################
-##################################################### DETAIL/BUFFER ####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_BUFFER_FILES
-        vka/detail/buffer/buffer.h
-        vka/detail/buffer/buffer.inl
-)
-
-########################################################################################################################
-##################################################### DETAIL/COMMON ####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_COMMON_FILES
-        vka/detail/common/common.h
-        vka/detail/common/common.inl
-)
-
-########################################################################################################################
-################################################### DETAIL/DESCRIPTOR ##################################################
-########################################################################################################################
-
-set(VKA_DETAIL_DESCRIPTOR_FILES
-        vka/detail/descriptor/descriptor.h
-        vka/detail/descriptor/descriptor.inl
-)
-
-########################################################################################################################
-##################################################### DETAIL/DEVICE ####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_DEVICE_FILES
-        vka/detail/device/device.h
-        vka/detail/device/device.cpp
-)
-
-########################################################################################################################
-##################################################### DETAIL/ERROR #####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_ERROR_FILES
-        vka/detail/error/error.h
-        vka/detail/error/error.inl
-        vka/detail/error/error.cpp
-)
-
-########################################################################################################################
-##################################################### DETAIL/FORMAT ####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_FORMAT_FILES
-        vka/detail/format/format.h
-        vka/detail/format/format.inl
-)
-
-########################################################################################################################
-#################################################### DETAIL/INSTANCE ###################################################
-########################################################################################################################
-
-set(VKA_DETAIL_INSTANCE_FILES
-        vka/detail/instance/instance.h
-        vka/detail/instance/instance.cpp
-)
-
-########################################################################################################################
-################################################# DETAIL/PUSH_CONSTANT #################################################
-########################################################################################################################
-
-set(VKA_DETAIL_PUSH_CONSTANT_FILES
-        vka/detail/push_constant/push_constant.h
-        vka/detail/push_constant/push_constant.inl
-        vka/core/push_constant/push_constant.h
-)
-
-########################################################################################################################
-##################################################### DETAIL/QUEUE #####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_QUEUE_FILES
-        vka/detail/queue/queue.h
-        vka/detail/queue/queue.inl
-)
-
-########################################################################################################################
-#################################################### DETAIL/TEXTURE ####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_TEXTURE_FILES
-        vka/detail/texture/texture.h
-        vka/detail/texture/texture.inl
-)
-
-########################################################################################################################
-#################################################### DETAIL/HANDLE #####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_HANDLE_FILES
-        vka/detail/handle/handle.h
-)
-
-########################################################################################################################
-##################################################### DETAIL/MODEL #####################################################
-########################################################################################################################
-
-set(VKA_DETAIL_MODEL_FILES
-)
-
-########################################################################################################################
 ######################################################## DETAIL ########################################################
 ########################################################################################################################
 
 set(VKA_DETAIL_FILES
-        ${VKA_DETAIL_BUFFER_FILES}
-        ${VKA_DETAIL_COMMON_FILES}
-        ${VKA_DETAIL_DESCRIPTOR_FILES}
-        ${VKA_DETAIL_DEVICE_FILES}
-        ${VKA_DETAIL_ERROR_FILES}
-        ${VKA_DETAIL_FORMAT_FILES}
-        ${VKA_DETAIL_INSTANCE_FILES}
-        ${VKA_DETAIL_PUSH_CONSTANT_FILES}
-        ${VKA_DETAIL_QUEUE_FILES}
-        ${VKA_DETAIL_TEXTURE_FILES}
-        ${VKA_DETAIL_HANDLE_FILES}
-        ${VKA_DETAIL_MODEL_FILES}
         vka/detail/detail.h
-)
-
-########################################################################################################################
-###################################################### CORE/COMMON #####################################################
-########################################################################################################################
-
-set(VKA_CORE_COMMON_FILES
-        vka/core/common/common.h
-        vka/core/common/common.inl
-        vka/core/common/common.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/ERROR ######################################################
-########################################################################################################################
-
-set(VKA_CORE_ERROR_FILES
-        vka/core/error/error.h
-        vka/core/error/error.inl
-)
-
-########################################################################################################################
-##################################################### CORE/INSTANCE ####################################################
-########################################################################################################################
-
-set(VKA_CORE_INSTANCE_FILES
-        vka/core/instance/instance.h
-        vka/core/instance/instance.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/DEVICE #####################################################
-########################################################################################################################
-
-set(VKA_CORE_DEVICE_FILES
-        vka/core/device/device.h
-        vka/core/device/device.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/QUEUE ######################################################
-########################################################################################################################
-
-set(VKA_CORE_QUEUE_FILES
-        vka/core/queue/queue.h
-        vka/core/queue/queue.cpp
-)
-
-########################################################################################################################
-##################################################### CORE/SURFACE #####################################################
-########################################################################################################################
-
-set(VKA_CORE_SURFACE_FILES
-        vka/core/surface/surface.h
-        vka/core/surface/surface.cpp
-)
-
-########################################################################################################################
-#################################################### CORE/SWAPCHAIN ####################################################
-########################################################################################################################
-
-set(VKA_CORE_SWAPCHAIN_FILES
-        vka/core/swapchain/swapchain.h
-        vka/core/swapchain/swapchain.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/MEMORY #####################################################
-########################################################################################################################
-
-set(VKA_CORE_MEMORY_FILES
-        vka/core/memory/memory.h
-        vka/core/memory/memory.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/FORMAT #####################################################
-########################################################################################################################
-
-set(VKA_CORE_FORMAT_FILES
-        vka/core/format/format.h
-        vka/core/format/format.inl
-        vka/core/format/format.cpp
-)
-
-########################################################################################################################
-#################################################### CORE/ATTACHMENT ###################################################
-########################################################################################################################
-
-set(VKA_CORE_ATTACHMENT_FILES
-        vka/core/attachment/attachment.h
-        vka/core/attachment/attachment.inl
-        vka/core/attachment/attachment.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/BUFFER #####################################################
-########################################################################################################################
-
-set(VKA_CORE_BUFFER_FILES
-        vka/core/buffer/buffer.h
-        vka/core/buffer/buffer.inl
-        vka/core/buffer/buffer.cpp
-)
-
-########################################################################################################################
-###################################################### CORE/SHADER #####################################################
-########################################################################################################################
-
-set(VKA_CORE_SHADER_FILES
-        vka/core/shader/shader.h
-        vka/core/shader/shader.inl
-        vka/core/shader/shader.cpp
-)
-
-########################################################################################################################
-##################################################### CORE/TEXTURE #####################################################
-########################################################################################################################
-
-set(VKA_CORE_TEXTURE_FILES
-        vka/core/texture/texture_top.h
-        vka/core/texture/texture.inl
-        vka/core/texture/texture.cpp
-        vka/core/texture/merger.inl
-        vka/core/texture/loader.inl
-        vka/core/texture/texture.h
-)
-
-########################################################################################################################
-#################################################### CORE/DESCRIPTOR ###################################################
-########################################################################################################################
-
-set(VKA_CORE_DESCRIPTOR_FILES
-        vka/core/descriptor/descriptor_class.h
-        vka/core/descriptor/descriptor_inline.inl
-        vka/core/descriptor/descriptor_set_binding_list.inl
-        vka/core/descriptor/descriptor_layout_array.inl
-        vka/core/descriptor/descriptor_set_array.inl
-        vka/core/descriptor/descriptor.h
-)
-
-########################################################################################################################
-################################################## CORE/PUSH_CONSTANT ##################################################
-########################################################################################################################
-
-set(VKA_CORE_PUSH_CONSTANT_FILES
-        vka/core/push_constant/push_constant_top.h
-        vka/core/push_constant/push_constant.inl
-        vka/core/push_constant/push_constant_layout.inl
-        vka/core/push_constant/push_constant_view.inl
-)
-
-########################################################################################################################
-###################################################### CORE/HANDLE #####################################################
-########################################################################################################################
-
-set(VKA_CORE_HANDLE_FILES
-        vka/core/handle/handle.h
-        vka/core/handle/unique_handle.h
-        vka/core/handle/unique_handle_parent.inl
-        vka/core/handle/unique_handle_no_parent.inl
-        vka/core/handle/unique_handle_dynamic_array.inl
-)
-
-########################################################################################################################
-###################################################### CORE/MODEL ######################################################
-########################################################################################################################
-
-set(VKA_CORE_MODEL_FILES
+        vka/detail/common/common.h
+        vka/detail/common/common.inl
+        vka/detail/error/error.h
+        vka/detail/error/error.inl
+        vka/detail/error/error.cpp
+        vka/detail/format/format.h
+        vka/detail/format/format.inl
+        vka/detail/instance/instance.h
+        vka/detail/instance/instance.cpp
+        vka/detail/device/device.h
+        vka/detail/device/device.cpp
+        vka/detail/queue/queue.h
+        vka/detail/queue/queue.inl
+        vka/detail/buffer/buffer.h
+        vka/detail/buffer/buffer.inl
+        vka/detail/attachment/attachment.h
+        vka/detail/attachment/attachment.inl
+        vka/detail/texture/texture.h
+        vka/detail/texture/texture.inl
+        vka/detail/handle/handle.h
+        vka/detail/push_constant/push_constant.h
+        vka/detail/push_constant/push_constant.inl
+        vka/core/push_constant/push_constant.h
+        vka/detail/descriptor/descriptor.h
+        vka/detail/descriptor/descriptor.inl
 )
 
 ########################################################################################################################
@@ -362,23 +100,60 @@ set(VKA_CORE_MODEL_FILES
 ########################################################################################################################
 
 set(VKA_CORE_FILES
-        ${VKA_CORE_COMMON_FILES}
-        ${VKA_CORE_ERROR_FILES}
-        ${VKA_CORE_INSTANCE_FILES}
-        ${VKA_CORE_DEVICE_FILES}
-        ${VKA_CORE_QUEUE_FILES}
-        ${VKA_CORE_SURFACE_FILES}
-        ${VKA_CORE_SWAPCHAIN_FILES}
-        ${VKA_CORE_MEMORY_FILES}
-        ${VKA_CORE_FORMAT_FILES}
-        ${VKA_CORE_ATTACHMENT_FILES}
-        ${VKA_CORE_BUFFER_FILES}
-        ${VKA_CORE_SHADER_FILES}
-        ${VKA_CORE_TEXTURE_FILES}
-        ${VKA_CORE_DESCRIPTOR_FILES}
-        ${VKA_CORE_PUSH_CONSTANT_FILES}
-        ${VKA_CORE_HANDLE_FILES}
-        ${VKA_CORE_MODEL_FILES}
+        vka/core/common/common.h
+        vka/core/common/common.inl
+        vka/core/common/common.cpp
+        vka/core/error/error.h
+        vka/core/error/error.inl
+        vka/core/instance/instance.h
+        vka/core/instance/instance.cpp
+        vka/core/device/device.h
+        vka/core/device/device.cpp
+        vka/core/queue/queue.h
+        vka/core/queue/queue.cpp
+        vka/core/surface/surface.h
+        vka/core/surface/surface.cpp
+        vka/core/swapchain/swapchain.h
+        vka/core/swapchain/swapchain.cpp
+        vka/core/memory/memory.h
+        vka/core/memory/memory.cpp
+        vka/core/format/format.h
+        vka/core/format/format.inl
+        vka/core/format/format.cpp
+        vka/core/attachment/attachment.h
+        vka/core/attachment/attachment.inl
+        vka/core/attachment/attachment.cpp
+        vka/core/buffer/buffer.h
+        vka/core/buffer/buffer.inl
+        vka/core/buffer/buffer.cpp
+        vka/core/shader/shader.h
+        vka/core/shader/shader.inl
+        vka/core/shader/shader.cpp
+        vka/core/texture/top.h
+        vka/core/texture/texture.h
+        vka/core/texture/merger.inl
+        vka/core/texture/loader.inl
+        vka/core/texture/texture.inl
+        vka/core/texture/texture.cpp
+        vka/core/descriptor/top.h
+        vka/core/descriptor/descriptor.h
+        vka/core/descriptor/binding_list.inl
+        vka/core/descriptor/binding_list.cpp
+        vka/core/descriptor/layout.inl
+        vka/core/descriptor/layout.cpp
+        vka/core/descriptor/set.inl
+        vka/core/descriptor/set.cpp
+        vka/core/descriptor/update.inl
+        vka/core/descriptor/update.cpp
+        vka/core/push_constant/top.h
+        vka/core/push_constant/push_constant.inl
+        vka/core/push_constant/layout.inl
+        vka/core/push_constant/view.inl
+        vka/core/handle/handle.h
+        vka/core/handle/unique_handle.h
+        vka/core/handle/parent.inl
+        vka/core/handle/no_parent.inl
+        vka/core/handle/dynamic_array.inl
         vka/core/core.h
 )
 
@@ -399,20 +174,22 @@ set(VKA_FILES
 ####################################################### LIBRARIES ######################################################
 ########################################################################################################################
 
-# Vulkan abstraction without using GLFW
+# Version of the library without GLFW enabled.
 add_library(vka STATIC ${VKA_FILES})
 target_link_libraries(vka PUBLIC Vulkan::Vulkan)
 target_include_directories(vka PUBLIC ${VKA_INCLUDE_DIR})
 
-# Vulkan abstraction with GLFW. If this target is linked, all GLFW features are automatically activated.
+# Version of the library with GLFW enabled.
 # To remove dependencies GLFW and Vulkan are automatically linked when linking this target.
-add_library(vka_glfw STATIC ${VKA_FILES})
-target_compile_options(vka_glfw PUBLIC -DVKA_GLFW_ENABLE)
-target_link_libraries(vka_glfw PUBLIC Vulkan::Vulkan glfw)
-target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR})
+if (TARGET glfw)
+    add_library(vka_glfw STATIC ${VKA_FILES})
+    target_compile_options(vka_glfw PUBLIC -DVKA_GLFW_ENABLE)
+    target_link_libraries(vka_glfw PUBLIC Vulkan::Vulkan glfw)
+    target_include_directories(vka_glfw PUBLIC ${VKA_INCLUDE_DIR})
+endif ()
 
 ########################################################################################################################
-############################################### VKA GLFW EXTENSION FILES ###############################################
+######################################################## EXAMPLE #######################################################
 ########################################################################################################################
 
 set(VKA_EXAMPLE_FILES

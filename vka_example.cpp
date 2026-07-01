@@ -367,7 +367,7 @@ void VkaExample::create_depth_attachment()
 		.viewComponentMapping = component_mapping,
 		.viewAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
 	};
-	this->depth_attachment.create(this->device, this->memory_properties, ci);
+	this->depth_attachment = vka::AttachmentImage(this->device, this->memory_properties, ci);
 }
 
 void VkaExample::create_render_pass()
@@ -444,8 +444,8 @@ void VkaExample::create_render_pass()
 
 void VkaExample::create_shaders()
 {
-	shaders[0].create(this->device, "assets/shaders/main.vert.spv");
-	shaders[1].create(this->device, "assets/shaders/main.frag.spv");
+	shaders[0] = vka::Shader(this->device, "assets/shaders/main.vert.spv");
+	shaders[1] = vka::Shader(this->device, "assets/shaders/main.frag.spv");
 }
 
 void VkaExample::create_pipeline()
@@ -587,8 +587,8 @@ void VkaExample::create_pipeline()
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layout_create_info.pNext = nullptr;
 	layout_create_info.flags = 0;
-	layout_create_info.setLayoutCount = vka::DescriptorLayoutArray<1>::count(),
-	layout_create_info.pSetLayouts = this->descriptor_layouts.layouts(),
+	layout_create_info.setLayoutCount = this->descriptor_layouts.count(),
+	layout_create_info.pSetLayouts = this->descriptor_layouts.handles(),
 	layout_create_info.pushConstantRangeCount = 0;
 	layout_create_info.pPushConstantRanges = nullptr;
 
@@ -842,27 +842,27 @@ void VkaExample::create_descriptors()
 	constexpr VkDescriptorPoolCreateInfo ci = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
-        .flags = vka::DescriptorSetArray<1>::POOL_FLAGS,
+        .flags = vka::DescriptorSets::POOL_FLAGS,
         .maxSets = 1,
         .poolSizeCount = 2,
         .pPoolSizes = sizes
     };
-    VkResult result = vkCreateDescriptorPool(this->device, &ci, nullptr, &this->dpool);
+    const VkResult result = vkCreateDescriptorPool(this->device, &ci, nullptr, &this->dpool);
     vka::check_result(result, "vkCreateDescriptorPool");
 
-    vka::DescriptorSetBindingList<1> bindings;
-    bindings.push(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-    bindings.push(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+    vka::DescriptorBindingList bindings;
+    bindings.push(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+    bindings.push(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 
-    this->descriptor_layouts.create(this->device, bindings, 0);
-    this->descriptors.create(this->dpool, this->descriptor_layouts);
+    this->descriptor_layouts = bindings.create_layouts(this->device);
+    this->descriptors = this->descriptor_layouts.create_sets(this->dpool);
 
-    const VkDescriptorBufferInfo buffer_info = vka::descriptor::make_buffer_info(this->uniform_buffer);
-    const VkDescriptorImageInfo image_info = vka::descriptor::make_image_info(this->texture, 1);
-    vka::DescriptorUpdateOperation<1, 2> update = this->descriptors.op_update<2>();
-    update.write(0, 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &image_info);
-    update.write(0, 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &buffer_info);
-    update.execute();
+	const VkDescriptorImageInfo texture_info = vka::descriptor::make_image_info(this->texture, 1);
+	const VkDescriptorBufferInfo buffer_info = vka::descriptor::make_buffer_info(this->uniform_buffer);
+	vka::DescriptorUpdateOP update = this->descriptors.update_op();
+	update.write(0, 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &texture_info);
+	update.write(0, 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &buffer_info);
+	update.execute();
 }
 
 void VkaExample::create_semaphores()

@@ -12,20 +12,20 @@
 namespace vka::detail::instance
 {
     /**
-     * @brief Checks if a layer at instance level is supported.
-     * @param properties Specifies the layer properties.
-     * @param count Specifies the number of layer properties.
-     * @param layer_name Specifies the name of the layer.
-     * @return Returns the index of the layer. If the layer is not supported, vka::NPOS is returned.
+     * Checks if a layer at instance level is supported.
+     * @param properties Layers of the vulkan instance.
+     * @param count Number of layers to check.
+     * @param layer_name Name of the layer to check for.
+     * @return Returns the index of the layer. If the layer is not supported, <c>vka::NPOS</c> is returned.
      */
     uint32_t supports_layer(const VkLayerProperties* properties, uint32_t count, std::string_view layer_name) noexcept;
 
     /**
-     * @brief Checks if an extension at instance level is supported.
-     * @param properties Specifies the extension properties.
-     * @param count Specifies the number of extension properties.
-     * @param extension_name Specifies the name of the extension.
-     * @return Returns the index of the extension. If the extension is not supported, vka::NPOS is returned.
+     * Checks if an extension at instance level is supported.
+     * @param properties Extensions of the vulkan instance.
+     * @param count Number of extensions to check.
+     * @param extension_name Name of the extension to check for.
+     * @return Returns the index of the extension. If the extension is not supported, <c>vka::NPOS</c> is returned.
      */
     uint32_t supports_extension(const VkExtensionProperties* properties, uint32_t count, std::string_view extension_name) noexcept;
 }

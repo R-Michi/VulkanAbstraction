@@ -6,26 +6,13 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
-void vka::CommandBufferOTS::destroy_handles() const noexcept
+vka::CommandBufferOTS::CommandBufferOTS(VkDevice device, VkCommandPool pool) :
+    m_device(device),
+    m_pool(pool),
+    m_cbo(this->allocate())
 {
-    if (this->m_cbo != VK_NULL_HANDLE)
-        vkFreeCommandBuffers(this->m_device, this->m_pool, 1, &this->m_cbo);
-}
-
-void vka::CommandBufferOTS::internal_begin()
-{
-    const VkCommandBufferAllocateInfo alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = nullptr,
-        .commandPool = this->m_pool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
-    };
-    check_result(vkAllocateCommandBuffers(this->m_device, &alloc_info, &this->m_cbo), CBO_ALLOC_FAILED);
-
     constexpr VkCommandBufferBeginInfo begin_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = nullptr,
@@ -48,7 +35,6 @@ void vka::CommandBufferOTS::end(VkQueue queue) const
         .signalSemaphoreCount = 0,
         .pSignalSemaphores = nullptr
     };
-
     check_result(vkEndCommandBuffer(this->m_cbo), CBO_END_FAILED);
     check_result(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE), CBO_SUBMIT_FAILED);
 }
@@ -66,15 +52,38 @@ VkResult vka::CommandBufferOTS::end_wait(VkQueue queue, VkFence fence, uint64_t 
         .signalSemaphoreCount = 0,
         .pSignalSemaphores = nullptr
     };
-
     check_result(vkEndCommandBuffer(this->m_cbo), CBO_END_FAILED);
     check_result(vkQueueSubmit(queue, 1, &submit_info, fence), CBO_SUBMIT_FAILED);
+
     if(fence == VK_NULL_HANDLE)
     {
         check_result(vkQueueWaitIdle(queue), WAIT_QUEUE_FAILED);
         return VK_SUCCESS;
     }
+
     const VkResult res = vkWaitForFences(this->m_device, 1, &fence, VK_TRUE, timeout);
     check_result(res, WAIT_FENCE_FAILED);
     return res;
+}
+
+VkCommandBuffer vka::CommandBufferOTS::allocate() const
+{
+    const VkCommandBufferAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = this->m_pool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1
+    };
+    VkCommandBuffer cbo;
+    check_result(vkAllocateCommandBuffers(this->m_device, &alloc_info, &cbo), CBO_ALLOC_FAILED);
+    return cbo;
+}
+
+
+
+void vka::common::cvt_stdstr2ccpv(const std::vector<std::string>& std_in, const char** ccp_out, size_t buff_size) noexcept
+{
+    for (size_t i = 0; i < std_in.size() && i < buff_size; i++)
+        ccp_out[i] = std_in[i].c_str();
 }

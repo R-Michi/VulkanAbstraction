@@ -11,20 +11,20 @@
 
 #include "error.h"
 
-inline void vka::detail::error::check_memory(const void* mem)
+constexpr void vka::detail::error::check_memory(const void* mem)
 {
     if (mem == nullptr) [[unlikely]]
         throw_bad_alloc();
 }
 
-inline void vka::detail::error::check_range(uint32_t range_offset, uint32_t rsize, uint32_t size, const char* msg)
+constexpr void vka::detail::error::check_range(uint32_t range_offset, uint32_t rsize, uint32_t size, const char* msg)
 {
     if ((range_offset + rsize) > size) [[unlikely]]
         throw_out_of_range(msg);
 }
 
 template<uint32_t N>
-inline void vka::detail::error::check_idx(uint32_t idx, const char* msg)
+constexpr void vka::detail::error::check_idx(uint32_t idx, const char* msg)
 {
     if (idx >= N) [[unlikely]]
         throw_out_of_range(msg);

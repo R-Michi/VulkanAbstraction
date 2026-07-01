@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
 uint32_t vka::memory::find_type_index(const VkPhysicalDeviceMemoryProperties& properties, uint32_t bits, VkMemoryPropertyFlags req_flags) noexcept
@@ -17,7 +16,7 @@ uint32_t vka::memory::find_type_index(const VkPhysicalDeviceMemoryProperties& pr
     // If this is the case, the index of the memory type is returned.
     for (uint32_t i = 0; i < properties.memoryTypeCount; i++)
     {
-        if ((bits & (0b1 << i)) && (properties.memoryTypes[i].propertyFlags & req_flags) == req_flags)
+        if (bits & 0b1 << i && (properties.memoryTypes[i].propertyFlags & req_flags) == req_flags)
             return i;
     }
     return NPOS;

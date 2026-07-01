@@ -10,38 +10,55 @@
 
 namespace vka::detail::descriptor
 {
+    struct Parent
+    {
+        VkDevice device;
+        VkDescriptorPool pool;
+    };
+
+    struct Handle
+    {
+        const VkDescriptorSet* sets;
+        uint32_t count;
+
+        explicit constexpr operator bool() const noexcept { return this->sets != nullptr; }
+    };
+
+    /// Frees the descriptor sets.
+    inline void destroy(Parent parent, Handle handle, const VkAllocationCallbacks* allocator);
+
     /**
-     * @brief Creates the write-structure for a buffer.
+     * Creates the write-structure for a buffer.
      * @return Returns an initialized descriptor-write structure.
      */
     inline VkWriteDescriptorSet make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorBufferInfo* infos) noexcept;
 
     /**
-     * @brief Creates the write-structure for an image / texture.
+     * Creates the write-structure for an image.
      * @return Returns an initialized descriptor-write structure.
      */
     inline VkWriteDescriptorSet make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorImageInfo* infos) noexcept;
 
     /**
-     * @brief Creates the write-structure for a buffer view.
+     * Creates the write-structure for a buffer view.
      * @return Returns an initialized descriptor-write structure.
      */
     inline VkWriteDescriptorSet make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkBufferView* views) noexcept;
 
     /**
-     * @brief Creates the write-structure for a NV-acceleration-structure (NV = Nvidia).
+     * Creates the write-structure for a NV-acceleration-structure (NV = Nvidia).
      * @return Returns an initialized descriptor-write structure.
      */
     inline VkWriteDescriptorSet make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureNV& as_write) noexcept;
 
     /**
-     * @brief Creates the write-structure for a KHR-acceleration-structure.
+     * Creates the write-structure for a KHR-acceleration-structure.
      * @return Returns an initialized descriptor-write structure.
      */
     inline VkWriteDescriptorSet make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetAccelerationStructureKHR& as_write) noexcept;
 
     /**
-     * @brief Creates the write-structure for an inline uniform block.
+     * Creates the write-structure for an inline uniform block.
      * @return Returns an initialized descriptor-write structure.
      */
     inline VkWriteDescriptorSet make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, const VkWriteDescriptorSetInlineUniformBlock& iub_write) noexcept;

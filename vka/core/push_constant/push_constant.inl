@@ -9,7 +9,7 @@
 // ReSharper disable CppRedundantInlineSpecifier
 #pragma once
 
-#include "push_constant_top.h"
+#include "top.h"
 
 template<uint32_t N>
 constexpr vka::PushConstants<N>::PushConstants() noexcept :
@@ -17,7 +17,7 @@ constexpr vka::PushConstants<N>::PushConstants() noexcept :
 {}
 
 template<uint32_t N>
-inline vka::PushConstants<N>::PushConstants(const PushConstantLayout<N>& layout) :
+constexpr vka::PushConstants<N>::PushConstants(const PushConstantLayout<N>& layout) :
     m_ranges(layout.ranges_array()),
     m_buff(layout.size())
 {}
@@ -29,13 +29,13 @@ constexpr vka::PushConstants<N>::operator bool() const noexcept
 }
 
 template<uint32_t N>
-inline vka::PushConstantView vka::PushConstants<N>::operator[] (uint32_t idx) noexcept
+constexpr vka::PushConstantView vka::PushConstants<N>::operator[] (uint32_t idx) noexcept
 {
     return PushConstantView(this->m_ranges[idx], this->m_buff.data());
 }
 
 template<uint32_t N>
-inline vka::PushConstantView vka::PushConstants<N>::at(uint32_t idx)
+constexpr vka::PushConstantView vka::PushConstants<N>::at(uint32_t idx)
 {
     if (this->m_buff.empty()) [[unlikely]]
         detail::error::throw_runtime_error(MSG_ACCESS);
@@ -61,7 +61,7 @@ constexpr const VkPushConstantRange* vka::PushConstants<N>::ranges() const noexc
 }
 
 template<uint32_t N>
-inline void vka::PushConstants<N>::push(VkCommandBuffer cbo, VkPipelineLayout layout) const noexcept
+constexpr void vka::PushConstants<N>::push(VkCommandBuffer cbo, VkPipelineLayout layout) const noexcept
 {
     for (uint32_t i = 0; !this->m_buff.empty() && i < N; i++)
     {

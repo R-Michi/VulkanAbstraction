@@ -6,10 +6,15 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
-vka::Buffer::BufferHandle vka::Buffer::create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
+vka::Buffer::Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info) :
+    m_buffer(create_buffer(device, properties, create_info)),
+    m_size(create_info.bufferSize),
+    m_map(nullptr)
+{}
+
+vka::unique_handle<vka::Buffer::BufferHandle> vka::Buffer::create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
 {
     // create buffer
     const VkBufferCreateInfo buffer_ci = {
@@ -43,5 +48,6 @@ vka::Buffer::BufferHandle vka::Buffer::create_buffer(VkDevice device, const VkPh
     unique_handle memory_guard(device, memory);
     check_result(vkBindBufferMemory(device, buffer, memory, 0), BIND_MEMORY_FAILED);
 
-    return { buffer_guard.release(), memory_guard.release() };
+    const BufferHandle handle = { buffer_guard.release(), memory_guard.release() };
+    return unique_handle(device, handle);
 }

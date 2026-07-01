@@ -11,93 +11,64 @@
 namespace vka
 {
     /**
-     * @brief This class is a helper to create attachment images. Attachment images are used inside a framebuffer to
-     * store color, depth, stencil, etc. information.
+     * Helper class to create attachment images. Attachment images are used inside a framebuffer to store color, depth,
+     * stencil, etc. information.
      */
-    class AttachmentImage final
+    class AttachmentImage
     {
-    private:
-        static constexpr char IMAGE_CREATE_FAILED[] = "[vka::AttachmentImage::create]: Failed to create image handle.";
-        static constexpr char ALLOC_MEMORY_FAILED[] = "[vka::AttachmentImage::create]: Failed to allocate memory.";
-        static constexpr char BIND_MEMORY_FAILED[] = "[vka::AttachmentImage::create]: Failed to bind memory to image.";
-        static constexpr char VIEW_CREATE_FAILED[] = "[vka::AttachmentImage::create]: Failed to create image view.";
-
-        VkDevice m_device;
-        VkDeviceMemory m_memory;
-        VkImage m_image;
-        VkImageView m_view;
-        VkExtent2D m_extent;
-
-        /// @brief Destroys all created vulkan handles.
-        void destroy_handles() const noexcept;
-
-        /**
-         * @brief Creates the attachment image and its image view.
-         * @param properties Specifies the memory properties of the physical device.
-         * @param create_info Specifies the create-info for the attachment image.
-         * @throw std::runtime_error Is thrown, if creating the image or image view, allocating the memory or binding
-         * the memory to the image failed.
-         */
-        void internal_create(const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
+        using AttachmentHandle = detail::attachment::Handle;
 
     public:
-        /// @brief Every vulkan handle is initialized to VK_NULL_HANDLE.
-        inline AttachmentImage() noexcept;
+        /// Creates an empty attachment image. This attachment image is invalid.
+        constexpr AttachmentImage() noexcept;
 
         /**
-         * @brief Creates the attachment image.
-         * @param device Specifies a valid device.
-         * @param properties Specifies the memory properties of the physical device.
-         * @param create_info Specifies the create-info for the attachment image.
-         * @throw std::runtime_error Is thrown, if creating the image or image view, allocating the memory or binding
-         * the memory to the image failed.
-         * @details This constructor has the same functionality as the function create().
+         * Creates the attachment image. The attachment image is valid if no exception was thrown.
+         * @param device Device with which the attachment image is created.
+         * @param properties Memory properties of the physical device.
+         * @param create_info Create-info for the attachment image.
+         * @throw std::runtime_error Is thrown, if creating the image, allocating the memory, binding the memory or
+         * creating the corresponding image view failed.
          */
-        explicit inline AttachmentImage(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
+        explicit AttachmentImage(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
 
-        // The AttachmentImage must not be copied.
+        /// @return Returns whether the attachment image is valid.
+        explicit constexpr operator bool() const noexcept;
+
+        /// @return Returns the size of the attachment image.
+        constexpr VkExtent2D size() const noexcept;
+
+        /// @return Returns the parent handle.
+        constexpr VkDevice parent() const noexcept;
+
+        /// @return Returns the vulkan <c>VkImage</c> handle.
+        constexpr VkImage handle() const noexcept;
+
+        /// @return Returns the vulkan <c>VkImageView</c> handle.
+        constexpr VkImageView view() const noexcept;
+
+        /// Destroys the attachment image. After destroying the attachment image is empty and therefore invalid.
+        constexpr void destroy() noexcept;
+
+        // default:
+        AttachmentImage(AttachmentImage&&) = default;
+        ~AttachmentImage() = default;
+        AttachmentImage& operator= (AttachmentImage&&) = default;
+
+        // deleted:
         AttachmentImage(const AttachmentImage&) = delete;
         AttachmentImage& operator= (const AttachmentImage&) = delete;
 
-        /**
-         * @brief Moves the ownership of an attachment image to a different object.
-         * @param src Specifies the attachment image to move.
-         * @details The source attachment image becomes invalidated. If the move destination has been created before and
-         * is a valid object, it gets destroyed.
-         */
-        inline AttachmentImage(AttachmentImage&& src) noexcept;
-        inline AttachmentImage& operator= (AttachmentImage&& src) noexcept;
+    private:
+        static constexpr char IMAGE_CREATE_FAILED[] = "[vka::AttachmentImage]: Failed to create image handle.";
+        static constexpr char ALLOC_MEMORY_FAILED[] = "[vka::AttachmentImage]: Failed to allocate memory.";
+        static constexpr char BIND_MEMORY_FAILED[] = "[vka::AttachmentImage]: Failed to bind memory to image.";
+        static constexpr char VIEW_CREATE_FAILED[] = "[vka::AttachmentImage]: Failed to create image view.";
 
-        /// @brief Destroys all created vulkan handles.
-        inline ~AttachmentImage();
+        unique_handle<AttachmentHandle> m_image;
+        VkExtent2D m_extent;
 
-        /**
-         * @brief Creates the attachment image.
-         * @param device Specifies a valid device.
-         * @param properties Specifies the memory properties of the physical device.
-         * @param create_info Specifies the create-info for the attachment image.
-         * @throw std::runtime_error Is thrown, if creating the image or image view, allocating the memory or binding
-         * the memory to the image failed.
-         */
-        inline void create(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
-
-        /**
-         * @brief Destroys all created vulkan handles.
-         * @details After the handles are destroyed, they are reset to VK_NULL_HANDLE. Moreover, this function does not
-         * destroy parent handles.
-         */
-        inline void destroy() noexcept;
-
-        /// @return Returns the size/extent of the image.
-        inline VkExtent2D size() const noexcept;
-
-        /// @return Returns the image handle.
-        inline VkImage handle() const noexcept;
-
-        /// @return Returns the image view handle.
-        inline VkImageView view() const noexcept;
-
-        /// @return Returns 'true' if the attachment image is a valid object and 'false' otherwise.
-        inline bool is_valid() const noexcept;
+        /// Creates the attachment image.
+        static unique_handle<AttachmentHandle> create_attachment(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info);
     };
 }

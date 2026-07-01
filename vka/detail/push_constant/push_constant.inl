@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include "push_constant.h"
 
 constexpr vka::detail::PushConstantBuffer::PushConstantBuffer() noexcept :
@@ -15,10 +17,10 @@ constexpr vka::detail::PushConstantBuffer::PushConstantBuffer() noexcept :
     m_data(nullptr)
 {}
 
-inline vka::detail::PushConstantBuffer::PushConstantBuffer(uint32_t size) : PushConstantBuffer()
-{
-    this->allocate(size);
-}
+constexpr vka::detail::PushConstantBuffer::PushConstantBuffer(uint32_t size) :
+    m_size(size),
+    m_data(operator new(size))
+{}
 
 constexpr vka::detail::PushConstantBuffer::PushConstantBuffer(PushConstantBuffer&& src) noexcept :
     m_size(src.m_size),
@@ -41,29 +43,6 @@ constexpr vka::detail::PushConstantBuffer& vka::detail::PushConstantBuffer::oper
     return *this;
 }
 
-inline void vka::detail::PushConstantBuffer::allocate(uint32_t size)
-{
-    if (this->m_data == nullptr)
-    {
-        this->m_data = std::malloc(size);
-        error::check_memory(this->m_data);
-        this->m_size = size;
-    }
-}
-
-constexpr void vka::detail::PushConstantBuffer::free_memory() const noexcept
-{
-    if (this->m_data != nullptr)
-        std::free(this->m_data);
-}
-
-constexpr void vka::detail::PushConstantBuffer::free() noexcept
-{
-    this->free_memory();
-    this->m_size = 0;
-    this->m_data = nullptr;
-}
-
 constexpr void* vka::detail::PushConstantBuffer::data() noexcept
 {
     return this->m_data;
@@ -81,5 +60,10 @@ constexpr uint32_t vka::detail::PushConstantBuffer::size() const noexcept
 
 constexpr bool vka::detail::PushConstantBuffer::empty() const noexcept
 {
-    return (this->m_size == 0);
+    return this->m_size == 0;
+}
+
+constexpr void vka::detail::PushConstantBuffer::free_memory() const noexcept
+{
+    operator delete(this->m_data);
 }

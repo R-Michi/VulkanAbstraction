@@ -10,7 +10,11 @@
 
 #include "descriptor.h"
 
-/**************************************************** make helpers ****************************************************/
+inline void vka::detail::descriptor::destroy(Parent parent, Handle handle, const VkAllocationCallbacks* allocator)
+{
+    vkFreeDescriptorSets(parent.device, parent.pool, handle.count, handle.sets);
+    delete[] handle.sets;
+}
 
 inline VkWriteDescriptorSet vka::detail::descriptor::make_write(VkDescriptorSet set, uint32_t binding, uint32_t offset, uint32_t count, VkDescriptorType type, const VkDescriptorBufferInfo* infos) noexcept
 {

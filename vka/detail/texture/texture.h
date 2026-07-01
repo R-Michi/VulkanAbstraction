@@ -23,7 +23,7 @@ namespace vka::detail::texture
     struct loader_function {};
     template<> struct loader_function<0>    { static constexpr auto func = stbi_load;    };
     template<> struct loader_function<1>    { static constexpr auto func = stbi_load_16; };
-    template<> struct loader_function<2>    { static constexpr auto func = stbi_loadf;   };
+    template<> struct loader_function<2>    { static constexpr auto func = stbi_loadf;     };
 
     /// Specifies all uint8_t formats for the texture loader.
     static constexpr VkFormat LOADER_FORMAT_U8[4] = {
@@ -69,7 +69,7 @@ namespace vka::detail::texture
     template<VkFormat F>
     constexpr auto loader_f = loader_function<format_type_id(F)>::func;
 
-    /// Defines the texture handle which is used as a custom handle in unique_handle. Parent: VkDevice.
+    /// Defines the texture handle which is used as a custom handle in <c>unique_handle</c>. Parent: <c>VkDevice</c>.
     struct Handle
     {
         VkImage image;

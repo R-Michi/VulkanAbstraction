@@ -16,90 +16,92 @@ namespace vka
         using BufferHandle = detail::buffer::Handle;
 
     public:
-        /// Default initialization = empty buffer.
+        /// Creates an empty buffer. This buffer is invalid.
         constexpr Buffer() noexcept;
 
         /**
-         * Create the buffer.
-         * @param device Specifies the device with which the buffer is created.
-         * @param properties Specifies memory properties of a physical device.
-         * @param create_info Specifies the create-info for the buffer.
+         * Create the buffer. The buffer is valid if no exception was thrown.
+         * @param device Device with which the buffer is created.
+         * @param properties Memory properties of the physical device.
+         * @param create_info Create-info for the buffer.
          * @throw std::runtime_error Is thrown, if creating the buffer, allocating the memory or binding the memory
          * failed.
          */
-        explicit inline Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
+        explicit Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
 
-        /**
-         * Moves a buffer object. A currently valid buffer is destroyed. DO NOT use the source buffer after a move! This
-         * may lead to unexpected or even undefined behavior.
-         */
+        /// Moves a buffer. The source buffer becomes invalidated and using to results in undefined behaviour.
         constexpr Buffer(Buffer&& src) noexcept;
 
-        /// Unmaps the memory if mapped.
+        /// Unmaps the buffer if mapped.
         constexpr ~Buffer();
 
         /**
-         * Moves a buffer object. A currently valid buffer is destroyed. DO NOT use the source buffer after a move! This
-         * may lead to unexpected or even undefined behavior.
+         * Moves a buffer. The source buffer becomes invalidated and using to results in undefined behaviour. An already
+         * allocated buffer is destroyed.
          */
         constexpr Buffer& operator= (Buffer&& src) noexcept;
 
-        /// @return Returns true whether the buffer is valid.
+        /// @return Returns whether the buffer is valid.
         explicit constexpr operator bool() const noexcept;
 
         /// @return Returns the allocated size in bytes.
         constexpr VkDeviceSize size() const noexcept;
 
-        /// @return Returns the vulkan VkBuffer handle.
-        constexpr VkBuffer handle() const noexcept;
-
-        /// @return Reruns the parent handle.
+        /// @return Returns the parent handle.
         constexpr VkDevice parent() const noexcept;
 
-        /// @return Returns the device address of the buffer.
+        /// @return Returns the vulkan <c>VkBuffer</c> handle.
+        constexpr VkBuffer handle() const noexcept;
+
+        /// @return Returns the device (GPU-side) pointer to the buffer.
         inline VkDeviceAddress device_address() const noexcept;
 
+        /// Destroys the buffer. After destroying the buffer is empty and therefore invalid.
+        constexpr void destroy() noexcept;
+
         /**
-         * Maps the memory of the whole buffer.
-         * @return Returns a pointer to the memory of the mapped buffer. The returned pointer is not nullptr.
+         * Maps the whole buffer.
+         * @return Returns a pointer to the memory of the mapped buffer. If the buffer is valid, the returned pointer is
+         * not <c>nullptr</c>.
          * @throw std::runtime_error Is thrown if mapping the buffer failed.
          */
         constexpr void* map();
 
         /**
-         * Maps a specific region of the memory.
-         * @param offset Specifies the offset of the region to map.
-         * @param size Specifies the size of the region to map.
-         * @return Returns a pointer to the memory of the mapped buffer. The returned pointer is not nullptr.
+         * Maps a specific region of the buffer.
+         * @param offset Offset of the region to map.
+         * @param size Size of the region to map.
+         * @return Returns a pointer to the memory of the mapped buffer region. If the buffer is valid, the returned
+         * pointer is not <c>nullptr</c>.
          * @throw std::runtime_error Is thrown if mapping the buffer failed.
          */
         constexpr void* map(VkDeviceSize offset, VkDeviceSize size);
 
-        /// Unmaps the memory.
+        /// Unmaps the buffer.
         constexpr void unmap() noexcept;
 
         /**
          * Records the command to copy the whole buffer. For correct usage see the vulkan documentation of
          * <c>vkCmdCopyBuffer</c>.
-         * @param cbo Specifies the command buffer in which the copy command is recorded.
-         * @param src Specifies the buffer to copy.
+         * @param cbo Command buffer in which the copy command is recorded.
+         * @param src Buffer to copy.
          */
         inline void copy(VkCommandBuffer cbo, const Buffer& src) noexcept;
 
         /**
          * Records the command to copy a specific region of the buffer. For correct usage see the vulkan documentation
          * of <c>vkCmdCopyBuffer</c>.
-         * @param cbo Specifies the command buffer in which the copy command is recorded.
-         * @param src Specifies the buffer to copy.
-         * @param region Specifies the copy region.
+         * @param cbo Command buffer in which the copy command is recorded.
+         * @param src Buffer to copy.
+         * @param region Region of the buffer to copy.
          */
         inline void copy_region(VkCommandBuffer cbo, const Buffer& src, const VkBufferCopy& region) noexcept;
 
         /**
          * Records the command to update the whole buffer. For correct usage see the vulkan documentation of
          * <c>vkCmdUpdateBuffer</c>.
-         * @param cbo Specifies the command buffer in which the update command is recorded.
-         * @param data Specifies the data to copy. Must point to memory which is at least as large as the buffer.
+         * @param cbo Command buffer in which the update command is recorded.
+         * @param data Data to copy. Must point to memory which is at least as large as the buffer.
          * @note The data which is copied into the buffer is directly recorded into the command buffer. Using this
          * functionality is only recommended for small copy sizes (e.g. for small uniform buffers).
          */
@@ -108,10 +110,10 @@ namespace vka
         /**
          * Records the command to update a specific region of the buffer. For correct usage see the vulkan documentation
          * of <c>vkCmdUpdateBuffer</c>.
-         * @param cbo Specifies the command buffer in which the update command is recorded.
-         * @param data Specifies the data to copy. Must point to memory which is at least <c>size</c> bytes large.
-         * @param offset Specifies the byte offset in the destination buffer.
-         * @param size Specifies the number of bytes to update.
+         * @param cbo Command buffer in which the update command is recorded.
+         * @param data Data to copy. Must point to memory which is at least <c>size</c> bytes large.
+         * @param offset Offset in bytes in the destination buffer.
+         * @param size Number of bytes to update.
          * @note The data which is copied into the buffer is directly recorded into the command buffer. Using this
          * functionality is only recommended for small copy sizes (e.g. for small uniform buffers).
          */
@@ -120,18 +122,18 @@ namespace vka
         /**
          * Records the command to fill the whole buffer with a single value. For correct usage see the vulkan
          * documentation of <c>vkCmdFillBuffer</c>. This command behaves like <c>memset</c>.
-         * @param cbo Specifies the command buffer in which the fill command is recorded.
-         * @param value Specifies the value with which the buffer is filled.
+         * @param cbo Command buffer in which the fill command is recorded.
+         * @param value Value with which the buffer is filled.
          */
         inline void fill(VkCommandBuffer cbo, uint32_t value) noexcept;
 
         /**
          * Records the command to fill a specific region of the buffer with a single value. For correct usage see the
          * vulkan documentation of <c>vkCmdFillBuffer</c>. This command behaves like <c>memset</c>.
-         * @param cbo Specifies the command buffer in which the fill command is recorded.
-         * @param value Specifies the value with which the buffer is filled.
-         * @param offset Specifies the byte offset in the destination buffer.
-         * @param size Specifies the number of bytes to fill.
+         * @param cbo Command buffer in which the fill command is recorded.
+         * @param value Value with which the buffer is filled.
+         * @param offset Offset in bytes in the destination buffer.
+         * @param size Number of bytes to fill.
          */
         inline void fill_region(VkCommandBuffer cbo, uint32_t value, VkDeviceSize offset, VkDeviceSize size) noexcept;
 
@@ -153,6 +155,6 @@ namespace vka
         constexpr void unmap_memory() const noexcept;
 
         /// Creates the buffer and its associated memory.
-        static BufferHandle create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
+        static unique_handle<BufferHandle> create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info);
     };
 }

@@ -10,7 +10,7 @@
 
 #include "format.h"
 
-inline bool vka::format::supports_feature(const VkFormatProperties& properties, VkImageTiling tiling, VkFormatFeatureFlags format_feature) noexcept
+constexpr bool vka::format::supports_feature(const VkFormatProperties& properties, VkImageTiling tiling, VkFormatFeatureFlags format_feature) noexcept
 {
     // check if the format properties of the given format support the given format features
     if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & format_feature) == format_feature) return true;

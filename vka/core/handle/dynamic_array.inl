@@ -107,6 +107,12 @@ constexpr void vka::unique_handle<Handle[], deleter, Parent>::reset_state() noex
 }
 
 template<typename Handle, auto deleter, typename Parent>
+constexpr Parent vka::unique_handle<Handle[], deleter, Parent>::parent() const noexcept
+{
+    return this->m_parent;
+}
+
+template<typename Handle, auto deleter, typename Parent>
 constexpr Handle* vka::unique_handle<Handle[], deleter, Parent>::get() noexcept
 {
     return this->m_handles;
@@ -119,9 +125,27 @@ constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::get() con
 }
 
 template<typename Handle, auto deleter, typename Parent>
-constexpr Parent vka::unique_handle<Handle[], deleter, Parent>::parent() const noexcept
+constexpr Handle* vka::unique_handle<Handle[], deleter, Parent>::begin() noexcept
 {
-    return this->m_parent;
+    return this->m_handles;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::begin() const noexcept
+{
+    return this->m_handles;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::end() const noexcept
+{
+    return this->m_handles + this->m_count;
+}
+
+template<typename Handle, auto deleter, typename Parent>
+constexpr uint32_t vka::unique_handle<Handle[], deleter, Parent>::count() const noexcept
+{
+    return this->m_count;
 }
 
 template<typename Handle, auto deleter, typename Parent>
@@ -176,7 +200,7 @@ constexpr void vka::unique_handle<Handle[], deleter, Parent>::destroy() noexcept
 }
 
 template<typename Handle, auto deleter, typename Parent>
-void vka::unique_handle<Handle[], deleter, Parent>::swap(unique_handle& handle) noexcept
+constexpr void vka::unique_handle<Handle[], deleter, Parent>::swap(unique_handle& handle) noexcept
 {
     Parent tmp_parent = this->m_parent;
     const Handle* tmp_handles = this->m_handles;
@@ -187,28 +211,4 @@ void vka::unique_handle<Handle[], deleter, Parent>::swap(unique_handle& handle) 
     handle.m_parent = tmp_parent;
     handle.m_handles = tmp_handles;
     handle.m_count = tmp_count;
-}
-
-template<typename Handle, auto deleter, typename Parent>
-constexpr uint32_t vka::unique_handle<Handle[], deleter, Parent>::size() const noexcept
-{
-    return this->m_count;
-}
-
-template<typename Handle, auto deleter, typename Parent>
-constexpr Handle* vka::unique_handle<Handle[], deleter, Parent>::begin() noexcept
-{
-    return this->m_handles;
-}
-
-template<typename Handle, auto deleter, typename Parent>
-constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::begin() const noexcept
-{
-    return this->m_handles;
-}
-
-template<typename Handle, auto deleter, typename Parent>
-constexpr const Handle* vka::unique_handle<Handle[], deleter, Parent>::end() const noexcept
-{
-    return this->m_handles + this->m_count;
 }
