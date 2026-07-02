@@ -139,6 +139,26 @@ namespace vka
         VkCommandBuffer                 commandBuffer;
     };
 
+    struct WindowCreateInfo
+    {
+        VkExtent2D                      extent;
+        const char*                     title;
+        GLFWmonitor*                    monitor;
+        GLFWwindow*                     share;
+        VkSwapchainCreateFlagsKHR       flags;
+        uint32_t                        min_image_count;
+        VkFormat                        image_format;
+        VkColorSpaceKHR                 image_color_space;
+        VkImageUsageFlags               image_usage;
+        VkSharingMode                   image_sharing_mode;
+        uint32_t                        queue_family_index_count;
+        const uint32_t*                 p_queue_family_indices;
+        VkSurfaceTransformFlagBitsKHR   pre_transform;
+        VkCompositeAlphaFlagBitsKHR     composite_alpha;
+        VkPresentModeKHR                present_mode;
+        VkBool32                        clipped;
+    };
+
     /**
      * Contains information for staging buffers of texture loaders.
      * - <c>queueFamilyIndex</c>: Specifies the queue family of the staging buffer.

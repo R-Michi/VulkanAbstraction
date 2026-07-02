@@ -18,8 +18,11 @@
 #include "attachment/attachment.inl"
 #include "texture/texture.inl"
 #include "descriptor/descriptor.inl"
-#include "handle/handle.h"
 #include "push_constant/push_constant.inl"
+#ifdef VKA_GLFW_ENABLE
+    #include "window/window.inl"
+#endif
+#include "handle/handle.h"
 
 #ifdef VKA_MODEL_LOADING_ENABLE
     #include "model/vka_model.h"

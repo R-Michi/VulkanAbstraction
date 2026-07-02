@@ -25,6 +25,10 @@
 #include "texture/texture.h"
 #include "descriptor/descriptor.h"
 
+#ifdef VKA_GLFW_ENABLE
+    #include "window/window.inl"
+#endif
+
 #ifdef VKA_MODEL_LOADING_ENABLE
     #include "model/vka_model.h"
 #endif

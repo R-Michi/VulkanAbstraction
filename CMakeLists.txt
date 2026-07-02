@@ -93,6 +93,7 @@ set(VKA_DETAIL_FILES
         vka/core/push_constant/push_constant.h
         vka/detail/descriptor/descriptor.h
         vka/detail/descriptor/descriptor.inl
+        vka/detail/window/window.h
 )
 
 ########################################################################################################################
@@ -100,6 +101,7 @@ set(VKA_DETAIL_FILES
 ########################################################################################################################
 
 set(VKA_CORE_FILES
+        vka/core/core.h
         vka/core/common/common.h
         vka/core/common/common.inl
         vka/core/common/common.cpp
@@ -154,7 +156,9 @@ set(VKA_CORE_FILES
         vka/core/handle/parent.inl
         vka/core/handle/no_parent.inl
         vka/core/handle/dynamic_array.inl
-        vka/core/core.h
+        vka/core/window/window.h
+        vka/core/window/window.inl
+        vka/core/window/window.cpp
 )
 
 ########################################################################################################################

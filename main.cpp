@@ -59,9 +59,9 @@ int main()
     merger1.load(filename);
 #endif
 
-    VkaExample app;
     try
     {
+        VkaExample app;
         app.init();
         app.run();
         app.shutdown();
