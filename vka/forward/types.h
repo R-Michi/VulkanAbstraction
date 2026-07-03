@@ -141,7 +141,7 @@ namespace vka
 
     struct WindowCreateInfo
     {
-        VkExtent2D                      extent;
+        VkExtent2D                      size;
         const char*                     title;
         GLFWmonitor*                    monitor;
         GLFWwindow*                     share;
@@ -149,6 +149,7 @@ namespace vka
         uint32_t                        min_image_count;
         VkFormat                        image_format;
         VkColorSpaceKHR                 image_color_space;
+        uint32_t                        image_array_layers;
         VkImageUsageFlags               image_usage;
         VkSharingMode                   image_sharing_mode;
         uint32_t                        queue_family_index_count;

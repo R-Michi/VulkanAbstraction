@@ -55,10 +55,6 @@ namespace vka
         ~AttachmentImage() = default;
         AttachmentImage& operator= (AttachmentImage&&) = default;
 
-        // deleted:
-        AttachmentImage(const AttachmentImage&) = delete;
-        AttachmentImage& operator= (const AttachmentImage&) = delete;
-
     private:
         static constexpr char IMAGE_CREATE_FAILED[] = "[vka::AttachmentImage]: Failed to create image handle.";
         static constexpr char ALLOC_MEMORY_FAILED[] = "[vka::AttachmentImage]: Failed to allocate memory.";
