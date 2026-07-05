@@ -10,6 +10,20 @@
 
 namespace vka
 {
+    struct AttachmentImageCreateInfo
+    {
+        VkFormat                imageFormat;
+        VkExtent2D              imageExtent;
+        VkSampleCountFlagBits   imageSamples;
+        VkImageUsageFlags       imageUsage;
+        VkSharingMode           imageSharingMode;
+        uint32_t                imageQueueFamilyIndexCount;
+        const uint32_t*         imageQueueFamilyIndices;
+        VkFormat                viewFormat;
+        VkComponentMapping      viewComponentMapping;
+        VkImageAspectFlags      viewAspectMask;
+    };
+
     /**
      * Helper class to create attachment images. Attachment images are used inside a framebuffer to store color, depth,
      * stencil, etc. information.

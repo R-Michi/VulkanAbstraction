@@ -10,6 +10,20 @@
 
 namespace vka
 {
+    // see documentation of VkBufferCreateInfo and VkMemoryAllocateInfo
+    struct BufferCreateInfo
+    {
+        const void*             pBufferNext;
+        VkBufferCreateFlags     bufferFlags;
+        VkDeviceSize            bufferSize;
+        VkBufferUsageFlags      bufferUsage;
+        VkSharingMode           bufferSharingMode;
+        uint32_t                bufferQueueFamilyIndexCount;
+        const uint32_t*         bufferQueueFamilyIndices;
+        const void*             pMemoryNext;
+        VkMemoryPropertyFlags   memoryPropertyFlags;
+    };
+
     /// Simplifies creating buffers in vulkan.
     class Buffer
     {

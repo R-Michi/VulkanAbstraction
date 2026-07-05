@@ -30,7 +30,7 @@ class VkaExample
 	};
 
 private:
-	constexpr static uint32_t SWAPCHAIN_IMAGE_COUNT = 4;
+	constexpr static uint32_t SWAPCHAIN_IMAGE_COUNT = 3;
 	constexpr static VkFormat SURFACE_COLOR_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 	constexpr static VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 	constexpr static VkColorSpaceKHR SURFACE_COLOR_SPACE = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
@@ -39,7 +39,6 @@ private:
 
 	VkApplicationInfo app_info;
 	VkInstance instance;
-	VkSurfaceKHR window_surface;
 
 	VkPhysicalDevice physical_device;
 	QueueInfo graphics_queue;
@@ -48,7 +47,7 @@ private:
 	VkPhysicalDeviceProperties pdevice_properties;
 	VkPhysicalDeviceMemoryProperties memory_properties;
 
-	VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
+	vka::Window window;
 	vka::AttachmentImage depth_attachment;
 	vka::unique_handle<VkImageView[]> swapchain_image_views;
 	std::vector<VkFramebuffer> swapchain_framebuffers;
@@ -74,18 +73,10 @@ private:
     vka::DescriptorLayouts descriptor_layouts;
 	vka::DescriptorSets descriptors;
 
-	VkSemaphore sem_img_available[SWAPCHAIN_IMAGE_COUNT];
-	VkSemaphore sem_rendering_done[SWAPCHAIN_IMAGE_COUNT];
-	VkFence fence_render[SWAPCHAIN_IMAGE_COUNT];
+	vka::Renderer renderer;
 
-	const GLFWvidmode* vid_mode;
-	GLFWwindow* window;
-	int width, height;
-
-	std::vector<double> frame_times;
-
-	void glfw_init();
-	void glfw_destroy() const;
+	static void glfw_init();
+	static void glfw_destroy();
 
 	// vulkan methods
 	void vulkan_init();
@@ -95,11 +86,11 @@ private:
 
 	void make_application_info();
 	void create_instance();
-	void create_surface();
 	void create_physical_device();
 	void create_logical_device();
 
-	void create_swapchain();
+	void create_window();
+	void create_image_views();
 	void create_depth_attachment();
 	void create_render_pass();
 	void create_shaders();
@@ -113,15 +104,17 @@ private:
 	void create_uniform_buffers();
 	void create_textures();
 	void create_descriptors();
-	void create_semaphores();
+	void create_renderer();
+
 	
 	void record_command_buffers() const;
-	void draw_frame() const;
 	void update_frame_contents();
+
+	void resize_window();
 
 public:
 	VkaExample() = default;
-	virtual ~VkaExample();
+	~VkaExample() = default;
 
 	void init();
 	void run();

@@ -2,6 +2,8 @@
 
 namespace vka
 {
+    using null_handle_t = decltype(VK_NULL_HANDLE);
+
     /**
      * A <c>unique_handle</c> is an object that manages a non-dispatchable vulkan handle and subsequently destroys it if
      * it goes out of scope. You can also use implementations of <c>unique_handle</c> with custom handle-types,
@@ -248,7 +250,7 @@ namespace vka
          */
         constexpr void reset(Handle handle) noexcept;
 
-        /// Destroys the current handle and sets it to <c>VK_NULL_HANDLE</c>. The parent handle is not affected.
+        /// Destroys the current handle and sets it to <c>VK_NULL_HANDLE</c>.
         constexpr void destroy() noexcept;
 
         /// Swaps the handles of the two <c>unique_handle</c> objects.

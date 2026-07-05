@@ -10,6 +10,12 @@
 
 namespace vka::detail::queue
 {
+    struct QueueFamilyRequirements
+    {
+        VkQueueFlags    queueFlags;
+        uint32_t        queueCount;
+    };
+
     /**
      * Checks requirements for a queue family.
      * @param requirements Requirements to check for.

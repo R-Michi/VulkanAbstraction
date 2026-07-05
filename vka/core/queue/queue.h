@@ -8,6 +8,17 @@
 
 #pragma once
 
+namespace vka
+{
+    enum class QueueFamilyPriority : uint8_t
+    {
+        FIRST,
+        OPTIMAL,
+    };
+
+    using QueueFamilyRequirements = detail::queue::QueueFamilyRequirements;
+}
+
 namespace vka::queue
 {
     /**

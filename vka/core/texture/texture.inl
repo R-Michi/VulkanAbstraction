@@ -17,7 +17,7 @@ constexpr vka::Texture::Texture() noexcept :
     m_level_count(0)
 {}
 
-constexpr VkImageView vka::Texture::operator[] (uint32_t idx) const noexcept
+inline VkImageView vka::Texture::operator[] (uint32_t idx) const noexcept
 {
     return this->m_texture.get().views[idx];
 }
@@ -73,7 +73,7 @@ constexpr VkSampler vka::Texture::sampler() const noexcept
     return this->m_texture.get().sampler;
 }
 
-constexpr VkImageView vka::Texture::view(uint32_t idx) const
+inline VkImageView vka::Texture::view(uint32_t idx) const
 {
     if (idx >= this->m_texture.get().view_count) [[unlikely]]
         detail::error::throw_out_of_range(VIEW_OUT_OF_RANGE);

@@ -19,37 +19,15 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-VkaExample::~VkaExample()
-{
-	double res = 0.0f;
-
-	for (double d : this->frame_times)
-		res += d;
-	res /= (double)this->frame_times.size();
-	std::cout << "AVG MSPT: " << res * 1000.0 << std::endl;
-	std::cout << "AVG FPS: " << 1.0 / res << std::endl;
-}
-
-
 void VkaExample::glfw_init()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);	// is only temporary false
-
-	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-	this->vid_mode = glfwGetVideoMode(monitor);
-	window = glfwCreateWindow(this->vid_mode->width / 2, this->vid_mode->height / 2, "", nullptr, nullptr);
-	if (window == nullptr)
-		throw std::runtime_error("Failed to create GLFW window!");
-
-	glfwGetWindowSize(this->window, &this->width, &this->height);
-	glfwSetWindowPos(window, this->vid_mode->width / 4, this->vid_mode->height / 4);
+	//glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);	// is only temporary false
 }
 
-void VkaExample::glfw_destroy() const
+void VkaExample::glfw_destroy()
 {
-	glfwDestroyWindow(this->window);
 	glfwTerminate();
 }
 
@@ -57,11 +35,11 @@ void VkaExample::vulkan_init()
 {
 	this->make_application_info();
 	this->create_instance();
-	this->create_surface();
 	this->create_physical_device();
 	this->create_logical_device();
 
-	this->create_swapchain();
+	this->create_window();
+	this->create_image_views();
 	this->create_render_pass();
 	this->create_depth_attachment();
 	this->create_shaders();
@@ -75,7 +53,7 @@ void VkaExample::vulkan_init()
 	this->create_descriptors();
 
 	this->create_pipeline();
-	this->create_semaphores();
+	this->create_renderer();
 	
 	this->record_command_buffers();
 }
@@ -84,13 +62,7 @@ void VkaExample::vulkan_destroy()
 {
 	vkDeviceWaitIdle(this->device);
 
-	for (uint32_t i = 0; i < SWAPCHAIN_IMAGE_COUNT; i++)
-	{
-		vkDestroyFence(this->device, this->fence_render[i], nullptr);
-		vkDestroySemaphore(this->device, this->sem_img_available[i], nullptr);
-		vkDestroySemaphore(this->device, this->sem_rendering_done[i], nullptr);
-	}
-
+	this->renderer.destroy();
 	this->texture = vka::Texture();
 	this->uniform_buffer = vka::Buffer();
 	this->index_buffer = vka::Buffer();
@@ -114,10 +86,9 @@ void VkaExample::vulkan_destroy()
 
 	this->depth_attachment.destroy();
 	this->swapchain_image_views.destroy();
-	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
+	this->window.destroy();
 
 	vkDestroyDevice(this->device, nullptr);
-	vkDestroySurfaceKHR(this->instance, this->window_surface, nullptr);
 	vkDestroyInstance(this->instance, nullptr);
 }
 
@@ -218,12 +189,6 @@ void VkaExample::create_instance()
 	vka::check_result(result, "vkCreateInstance");
 }
 
-void VkaExample::create_surface()
-{
-	const VkResult result = glfwCreateWindowSurface(this->instance, window, nullptr, &this->window_surface);
-	vka::check_result(result, "glfwCreateWindowSurface");
-}
-
 void VkaExample::create_physical_device()
 {
 	constexpr VkMemoryPropertyFlags DEVICE_MEMORY = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -318,38 +283,57 @@ void VkaExample::create_logical_device()
 	this->graphics_queue.family_index = family_index;
 }
 
-
-void VkaExample::create_swapchain()
+void VkaExample::create_window()
 {
-	VkSwapchainCreateInfoKHR swapchain_create_info;
-	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapchain_create_info.pNext = nullptr;
-	swapchain_create_info.flags = 0;
-	swapchain_create_info.surface = this->window_surface;
-	swapchain_create_info.minImageCount = SWAPCHAIN_IMAGE_COUNT;
-	swapchain_create_info.imageFormat = SURFACE_COLOR_FORMAT;
-	swapchain_create_info.imageColorSpace = SURFACE_COLOR_SPACE;
-	swapchain_create_info.imageExtent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
-	swapchain_create_info.imageArrayLayers = 1;
-	swapchain_create_info.imageUsage = SURFACE_IMAGE_USAGE;
-	swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	swapchain_create_info.queueFamilyIndexCount = 1;
-	swapchain_create_info.pQueueFamilyIndices = &this->graphics_queue.family_index;
-	swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	swapchain_create_info.presentMode = PRESENTATION_MODE;
-	swapchain_create_info.clipped = VK_TRUE;
-	swapchain_create_info.oldSwapchain = this->swapchain;
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* vid_mode = glfwGetVideoMode(monitor);
 
-	VkSwapchainKHR new_swapchain = VK_NULL_HANDLE;
-	this->swapchain_image_views.destroy();
-	const VkResult result = vka::swapchain::create(this->device, swapchain_create_info, new_swapchain, this->swapchain_image_views);
-	vkDestroySwapchainKHR(this->device, this->swapchain, nullptr);
-	this->swapchain = new_swapchain;
+	const vka::WindowCreateInfo create_info = {
+		.size = { (uint32_t)(vid_mode->width / 2), (uint32_t)(vid_mode->height / 2) },
+		.title = "VKA example",
+		.monitor = nullptr,
+		.share = nullptr,
+		.flags = 0,
+		.min_image_count = SWAPCHAIN_IMAGE_COUNT,
+		.image_format = SURFACE_COLOR_FORMAT,
+		.image_color_space = SURFACE_COLOR_SPACE,
+		.image_array_layers = 1,
+		.image_usage = SURFACE_IMAGE_USAGE,
+		.image_sharing_mode = VK_SHARING_MODE_EXCLUSIVE,
+		.queue_family_index_count = 1,
+		.p_queue_family_indices = &this->graphics_queue.family_index,
+		.pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+		.composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+		.present_mode = PRESENTATION_MODE,
+		.clipped = VK_TRUE
+	};
+	this->window = vka::Window(this->instance, this->device, create_info);
+}
 
-	// Important to note is that the result should be checked after the swapchain handle has been guarded. The function
-	// may still fail (e.g., when creating the images), although the swapchain handle has already been created.
-	vka::check_result(result, "vkCreateSwapchainKHR");
+void VkaExample::create_image_views()
+{
+	this->swapchain_image_views = vka::unique_handle<VkImageView[]>(this->device, new VkImageView[this->window.image_count()]{ VK_NULL_HANDLE }, this->window.image_count());
+	for (uint32_t i = 0; i < this->window.image_count(); i++)
+	{
+		constexpr VkImageSubresourceRange subresource_range = {
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1
+		};
+		const VkImageViewCreateInfo view_create_info = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.image = this->window.image(i),
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = SURFACE_COLOR_FORMAT,
+			.components = {},
+			.subresourceRange = subresource_range
+		};
+		vka::check_result(vkCreateImageView(this->device, &view_create_info, nullptr, this->swapchain_image_views.get() + i), "vkCreateImageView failed");
+	}
 }
 
 void VkaExample::create_depth_attachment()
@@ -357,7 +341,7 @@ void VkaExample::create_depth_attachment()
 	VkComponentMapping component_mapping = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
 	const vka::AttachmentImageCreateInfo ci = {
 		.imageFormat = DEPTH_FORMAT,
-		.imageExtent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) },
+		.imageExtent = this->window.surface_size(),
 		.imageSamples = VK_SAMPLE_COUNT_1_BIT,
 		.imageUsage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -479,18 +463,19 @@ void VkaExample::create_pipeline()
 	vertex_input_create_info.pVertexBindingDescriptions = bindings.data();
 	vertex_input_create_info.vertexAttributeDescriptionCount = attributes.size();
 	vertex_input_create_info.pVertexAttributeDescriptions = attributes.data();
-	
+
+	VkExtent2D surface_size = this->window.surface_size();
 	VkViewport view_port;
 	view_port.x = 0.0f;
 	view_port.y = 0.0f;
-	view_port.width = static_cast<float>(this->width);
-	view_port.height = static_cast<float>(this->height);
+	view_port.width = (float)surface_size.width;
+	view_port.height = (float)surface_size.height;
 	view_port.minDepth = 0.0f;
 	view_port.maxDepth = 1.0f;
 
 	VkRect2D scissor;
 	scissor.offset = { 0, 0 };
-	scissor.extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
+	scissor.extent = surface_size;
 
 	VkPipelineViewportStateCreateInfo view_port_create_info;
 	view_port_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -635,6 +620,7 @@ void VkaExample::create_framebuffers()
 			this->depth_attachment.view()
 		};
 
+		const VkExtent2D surface_size = this->window.surface_size();
 		VkFramebufferCreateInfo fbo_creare_info = {};
 		fbo_creare_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		fbo_creare_info.pNext = nullptr;
@@ -642,8 +628,8 @@ void VkaExample::create_framebuffers()
 		fbo_creare_info.renderPass = this->render_pass;
 		fbo_creare_info.attachmentCount = 2;
 		fbo_creare_info.pAttachments = attachments;
-		fbo_creare_info.width = static_cast<uint32_t>(this->width);
-		fbo_creare_info.height = static_cast<uint32_t>(this->height);
+		fbo_creare_info.width = surface_size.width;
+		fbo_creare_info.height = surface_size.height;
 		fbo_creare_info.layers = 1;
 
 		VkFramebuffer fbo;
@@ -659,7 +645,7 @@ void VkaExample::create_command_pool()
 	VkCommandPoolCreateInfo command_pool_create_info;
 	command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	command_pool_create_info.pNext = nullptr;
-	command_pool_create_info.flags = 0;
+	command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	command_pool_create_info.queueFamilyIndex = this->graphics_queue.family_index;
 
 	VkResult result = vkCreateCommandPool(this->device, &command_pool_create_info, nullptr, &this->command_pool);
@@ -865,29 +851,10 @@ void VkaExample::create_descriptors()
 	update.execute();
 }
 
-void VkaExample::create_semaphores()
+void VkaExample::create_renderer()
 {
-	VkSemaphoreCreateInfo semaphore_create_info;
-	semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	semaphore_create_info.pNext = nullptr;
-	semaphore_create_info.flags = 0;
-
-	VkFenceCreateInfo fence_create_info;
-	fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fence_create_info.pNext = nullptr;
-	fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (uint32_t i = 0; i < SWAPCHAIN_IMAGE_COUNT; i++)
-	{
-		VkResult result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, this->sem_img_available + i);
-		vka::check_result(result, "vkCreateSemaphore");
-		result = vkCreateSemaphore(this->device, &semaphore_create_info, nullptr, this->sem_rendering_done + i);
-		vka::check_result(result, "vkCreateSemaphore");
-		result = vkCreateFence(this->device, &fence_create_info, nullptr, this->fence_render + i);
-		vka::check_result(result, "vkCreateFence");
-	}
+	this->renderer = vka::Renderer(this->device, this->window, this->window.image_count());
 }
-
 
 void VkaExample::record_command_buffers() const
 {
@@ -902,13 +869,14 @@ void VkaExample::record_command_buffers() const
 		VkResult result = vkBeginCommandBuffer(this->swapchain_command_buffers.at(i), &command_buffer_begin_info);
 		vka::check_result(result, "vkBeginCommandBuffer");
 
+		const VkExtent2D surface_size = this->window.surface_size();
 		VkRenderPassBeginInfo render_pass_begin_info;
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		render_pass_begin_info.pNext = nullptr;
 		render_pass_begin_info.renderPass = this->render_pass;
 		render_pass_begin_info.framebuffer = this->swapchain_framebuffers.at(i);
 		render_pass_begin_info.renderArea.offset = { 0, 0 };
-		render_pass_begin_info.renderArea.extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
+		render_pass_begin_info.renderArea.extent = surface_size;
 
 		std::vector<VkClearValue> clear_values(2);
 		clear_values[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };	// clear color
@@ -924,15 +892,15 @@ void VkaExample::record_command_buffers() const
 		VkViewport view_port;
 		view_port.x = 0;
 		view_port.y = 0;
-		view_port.width = static_cast<float>(this->width);
-		view_port.height = static_cast<float>(this->height);
+		view_port.width = (float)surface_size.width;
+		view_port.height = (float)surface_size.height;
 		view_port.minDepth = 0.0f;
 		view_port.maxDepth = 1.0f;
 		vkCmdSetViewport(this->swapchain_command_buffers.at(i), 0, 1, &view_port);
 
 		VkRect2D scissor;
 		scissor.offset = { 0, 0 };
-		scissor.extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
+		scissor.extent = surface_size;
 		vkCmdSetScissor(this->swapchain_command_buffers.at(i), 0, 1, &scissor);
 
 		// bind buffers
@@ -957,50 +925,9 @@ void VkaExample::record_command_buffers() const
 
 void VkaExample::init()
 {
+	glfw_init();
 	this->load_models();
-	this->glfw_init();
 	this->vulkan_init();
-}
-
-void VkaExample::draw_frame() const
-{
-	static uint32_t frame_index = 0;
-
-	vkWaitForFences(this->device, 1, this->fence_render + frame_index, VK_TRUE, UINT64_MAX);
-	vkResetFences(this->device, 1, this->fence_render + frame_index);
-
-	uint32_t img_index;
-	vkAcquireNextImageKHR(this->device, this->swapchain, UINT64_MAX, this->sem_img_available[frame_index], VK_NULL_HANDLE, &img_index);
-
-	constexpr VkPipelineStageFlags wait_stage_mask[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-	VkSubmitInfo submit_info;
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.pNext = nullptr;
-	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = this->sem_img_available + frame_index;
-	submit_info.pWaitDstStageMask = wait_stage_mask;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &this->swapchain_command_buffers.at(img_index);
-	submit_info.signalSemaphoreCount = 1;					  
-	submit_info.pSignalSemaphores = this->sem_rendering_done + img_index;
-
-	VkResult result = vkQueueSubmit(this->graphics_queue.queue, 1, &submit_info, this->fence_render[frame_index]);
-	vka::check_result(result, "vkQueueSubmit");
-
-	VkPresentInfoKHR present_info;
-	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	present_info.pNext = nullptr;
-	present_info.waitSemaphoreCount = 1;
-	present_info.pWaitSemaphores = this->sem_rendering_done + img_index;
-	present_info.swapchainCount = 1;
-	present_info.pSwapchains = &this->swapchain;
-	present_info.pImageIndices = &img_index;
-	present_info.pResults = nullptr;
-
-	result = vkQueuePresentKHR(this->graphics_queue.queue, &present_info);
-	vka::check_result(result, "vkQueuePresentKHR");
-
-	frame_index = (frame_index + 1) % SWAPCHAIN_IMAGE_COUNT;
 }
 
 void VkaExample::update_frame_contents()
@@ -1020,7 +947,8 @@ void VkaExample::update_frame_contents()
 	view[3][2] = -glm::dot(pos, tmp_view[2]);
 	view[3][3] = 1.0f;
 
-	glm::mat4 projection = glm::perspectiveRH_ZO(glm::radians(60.0f), static_cast<float>(this->width) / static_cast<float>(this->height), 0.001f, 1000.0f);
+	const VkExtent2D surface_size = this->window.surface_size();
+	glm::mat4 projection = glm::perspectiveRH_ZO(glm::radians(60.0f), static_cast<float>(surface_size.width) / static_cast<float>(surface_size.height), 0.001f, 1000.0f);
 	projection[2][2] *= -1.0f;
 	projection[2][3] *= -1.0f;
 	utm.MVP = projection * view * model;
@@ -1030,21 +958,49 @@ void VkaExample::update_frame_contents()
 	this->uniform_buffer.unmap();
 }
 
+void VkaExample::resize_window()
+{
+	const vka::WindowUpdateInfo update_info = {
+		.flags = 0,
+		.min_image_count = SWAPCHAIN_IMAGE_COUNT,
+		.image_format = SURFACE_COLOR_FORMAT,
+		.image_color_space = SURFACE_COLOR_SPACE,
+		.image_array_layers = 1,
+		.image_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		.image_sharing_mode = VK_SHARING_MODE_EXCLUSIVE,
+		.queue_family_index_count = 1,
+		.p_queue_family_indices = &this->graphics_queue.family_index,
+		.pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+		.composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+		.present_mode = PRESENTATION_MODE,
+		.clipped = VK_TRUE,
+	};
+
+	for (const VkFramebuffer fbo : this->swapchain_framebuffers)
+		vkDestroyFramebuffer(this->device, fbo, nullptr);
+	this->swapchain_framebuffers.clear();
+	this->depth_attachment.destroy();
+	this->swapchain_image_views.destroy();
+
+	this->window.update(update_info);
+	this->create_image_views();
+	this->create_depth_attachment();
+	this->create_framebuffers();
+	this->record_command_buffers();
+}
+
 void VkaExample::run()
 {
-	while (!glfwGetKey(this->window, GLFW_KEY_ESCAPE) && !glfwWindowShouldClose(this->window))
+	while (!this->window.key_state(GLFW_KEY_ESCAPE) && !this->window.should_close())
 	{
-		//double t0_render = glfwGetTime();
-
 		glfwPollEvents();
 
 		this->update_frame_contents();
-		this->draw_frame();
-
-		//double t_render = glfwGetTime() - t0_render;
-
-		//std::cout << "\r" << 1.0 / t_render << "FPS                    ";
-		//this->frame_times.push_back(t_render);
+		if (this->renderer.execute(graphics_queue.queue, swapchain_command_buffers.data(), VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT))
+		{
+			this->resize_window();
+			std::cout << "Resized window" << std::endl;
+		}
 	}
 	std::cout << std::endl;
 }
@@ -1052,5 +1008,5 @@ void VkaExample::run()
 void VkaExample::shutdown()
 {
 	this->vulkan_destroy();
-	this->glfw_destroy();
+	glfw_destroy();
 }

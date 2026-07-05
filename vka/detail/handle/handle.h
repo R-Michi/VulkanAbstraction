@@ -116,7 +116,6 @@ namespace vka::detail::handle
 
     // custom handles
     template<> struct parent<descriptor::Handle>            { using type = descriptor::Parent;  };
-    template<> struct parent<window::Handle>                { using type = window::Parent;      };
 
     template<typename T>
     using parent_t = parent<T>::type;
@@ -184,7 +183,9 @@ namespace vka::detail::handle
     template<> struct destroy_func<attachment::Handle>              { static constexpr auto func = attachment::destroy;                     };
     template<> struct destroy_func<texture::Handle>                 { static constexpr auto func = texture::destroy;                        };
     template<> struct destroy_func<descriptor::Handle>              { static constexpr auto func = descriptor::destroy;                     };
-    template<> struct destroy_func<window::Handle>                  { static constexpr auto func = window::destroy;                         };
+#ifdef VKA_GLFW_ENABLE
+    template<> struct destroy_func<renderer::Handle>                { static constexpr auto func = renderer::destroy;                       };
+#endif
 
     template<typename T>
     constexpr auto destroy_f = destroy_func<T>::func;

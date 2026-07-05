@@ -21,6 +21,7 @@
 #include "push_constant/push_constant.inl"
 #ifdef VKA_GLFW_ENABLE
     #include "window/window.inl"
+    #include "renderer/renderer.inl"
 #endif
 #include "handle/handle.h"
 

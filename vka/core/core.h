@@ -21,12 +21,11 @@
 #include "queue/queue.h"
 #include "shader/shader.inl"
 #include "surface/surface.h"
-#include "swapchain/swapchain.h"
 #include "texture/texture.h"
 #include "descriptor/descriptor.h"
-
 #ifdef VKA_GLFW_ENABLE
     #include "window/window.inl"
+    #include "renderer/renderer.inl"
 #endif
 
 #ifdef VKA_MODEL_LOADING_ENABLE

@@ -8,6 +8,20 @@
 
 #pragma once
 
+namespace vka
+{
+    struct PhysicalDeviceRequirements
+    {
+        VkPhysicalDeviceType            type;
+        const VkMemoryPropertyFlags*    memoryPropertyFlags;
+        uint32_t                        memoryPropertyFlagsCount;
+        const VkQueueFlags*             queueFamilyFlags;
+        uint32_t                        queueFamilyFlagsCount;
+        bool                            surfaceSupport;
+        const char*                     sequence;
+    };
+}
+
 namespace vka::device
 {
     /**

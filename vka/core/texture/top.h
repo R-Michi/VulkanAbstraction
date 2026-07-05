@@ -11,6 +11,61 @@
 
 namespace vka
 {
+    // image view create-info for texture, see documentation of VkImageViewCreateInfo
+    struct TextureViewCreateInfo
+    {
+        VkImageViewCreateFlags  flags;
+        VkImageViewType         viewType;
+        VkFormat                format;
+        VkComponentMapping      components;
+        uint32_t                baseArrayLayer;
+        uint32_t                layerCount;
+    };
+    
+    // see documentation of VkImageCreateInfo and VkSamplerCreateInfo
+    struct TextureCreateInfo
+    {
+        VkImageCreateFlags              imageFlags;
+        VkImageType                     imageType;
+        VkFormat                        imageFormat;
+        VkExtent3D                      imageExtent;
+        uint32_t                        imageArrayLayers;
+        uint32_t                        imageQueueFamilyIndexCount;
+        const uint32_t*                 imageQueueFamilyIndices;
+        VkFilter                        samplerMagFilter;
+        VkFilter                        samplerMinFilter;
+        VkSamplerMipmapMode             samplerMipmapMode;
+        VkSamplerAddressMode            samplerAddressModeU;
+        VkSamplerAddressMode            samplerAddressModeV;
+        VkSamplerAddressMode            samplerAddressModeW;
+        float                           samplerLodBias;
+        uint32_t                        samplerAnisotropyEnable;
+        float                           samplerMaxAnisotropy;
+        uint32_t                        samplerCompareEnable;
+        VkCompareOp                     samplerCompareOp;
+        float                           samplerMinLod;
+        float                           samplerMaxLod;
+        VkBorderColor                   samplerBorderColor;
+        uint32_t                        samplerUnnormalizedCoordinates;
+        uint32_t                        viewCount;
+        const TextureViewCreateInfo*    views;
+        bool                            generateMipMap;
+        VkCommandBuffer                 commandBuffer;
+    };
+
+    /**
+     * Contains information for staging buffers of texture loaders.
+     * - <c>queueFamilyIndex</c>: Specifies the queue family of the staging buffer.
+     * - <c>memoryPropertyFlags</c>: Specify memory property flags that are mappable.
+     * - <c>memoryProperties</c>: Specifies the memory properties of the used device.
+     */
+    struct TextureLoadInfo
+    {
+        uint32_t                                queueFamilyIndex;
+        VkMemoryPropertyFlags                   memoryPropertyFlags;
+        const VkPhysicalDeviceMemoryProperties* memoryProperties;
+    };
+
     /**
      * Helper class to load and merge 2D images from a file or 3D images from memory into a single image. Every time
      * <c>load()</c> is called, the components of the current image are appended to the already existing components of
@@ -348,7 +403,7 @@ namespace vka
          * No range check is performed.
          * @retun Returns the vulkan <c>VkImageView</c> handle at the specified index.
          */
-        constexpr VkImageView operator[] (uint32_t idx) const noexcept;
+        inline VkImageView operator[] (uint32_t idx) const noexcept;
 
         /// @return Returns whether the texture is valid.
         explicit constexpr operator bool() const noexcept;
@@ -385,7 +440,7 @@ namespace vka
          * @return Returns the vulkan <c>VkImageView</c> handle at the specified index.
          * @throw std::out_of_range Is thrown if the specified index is out of bounds of the image-view array.
          */
-        constexpr VkImageView view(uint32_t idx) const;
+        inline VkImageView view(uint32_t idx) const;
 
         /**
          * Loads image data into the texture.

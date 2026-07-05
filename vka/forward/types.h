@@ -14,19 +14,6 @@ namespace vka
     using real_t = tinyobj::real_t;
 #endif
 
-    using null_handle_t = decltype(VK_NULL_HANDLE);
-
-    using ColorFormatArray = std::array<VkFormat, 123>;
-    using DepthFormatArray = std::array<VkFormat, 6>;
-    using StencilFormatArray = std::array<VkFormat, 4>;
-    using DepthStencilFormatArray = std::array<VkFormat, 3>;
-
-    enum class QueueFamilyPriority : uint8_t
-    {
-        FIRST,
-        OPTIMAL,
-    };
-
     enum class VertexAttributeType : uint32_t // deprecated
     {
         NONE = 0,
@@ -46,130 +33,9 @@ namespace vka
     };
     using ModelLoadOptionFlags = uint32_t;
 
-    struct PhysicalDeviceRequirements
-    {
-        VkPhysicalDeviceType            type;
-        const VkMemoryPropertyFlags*    memoryPropertyFlags;
-        uint32_t                        memoryPropertyFlagsCount;
-        const VkQueueFlags*             queueFamilyFlags;
-        uint32_t                        queueFamilyFlagsCount;
-        bool                            surfaceSupport;
-        const char*                     sequence;
-    };
-
-    struct QueueFamilyRequirements
-    {
-    	VkQueueFlags    queueFlags;
-    	uint32_t        queueCount;
-    };
-
     struct VertexAttribute // deprecated
     {
         VertexAttributeType type;
         size_t              spacing;
-    };
-
-    struct AttachmentImageCreateInfo
-    {
-        VkFormat                imageFormat;
-        VkExtent2D              imageExtent;
-        VkSampleCountFlagBits   imageSamples;
-        VkImageUsageFlags       imageUsage;
-        VkSharingMode           imageSharingMode;
-        uint32_t                imageQueueFamilyIndexCount;
-        const uint32_t*         imageQueueFamilyIndices;
-        VkFormat                viewFormat;
-        VkComponentMapping      viewComponentMapping;
-        VkImageAspectFlags      viewAspectMask;
-    };
-
-    // see documentation of VkBufferCreateInfo and VkMemoryAllocateInfo
-    struct BufferCreateInfo
-    {
-        const void*             pBufferNext;
-        VkBufferCreateFlags     bufferFlags;
-        VkDeviceSize            bufferSize;
-        VkBufferUsageFlags      bufferUsage;
-        VkSharingMode           bufferSharingMode;
-        uint32_t                bufferQueueFamilyIndexCount;
-        const uint32_t*         bufferQueueFamilyIndices;
-        const void*             pMemoryNext;
-        VkMemoryPropertyFlags   memoryPropertyFlags;
-    };
-
-    // image view create-info for texture, see documentation of VkImageViewCreateInfo
-    struct TextureViewCreateInfo
-    {
-        VkImageViewCreateFlags  flags;
-        VkImageViewType         viewType;
-        VkFormat                format;
-        VkComponentMapping      components;
-        uint32_t                baseArrayLayer;
-        uint32_t                layerCount;
-    };
-
-    // see documentation of VkImageCreateInfo and VkSamplerCreateInfo
-    struct TextureCreateInfo
-    {
-        VkImageCreateFlags              imageFlags;
-        VkImageType                     imageType;
-        VkFormat                        imageFormat;
-        VkExtent3D                      imageExtent;
-        uint32_t                        imageArrayLayers;
-        uint32_t                        imageQueueFamilyIndexCount;
-        const uint32_t*                 imageQueueFamilyIndices;
-        VkFilter                        samplerMagFilter;
-        VkFilter                        samplerMinFilter;
-        VkSamplerMipmapMode             samplerMipmapMode;
-        VkSamplerAddressMode            samplerAddressModeU;
-        VkSamplerAddressMode            samplerAddressModeV;
-        VkSamplerAddressMode            samplerAddressModeW;
-        float                           samplerLodBias;
-        uint32_t                        samplerAnisotropyEnable;
-        float                           samplerMaxAnisotropy;
-        uint32_t                        samplerCompareEnable;
-        VkCompareOp                     samplerCompareOp;
-        float                           samplerMinLod;
-        float                           samplerMaxLod;
-        VkBorderColor                   samplerBorderColor;
-        uint32_t                        samplerUnnormalizedCoordinates;
-        uint32_t                        viewCount;
-        const TextureViewCreateInfo*    views;
-        bool                            generateMipMap;
-        VkCommandBuffer                 commandBuffer;
-    };
-
-    struct WindowCreateInfo
-    {
-        VkExtent2D                      size;
-        const char*                     title;
-        GLFWmonitor*                    monitor;
-        GLFWwindow*                     share;
-        VkSwapchainCreateFlagsKHR       flags;
-        uint32_t                        min_image_count;
-        VkFormat                        image_format;
-        VkColorSpaceKHR                 image_color_space;
-        uint32_t                        image_array_layers;
-        VkImageUsageFlags               image_usage;
-        VkSharingMode                   image_sharing_mode;
-        uint32_t                        queue_family_index_count;
-        const uint32_t*                 p_queue_family_indices;
-        VkSurfaceTransformFlagBitsKHR   pre_transform;
-        VkCompositeAlphaFlagBitsKHR     composite_alpha;
-        VkPresentModeKHR                present_mode;
-        VkBool32                        clipped;
-    };
-
-    /**
-     * Contains information for staging buffers of texture loaders.
-     * - <c>queueFamilyIndex</c>: Specifies the queue family of the staging buffer.
-     * - <c>memoryPropertyFlags</c>: Specify memory property flags that are mappable.
-     * - <c>memoryProperties</c>: Specifies the memory properties of the used device.
-     */
-    struct TextureLoadInfo
-    {
-        uint32_t                                queueFamilyIndex;
-        VkMemoryPropertyFlags                   memoryPropertyFlags;
-        const VkPhysicalDeviceMemoryProperties* memoryProperties;
     };
 }

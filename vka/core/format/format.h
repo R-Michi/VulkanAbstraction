@@ -8,6 +8,14 @@
 
 #pragma once
 
+namespace vka
+{
+    using ColorFormatArray = std::array<VkFormat, 123>;
+    using DepthFormatArray = std::array<VkFormat, 6>;
+    using StencilFormatArray = std::array<VkFormat, 4>;
+    using DepthStencilFormatArray = std::array<VkFormat, 3>;
+}
+
 namespace vka::format
 {
     /**

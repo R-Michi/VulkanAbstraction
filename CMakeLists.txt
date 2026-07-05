@@ -94,6 +94,8 @@ set(VKA_DETAIL_FILES
         vka/detail/descriptor/descriptor.h
         vka/detail/descriptor/descriptor.inl
         vka/detail/window/window.h
+        vka/detail/renderer/renderer.h
+        vka/detail/renderer/renderer.inl
 )
 
 ########################################################################################################################
@@ -115,8 +117,6 @@ set(VKA_CORE_FILES
         vka/core/queue/queue.cpp
         vka/core/surface/surface.h
         vka/core/surface/surface.cpp
-        vka/core/swapchain/swapchain.h
-        vka/core/swapchain/swapchain.cpp
         vka/core/memory/memory.h
         vka/core/memory/memory.cpp
         vka/core/format/format.h
@@ -159,6 +159,9 @@ set(VKA_CORE_FILES
         vka/core/window/window.h
         vka/core/window/window.inl
         vka/core/window/window.cpp
+        vka/core/renderer/renderer.h
+        vka/core/renderer/renderer.inl
+        vka/core/renderer/renderer.cpp
 )
 
 ########################################################################################################################
