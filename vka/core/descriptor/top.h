@@ -14,7 +14,31 @@ namespace vka
     class DescriptorSets;
     class DescriptorUpdateOP;
 
-    class DescriptorBindingList
+    /**
+     * Helper class to define descriptor sets and bindings.
+     *
+     * <b>Default initialization:</b>\n
+     * Creates an empty list.
+     *
+     * <b>Copy behaviour:</b>\n
+     * Trivially copyable.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>crating layouts</b> -- Invoked by <c>create_layouts()</c> creates the descriptor set layouts from the list.
+     */
+    class DescriptorBindingList final
     {
     public:
         /// Initializes the binding list.
@@ -67,7 +91,43 @@ namespace vka
         std::vector<std::vector<VkDescriptorSetLayoutBinding>> m_bindings;
     };
 
-    class DescriptorLayouts
+    /**
+     * Abstraction to simplify the creation of descriptor layouts. Contains an array of vulkan
+     * <c>VkDescriptorSetLayout</c> handles.
+     *
+     * <b>Default initialization:</b>\n
+     * The default constructor creates <b>empty</b> descriptor layouts. This empty object is invalid and cannot perform
+     * any actions (see below for a brief list of actions). Any member function or operator returning a vulkan handle
+     * returns <c>VK_NULL_HANDLE</c> or <c>nullptr</c>. Calling <c>count()</c> returns <c>0</c>. Calling
+     * <c>destroy()</c> does nothing.
+     *
+     * <b>Initialization:</b>\n
+     * The initialization constructor creates valid descriptor layouts that can perform any action, if no exception was
+     * thrown.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Destroy behaviour:</b>\n
+     * Destroys all vulkan handles and sets everything back to default values. After destroying the object contains
+     * <b>empty</b> descriptor layouts.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>creating sets</b> -- Invoked by <c>create_sets()</c> creates the descriptor set from the layouts.
+     */
+    class DescriptorLayouts final
     {
     public:
         /**
@@ -121,7 +181,45 @@ namespace vka
         static unique_handle<VkDescriptorSetLayout[]> create_layouts(VkDevice device, const DescriptorBindingList& bindings, VkDescriptorSetLayoutCreateFlags flags);
     };
 
-    class DescriptorSets
+    /**
+     * Abstraction to simplify the creation of descriptor sets. Contains an array of vulkan <c>VkDescriptorSet</c>
+     * handles.
+     *
+     * <b>Default initialization:</b>\n
+     * The default constructor creates <b>empty</b> descriptor sets. This empty object is invalid and cannot perform any
+     * actions (see below for a brief list of actions). Any member function or operator returning a vulkan handle
+     * returns <c>VK_NULL_HANDLE</c> or <c>nullptr</c>. Calling <c>count()</c> returns <c>0</c>. Calling
+     * <c>destroy()</c> does nothing.
+     *
+     * <b>Initialization:</b>\n
+     * The initialization constructor creates valid descriptor sets that can perform any action, if no exception was
+     * thrown.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Destroy behaviour:</b>\n
+     * Destroys all vulkan handles and sets everything back to default values. After destroying the object contains
+     * <b>empty</b> descriptor sets.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>binding</b> -- Invoked by <c>bind()</c> binds the descriptor sets to a pipeline.
+     * - <b>updating</b> -- Invoked by <c>update_op()</c> creates an operation which is used to update the descriptor
+     * sets.
+     */
+    class DescriptorSets final
     {
         using Parent = detail::descriptor::Parent;
         using Handle = detail::descriptor::Handle;
@@ -188,7 +286,35 @@ namespace vka
         static unique_handle<Handle> create_sets(VkDescriptorPool pool, const DescriptorLayouts& layouts);
     };
 
-    class DescriptorUpdateOP
+    /**
+     * Operation object used to update descriptor sets.
+     *
+     * <b>Default initialization:</b>\n
+     * Has no default initialization.
+     *
+     * <b>Initialization:</b>\n
+     * Creates an update operation object.
+     *
+     * <b>Copy behaviour:</b>\n
+     * Trivially copyable.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>write</b> -- Invoked by <c>write()</c> adds a descriptor write.
+     * - <b>update</b> -- Invoked by <c>execute()</c> updates the descriptor sets.
+     */
+    class DescriptorUpdateOP final
     {
     public:
         /**

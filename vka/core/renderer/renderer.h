@@ -2,7 +2,42 @@
 
 namespace vka
 {
-    class Renderer
+    /**
+     * Abstraction to render images to the screen. This class performs all synchronizations internally.
+     *
+     * <b>Default initialization:</b>\n
+     * The default constructor creates an <b>empty</b> renderer. This empty object is invalid and is not capable of
+     * rendering any images. You will get undefined behaviour or even a crash, if you attempt to call <c>execute()</c>.
+     * Calling <c>destroy()</c> does nothing.
+     *
+     * <b>Initialization:</b>\n
+     * The initialization constructor creates a valid renderer that is capable of rendering images by calling
+     * <c>execute()</c>, if no exception was thrown.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Destroy behaviour:</b>\n
+     * Destroys all internal vulkan handles and sets everything back to default values. After destroying the object is
+     * an <b>empty</b> renderer.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * You can use the renderer in a thread different from the main thread. From the window the renderer references,
+     * only the swapchain is used and no action is performed that includes calling a GLFW-function. However, if you use
+     * this class across multiple threads, actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>rendering</b> -- Invoked by <c>execute()</c> renders the next swapchain image to the screen.
+     */
+    class Renderer final
     {
         using Handle = detail::renderer::Handle;
 
@@ -17,11 +52,15 @@ namespace vka
          * @param fif_count Number of frames in flight to render.
          * @throw std::runtime_error Is thrown, if creating the render context (fences and semaphores) failed.
          * @throw std::invalid_argument Is thrown, if <c>fif_count > window.image_count()</c>
+         * @pre <c>window</c> is a valid window.
          */
         explicit Renderer(VkDevice device, const Window& window, uint32_t fif_count);
 
         /// @return Returns whether the renderer is valid.
         explicit constexpr operator bool() const noexcept;
+
+        /// Destroys the renderer. After destroying the renderer is empty and therefore invalid.
+        constexpr void destroy() noexcept;
 
         /**
          * Executes the render process.
@@ -34,9 +73,6 @@ namespace vka
          * @pre This function is only called on valid renderer objects.
          */
         bool execute(VkQueue queue, const VkCommandBuffer* cbos, VkPipelineStageFlags sync_stage);
-
-        /// Destroys the renderer. After destroying the renderer is empty and therefore invalid.
-        constexpr void destroy() noexcept;
 
         // default:
         Renderer(Renderer&&) = default;

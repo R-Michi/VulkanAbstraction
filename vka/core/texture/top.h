@@ -11,7 +11,12 @@
 
 namespace vka
 {
-    // image view create-info for texture, see documentation of VkImageViewCreateInfo
+    /**
+     * Structure specifying parameters of a newly created image view for textures. The parameters of this structure
+     * correspond to the parameters of
+     * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkImageViewCreateInfo.html">
+     * VkImageViewCreateInfo</a>.
+     */
     struct TextureViewCreateInfo
     {
         VkImageViewCreateFlags  flags;
@@ -21,8 +26,19 @@ namespace vka
         uint32_t                baseArrayLayer;
         uint32_t                layerCount;
     };
-    
-    // see documentation of VkImageCreateInfo and VkSamplerCreateInfo
+
+    /**
+     * Structure specifying the parameters of a newly created texture object. Parameters prefixed with
+     * <c>image</c> correspond to the parameters of a
+     * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkImageCreateInfo.html">VkImageCreateInfo</a>.
+     * Parameters prefixed with <c>sampler</c> correspond to the parameters of a
+     * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkSamplerCreateInfo.html">
+     * VkSamplerCreateInfo</a>.
+     * - <c>viewCount</c> -- Number of views created for this texture.
+     * - <c>views</c> -- Create-info for the views.
+     * - <c>generateMipMap</c> -- Indicates whether mip-maps should be generated.
+     * - <c>commandBuffer</c> -- Command buffer in which internal operations are recorded.
+     */
     struct TextureCreateInfo
     {
         VkImageCreateFlags              imageFlags;
@@ -54,10 +70,10 @@ namespace vka
     };
 
     /**
-     * Contains information for staging buffers of texture loaders.
-     * - <c>queueFamilyIndex</c>: Specifies the queue family of the staging buffer.
-     * - <c>memoryPropertyFlags</c>: Specify memory property flags that are mappable.
-     * - <c>memoryProperties</c>: Specifies the memory properties of the used device.
+     * Contains information for staging buffers internally created when loading image data with texture loaders.
+     * - <c>queueFamilyIndex</c> -- Specifies the queue family of the staging buffer.
+     * - <c>memoryPropertyFlags</c> -- Specify memory property flags that are mappable.
+     * - <c>memoryProperties</c> -- Specifies the memory properties of the used device.
      */
     struct TextureLoadInfo
     {
@@ -70,14 +86,57 @@ namespace vka
      * Helper class to load and merge 2D images from a file or 3D images from memory into a single image. Every time
      * <c>load()</c> is called, the components of the current image are appended to the already existing components of
      * the texture. The specified format caps the total number of components that can be attached. Excess components are
-     * cut off. Unused components are filled with zeros.
+     * cut off. Unused components are filled with <c>zeros</c>.
+     *
+     * <b>Default initialization:</b>\n
+     * No default initialization.
+     *
+     * <b>Initialization:</b>\n
+     * See constructor description.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>loading</b> -- Invoked by <c>load()</c> loads images from memory, from files or from single colors.
+     *
+     * <b>Formats:</b>\n
+     * 8-bit unsigned integer formats:
+     * - <c>VK_FORMAT_R8_UINT</c>
+     * - <c>VK_FORMAT_R8G8_UINT</c>
+     * - <c>VK_FORMAT_R8G8B8_UINT</c>
+     * - <c>VK_FORMAT_R8G8B8A8_UINT</c>
+     *
+     * 16-bit unsigned integer formats:
+     * - <c>VK_FORMAT_R16_UINT</c>
+     * - <c>VK_FORMAT_R16G16_UINT</c>
+     * - <c>VK_FORMAT_R16G16B16_UINT</c>
+     * - <c>VK_FORMAT_R16G16B16A16_UINT</c>
+     *
+     * 32-bit float formats:
+     * - <c>VK_FORMAT_R32_SFLOAT</c>
+     * - <c>VK_FORMAT_R32G32_SFLOAT</c>
+     * - <c>VK_FORMAT_R32G32B32_SFLOAT</c>
+     * - <c>VK_FORMAT_R32G32B32A32_SFLOAT</c>
      *
      * @tparam F Specifies the format of the loader. If an image has a different format data-type than the loader,
      * loading this image results in undefined behavior or even a crash! The texture must be created with a format that
-     * has the same number of components as the loader's format!
+     * has the same number of components as the format of the loader!
      */
     template<VkFormat F> requires detail::texture::is_loader_format<F>
-    class TextureMerger
+    class TextureMerger final
     {
         using component_t = detail::texture::loader_format_t<F>;
 
@@ -191,8 +250,31 @@ namespace vka
      * layer count of a 2D-image array. Vice versa, when loading/stacking multiple 2D-images, the resulting texture can
      * be interpreted as a 3D-image.
      *
-     * Possible loader formats:
+     * <b>Default initialization:</b>\n
+     * No default initialization.
      *
+     * <b>Initialization:</b>\n
+     * See constructor description.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>loading</b> -- Invoked by <c>load()</c> loads images from memory, from files or from single colors.
+     *
+     * <b>Formats:</b>\n
      * 8-bit unsigned integer formats:
      * - <c>VK_FORMAT_R8_UINT</c>
      * - <c>VK_FORMAT_R8G8_UINT</c>
@@ -218,7 +300,7 @@ namespace vka
      * same number of components as the loader's format!
      */
     template<VkFormat F> requires detail::texture::is_loader_format<F>
-    class TextureLoader
+    class TextureLoader final
     {
         using component_t = detail::texture::loader_format_t<F>;
 
@@ -381,10 +463,46 @@ namespace vka
         static inline uint32_t grow_factor(uint32_t layer_count) noexcept;
     };
 
-    /// Simplifies creating textures in vulkan.
-    class Texture
+    /**
+     * Abstraction to simplify the creation of texture images and their mip-map levels. Contains the vulkan
+     * <c>VkImage</c>, the corresponding <c>VkSampler</c> and the associated <c>VkImageView</c> handles.
+     *
+     * <b>Default initialization:</b>\n
+     * The default constructor creates an <b>empty</b> texture. This empty object is invalid and cannot perform any
+     * actions (see below for a brief list of actions). Any member function returning a vulkan handle returns
+     * <c>VK_NULL_HANDLE</c>. Calling <c>size()</c> returns <c>{0, 0, 0}</c>. Calling <c>view_count()</c>,
+     * <c>layer_count()</c> or <c>level_count()</c> returns <c>0</c>. Calling <c>destroy()</c> does nothing.
+     *
+     * <b>Initialization:</b>\n
+     * The initialization constructor creates a valid texture that can perform any action, if no exception was thrown.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Destroy behaviour:</b>\n
+     * Destroys all vulkan handles and sets everything back to default values. After destroying the object is an
+     * <b>empty</b> texture.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>loading</b> -- Invoked by <c>load()</c> records the commands to load image data into the texture.
+     * - <b>finishing</b> -- Invoked by <c>finish()</c> or <c>finish_manual()</c> creates the mip-map levels and
+     * performs a layout transition. After that the texture is ready to be used.
+     */
+    class Texture final
     {
-        using TextureHandle = detail::texture::Handle;
+        using Handle = detail::texture::Handle;
 
     public:
         /// Creates an empty texture. This texture is invalid.
@@ -441,6 +559,9 @@ namespace vka
          * @throw std::out_of_range Is thrown if the specified index is out of bounds of the image-view array.
          */
         inline VkImageView view(uint32_t idx) const;
+
+        /// Destroys the texture. After destroying the texture is empty and therefore invalid.
+        constexpr void destroy() noexcept;
 
         /**
          * Loads image data into the texture.
@@ -527,7 +648,7 @@ namespace vka
         static constexpr const char* VIEW_OUT_OF_RANGE = "[vka::Texture]: Image view index out of range.";
         static constexpr VkOffset3D ZERO_OFFSET = { 0, 0, 0 };
 
-        unique_handle<TextureHandle> m_texture;
+        unique_handle<Handle> m_texture;
         VkExtent3D m_extent;
         uint16_t m_layer_count;
         uint16_t m_level_count;
@@ -551,6 +672,6 @@ namespace vka
         static Buffer stage(VkDevice device, const void* data, VkDeviceSize size, TextureLoadInfo info);
 
         /// Creates the texture handle.
-        static unique_handle<TextureHandle> create_texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
+        static unique_handle<Handle> create_texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info);
     };
 }

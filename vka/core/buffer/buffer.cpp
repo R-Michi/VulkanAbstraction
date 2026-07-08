@@ -14,7 +14,7 @@ vka::Buffer::Buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& pro
     m_map(nullptr)
 {}
 
-vka::unique_handle<vka::Buffer::BufferHandle> vka::Buffer::create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
+vka::unique_handle<vka::Buffer::Handle> vka::Buffer::create_buffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const BufferCreateInfo& create_info)
 {
     // create buffer
     const VkBufferCreateInfo buffer_ci = {
@@ -41,13 +41,13 @@ vka::unique_handle<vka::Buffer::BufferHandle> vka::Buffer::create_buffer(VkDevic
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
         .pNext = create_info.pMemoryNext,
         .allocationSize = requirements.size,
-        .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, create_info.memoryPropertyFlags)
+        .memoryTypeIndex = memory::find_type_index(properties, requirements.memoryTypeBits, create_info.memoryType)
     };
     VkDeviceMemory memory;
     check_result(vkAllocateMemory(device, &memory_ai, nullptr, &memory), ALLOC_MEMORY_FAILED);
     unique_handle memory_guard(device, memory);
     check_result(vkBindBufferMemory(device, buffer, memory, 0), BIND_MEMORY_FAILED);
 
-    const BufferHandle handle = { buffer_guard.release(), memory_guard.release() };
+    const Handle handle = { buffer_guard.release(), memory_guard.release() };
     return unique_handle(device, handle);
 }

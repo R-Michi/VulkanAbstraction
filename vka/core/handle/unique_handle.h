@@ -5,42 +5,107 @@ namespace vka
     using null_handle_t = decltype(VK_NULL_HANDLE);
 
     /**
-     * A <c>unique_handle</c> is an object that manages a non-dispatchable vulkan handle and subsequently destroys it if
-     * it goes out of scope. You can also use implementations of <c>unique_handle</c> with custom handle-types,
-     * parent-types and custom deleters. However, the deleter function requires a specific signature. It must be of the
-     * function-pointer-type <c>DestroyFunc<Handle, Parent></c> or <c>ParentDestroyFunc<Handle></c> for parent handles
-     * respectively.
+     * A <c>unique_handle</c> is an object that manages the life-time of a non-dispatchable vulkan handle and
+     * subsequently destroys it if it goes out of scope. You can also use implementations of <c>unique_handle</c> with
+     * custom handle-types, parent-types and custom deleters. However, the deleter function requires a specific
+     * signature. It must be of the function-pointer-type <c>DestroyFunc<Handle, Parent></c> or
+     * <c>ParentDestroyFunc<Handle></c> for parent handles respectively.
      *
-     * The custom handle-type needs the following requirements:
-     * - It must be convertable to <c>bool</c>.
-     * - It must be copyable.
+     * <b>Specializations:</b>
+     * 1. Specialization that manages a single handle without a parent handle:
+     * @code
+     * unique_handle<Handle>(Handle);
+     * @endcode
+     * 2. Specialization that manages a handle with its associated parent handle:
+     * @code
+     * unique_handle<Handle>(Parent, Handle);
+     * @endcode
+     * 3. Specialization that manages an array of handle with their associated parent handle:
+     * @code
+     * unique_handle<Handle>(Parent, Handle*, uint32_t);
+     * @endcode
      *
-     * Optionally, the handle-type can overload the following operators:
-     * - <c>operator== (null_handle_t)</c> -> compares with <c>VK_NULL_HANDLE</c> for equality
-     * - <c>operator== (const Handle&)</c> -> compares for equality
+     * <b>Default initialization:</b>\n
+     * The description of the default initializations follows the same order as the description of the
+     * <b>specializations</b>:
+     * 1. The handle is initialized with <c>VK_NULL_HANDLE</c>.
+     * 2. The handle and its associated parent are initialized with <c>VK_NULL_HANDLE</c>.
+     * 3. The array is initialized with <c>nullptr</c>, the parent with <c>VK_NULL_HANDLE</c> and the number of
+     * managed handles with <c>0</c>.
      *
-     * The custom parent-type needs the following requirements:
-     * - It must be copyable.
+     * <b>Initialization:</b>\n
+     * If initialized with valid handles, the <c>unique_handle</c> object manages the life-time of the specified handle.
+     * Please consider the <b>preconditions</b> of the initialization constructor.
      *
-     * Allowed signatures for deleter functions for normal handles are (they can optionally be <c>noexcept</c>):
-     * - <c>void(*)(Parent, Handle, const VkAllocationCallbacks*)</c>
-     * - <c>void(*)(Parent, const Handle&, const VkAllocationCallbacks*)</c>
-     * - <c>void(*)(const Parent&, Handle, const VkAllocationCallbacks*)</c>
-     * - <c>void(*)(const Parent&, const Handle&, const VkAllocationCallbacks*)</c>
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted. A <c>unique_handle</c> object is not copyable.
      *
-     * Allowed signatures for deleter functions for parent handles are (they can optionally be <c>noexcept</c>):
-     * - <c>void(*)(Handle, const VkAllocationCallbacks*)</c>
-     * - <c>void(*)(const Handle&, const VkAllocationCallbacks*)</c>
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
      *
+     * <b>Destroy behaviour:</b>\n
+     * The <c>unique_handle</c> object can be destroyed using <c>destroy()</c> or by assigning <c>VK_NULL_HANDLE</c>.
+     * This action resets everything back to default values. See <b>default initialization</b>.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * You are allowed to inherit from this class and extend its functionality. However, keep in mind that the
+     * destructor is not <c>virtual</c> - this is by design. Therefore, do not use this class in a late-binding context
+     * unless you exactly know what you are doing.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Custom handles:</b>\n
      * If you specify any custom handle-type (which can be a combination of multiple vulkan handles), the default parent
      * is always <c>VkDevice</c>.
      *
-     * Furthermore, you may want to extend the functionality of this class. For this purpose you are allowed to inherit
-     * from it. But never use it in a context like:
-     *  - <c>unique_handle<Handle>* p = new Derived(...)</c> or
-     *  - <c>function(unique_handle<Handle>& p)</c> and <c>function(object_of_derived)</c>
+     * <b>The custom handle-type needs the following requirements:</b>
+     * - It must be convertable to <c>bool</c>.
+     * - It must be copyable.
      *
-     * unless you know what you are doing because the destructor is not virtual - this is by design!
+     * <b>Optionally, the handle-type can overload the following operators:</b>
+     * @code
+     * // compares with VK_NULL_HANDLE for equality
+     * constexpr bool operator== (null_handle_t) const noexcept;
+     * @endcode
+     * @code
+     * // compares for equality
+     * constexpr bool operator== (const Handle&) const noexcept;
+     * @endcode
+     *
+     * <b>The custom parent-type needs the following requirements:</b>
+     * - It must be copyable.
+     *
+     * <b>Allowed signatures for deleter functions for normal handles are:</b>
+     * @code
+     * void destroy(Parent, Handle, const VkAllocationCallbacks*);
+     * void destroy(Parent, Handle, const VkAllocationCallbacks*) noexcept;
+     * @endcode
+     * @code
+     * void destroy(Parent, const Handle&, const VkAllocationCallbacks*);
+     * void destroy(Parent, const Handle&, const VkAllocationCallbacks*) noexcept;
+     * @endcode
+     * @code
+     * void destroy(const Parent&, Handle, const VkAllocationCallbacks*);
+     * void destroy(const Parent&, Handle, const VkAllocationCallbacks*) noexcept;
+     * @endcode
+     * @code
+     * void destroy(const Parent&, const Handle&, const VkAllocationCallbacks*);
+     * void destroy(const Parent&, const Handle&, const VkAllocationCallbacks*) noexcept;
+     * @endcode
+     *
+     * <b>Allowed signatures for deleter functions for parent handles are:</b>
+     * @code
+     * void destroy(Handle, const VkAllocationCallbacks*);
+     * void destroy(Handle, const VkAllocationCallbacks*) noexcept;
+     * @endcode
+     * @code
+     * void destroy(const Handle&, const VkAllocationCallbacks*);
+     * void destroy(const Handle&, const VkAllocationCallbacks*) noexcept;
+     * @endcode
      */
     template<
         typename Handle,

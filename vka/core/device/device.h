@@ -10,6 +10,17 @@
 
 namespace vka
 {
+    /**
+     * Structure specifying the requirements for a physical device.
+     * - <b>type</b> -- Type of the physical device.
+     * - <b>memoryPropertyFlags</b> -- Memory properties the physical device must support.
+     * - <b>memoryPropertyFlagsCount</b> -- Number of flag elements passed to <c>memoryPropertyFlags</c>.
+     * - <b>queueFamilyFlags</b> -- Queue family flags the physical device must support.
+     * - <b>queueFamilyFlagsCount</b> -- Number of flag elements passed to <c>queueFamilyFlags</c>.
+     * - <b>surfaceSupport</b> -- Flag whether the physical device should have surface support.
+     * - <b>sequence</b> -- Sequence of characters the name of the physical device must contain. Set this parameter to
+     * <c>nullptr</c> to ignore it.
+     */
     struct PhysicalDeviceRequirements
     {
         VkPhysicalDeviceType            type;

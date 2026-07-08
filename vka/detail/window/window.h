@@ -12,7 +12,7 @@ namespace vka::detail
          * Initialize with a handle.
          * @param handle Must either be <c>nullptr</c> or a valid window handle.
          */
-        constexpr unique_window(GLFWwindow* handle) noexcept;
+        explicit constexpr unique_window(GLFWwindow* handle) noexcept;
 
         /// Transfers the ownership of a window handle to a different <c>unique_window</c> object.
         constexpr unique_window(unique_window&& src) noexcept;

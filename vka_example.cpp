@@ -677,7 +677,7 @@ void VkaExample::create_vertex_buffers()
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
 		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
-		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		.memoryType = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 
     vka::Buffer staging_buffer(this->device, this->memory_properties, create_info);
@@ -689,7 +689,7 @@ void VkaExample::create_vertex_buffers()
 	this->vertices.shrink_to_fit();
 
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	create_info.memoryType = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	this->vertex_buffer = vka::Buffer(this->device, this->memory_properties, create_info);
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
@@ -707,7 +707,7 @@ void VkaExample::create_index_buffers()
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
 		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
-		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		.memoryType = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 	
 	vka::Buffer staging_buffer(this->device, this->memory_properties, create_info);
@@ -720,7 +720,7 @@ void VkaExample::create_index_buffers()
 	this->indices.shrink_to_fit();
 
 	create_info.bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-	create_info.memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	create_info.memoryType = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	this->index_buffer = vka::Buffer(this->device, this->memory_properties, create_info);
 
     vka::CommandBufferOTS cbo(this->device, this->command_pool);
@@ -737,7 +737,7 @@ void VkaExample::create_uniform_buffers()
 		.bufferSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.bufferQueueFamilyIndexCount = 1,
 		.bufferQueueFamilyIndices = &this->graphics_queue.family_index,
-		.memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+		.memoryType = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
 	};
 	this->uniform_buffer = vka::Buffer(this->device, this->memory_properties, create_info);
 }

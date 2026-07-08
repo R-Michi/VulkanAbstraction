@@ -4,6 +4,13 @@ namespace vka
 {
     class Window;
 
+    /**
+     * Structure specifying the parameters of a newly created window object. The first 4 parameters correspond to the
+     * parameters of <a href="https://www.glfw.org/docs/3.3/group__window.html#ga3555a418df92ad53f917597fe2f64aeb">
+     * glfwCreateWindow</a>. The rest of the parameters correspond to the parameters of
+     * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkSwapchainCreateInfoKHR.html">
+     * VkSwapchainCreateInfoKHR</a>.
+     */
     struct WindowCreateInfo
     {
         VkExtent2D                      size;
@@ -25,6 +32,12 @@ namespace vka
         VkBool32                        clipped;
     };
 
+    /**
+     * Structure specifying the parameters of the new swapchain when updating the window.
+     * The parameters correspond to the parameters of
+     * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkSwapchainCreateInfoKHR.html">
+     * VkSwapchainCreateInfoKHR</a>.
+     */
     struct WindowUpdateInfo
     {
         VkSwapchainCreateFlagsKHR       flags;
@@ -42,6 +55,11 @@ namespace vka
         VkBool32                        clipped;
     };
 
+    /**
+     * Defines the window frame size according to
+     * <a href="https://www.glfw.org/docs/3.3/group__window.html#ga1a9fd382058c53101b21cf211898f1f1">
+     * glfwGetWindowFrameSize</a>
+     */
     struct WindowFrame
     {
         uint32_t left;
@@ -50,24 +68,28 @@ namespace vka
         uint32_t bottom;
     };
 
+    /// Defines the <c>{X, Y}</c> scale of the window contents.
     struct WindowContentScale
     {
         float x;
         float y;
     };
 
+    /// Defines the <c>{X, Y}</c> cursor position relative to the window.
     struct WindowCursorPos
     {
         double x;
         double y;
     };
 
+    /// Defines the <c>{X, Y}</c> scroll offset.
     struct WindowScrollOffset
     {
         double x;
         double y;
     };
 
+    /// Defines the window callbacks. For the signature see the description of the corresponding setter functions.
     using WindowPosCallback             = void(*)(Window& window, VkOffset2D pos);
     using WindowSizeCallback            = void(*)(Window& window, VkExtent2D size);
     using WindowCloseCallback           = void(*)(Window& window);
@@ -86,6 +108,7 @@ namespace vka
     using WindowScrollCallback          = void(*)(Window& window, WindowScrollOffset offset);
     using WindowDropCallback            = void(*)(Window& window, uint32_t path_count, const char* paths[]);
 
+    /// Structure containing a list of all callbacks. For internal use only!
     struct WindowCallbacks
     {
         WindowPosCallback pos;
@@ -107,7 +130,52 @@ namespace vka
         WindowDropCallback drop;
     };
 
-    class Window
+    /**
+     * Abstraction to simplify the creation of windows and the associated context. Contains the GLFW <c>GLFWwindow*</c>
+     * handle and the associated vulkan context. The context consists of the vulkan <c>VkSurfaceKHR</c> and
+     * <c>VkSwapchainKHR</c> handle.
+     *
+     * <b>Default initialization:</b>\n
+     * The default constructor creates an <b>empty</b> window.  This empty object is invalid and cannot perform any
+     * actions (see below for a brief list of actions). Any member returning a GLFW handle returns <c>nullptr</c>. Any
+     * member function returning a vulkan handle returns <c>VK_NULL_HANDLE</c>. Invoking any function that calls a GLFW
+     * function is undefined behaviour and may result in a crash. Specified callbacks on empty objects no nothing.
+     * Calling <c>destroy()</c> does nothing.
+     *
+     * <b>Initialization:</b>\n
+     * The initialization constructor creates a valid window that can perform any action, if no exception was thrown.
+     *
+     *  <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Destroy behaviour:</b>\n
+     * Destroys all GLFW and vulkan handles and sets everything back to default values. After destroying the object is
+     * an <b>empty</b> window.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * Functions that call a GLFW function internally underlie the threading specification of that GLFW function. All
+     * other functions and operators can be called from any thread. However, if you use this class across multiple
+     * threads, actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>iconifying</b> -- Invoked by <c>iconify()</c>. See the description of this function.
+     * - <b>restoring</b> -- Invoked by <c>restore()</c>. See the description of this function.
+     * - <b>maximizing</b> -- Invoked by <c>maximize()</c>. See the description of this function.
+     * - <b>showing</b> -- Invoked by <c>show()</c>. See the description of this function.
+     * - <b>hiding</b> -- Invoked by <c>hide()</c>. See the description of this function.
+     * - <b>focusing</b> -- Invoked by <c>focus()</c>. See the description of this function.
+     * - <b>requesting attention</b> -- Invoked by <c>request_attention()</c>. See the description of this function.
+     * - <b>updating</b> -- Invoked by <c>update()</c> updates the internal swapchain.
+     */
+    class Window final
     {
     public:
         /// Creates an empty window. This window is invalid.
@@ -600,6 +668,11 @@ namespace vka
          */
         inline void request_attention() noexcept;
 
+        /**
+         * Updates the swapchain associated with the window.
+         * @param update_info Update-info specifying the parameters of the new swapchain.
+         * @throw std::runtime_error Is thrown, if creating the new swapchain failed.
+         */
         void update(const WindowUpdateInfo& update_info);
 
         /// Destroys the window. After destroying the window is empty and therefore invalid.

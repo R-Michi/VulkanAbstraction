@@ -80,6 +80,13 @@ inline VkImageView vka::Texture::view(uint32_t idx) const
     return this->m_texture.get().views[idx];
 }
 
+constexpr void vka::Texture::destroy() noexcept
+{
+    this->m_texture = VK_NULL_HANDLE;
+    this->m_extent = {};
+    this->m_level_count = this->m_layer_count = 0;
+}
+
 template<VkFormat F> requires vka::detail::texture::is_loader_format<F>
 [[nodiscard]]
 vka::Buffer vka::Texture::load(VkCommandBuffer cbo, const TextureMerger<F>& merger, TextureLoadInfo info, uint32_t layer, uint32_t level)

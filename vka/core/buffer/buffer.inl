@@ -58,7 +58,7 @@ constexpr VkBuffer vka::Buffer::handle() const noexcept
     return this->m_buffer.get().buffer;
 }
 
-inline VkDeviceAddress vka::Buffer::device_address() const noexcept
+inline VkDeviceAddress vka::Buffer::device_ptr() const noexcept
 {
     const VkBufferDeviceAddressInfo info = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,

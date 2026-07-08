@@ -13,7 +13,7 @@ vka::AttachmentImage::AttachmentImage(VkDevice device, const VkPhysicalDeviceMem
     m_extent(create_info.imageExtent)
 {}
 
-vka::unique_handle<vka::AttachmentImage::AttachmentHandle> vka::AttachmentImage::create_attachment(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info)
+vka::unique_handle<vka::AttachmentImage::Handle> vka::AttachmentImage::create_attachment(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const AttachmentImageCreateInfo& create_info)
 {
     // create image
     const VkImageCreateInfo image_ci = {
@@ -73,7 +73,7 @@ vka::unique_handle<vka::AttachmentImage::AttachmentHandle> vka::AttachmentImage:
     VkImageView view;
     check_result(vkCreateImageView(device, &view_ci, nullptr, &view), VIEW_CREATE_FAILED);
 
-    const AttachmentHandle handle = {
+    const Handle handle = {
         .image = image_guard.release(),
         .memory = memory_guard.release(),
         .view = view

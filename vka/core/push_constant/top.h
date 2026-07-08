@@ -10,10 +10,44 @@
 
 namespace vka
 {
-    // forward declaration
     template<uint32_t N>
     class PushConstants;
 
+    /**
+     * Defines a view to a push constant range. It contains a pointer to the memory as well as a
+     * <c>VkPushConstantRange</c> defining the offset, size and shader stage flags of the push constant range.
+     * - <b>shader stage flags</b> -- Specifies the shader stages in which the push constant range is active. The shader
+     * stages are returned by <c>stages()</c>.
+     * - <b>offset</b> --  Offset in bytes of the range relative to the whole push constant memory. The offset is
+     * returned by <c>offset()</c>.
+     * - <b>size</b> -- Size in bytes of the push constant range. The size is returned by <c>size()</c>.
+     *
+     * When writing data to a push constant range via <c>write()</c> the <c>offset</c> parameter specifies the memory
+     * offset of this <b>push constant range</b>.
+     *
+     * <b>Default initialization:</b>\n
+     * No default initialization.
+     *
+     * <b>Initialization:</b>\n
+     * Is initialized with a <c>VkPushConstantRange</c> and a pointer pointing the memory of this push constant range.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The view acts like a trivial type and is therefore trivially copyable.
+     *
+     * <b>Moving behaviour:</b>\n
+     * As this is a trivial type moving is equivalent to copying.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>writing</b> -- Invoked by <c>write()</c> writes data to the push constant range.
+     * - <b>pushing</b> -- Invoked by <c>push()</c> pushes the range to the command buffer.
+     */
     class PushConstantView final
     {
     public:
@@ -34,22 +68,22 @@ namespace vka
         constexpr uint32_t offset() const noexcept;
 
         /**
-         * Grants direct access to the push constant range's memory.
-         * @return Returns the raw pointer to the push constant range's memory.
+         * Grants direct access to the memory of the push constant range.
+         * @return Returns the raw pointer to the memory of the push constant range.
          */
         constexpr void* data() noexcept;
         constexpr const void* data() const noexcept;
 
         /**
          * Writes data to the push constant range.
-         * @param offset Offset in bytes relative to the push constant range's memory.
-         * @param size Size in bytes to write.
+         * @param offset Offset in bytes relative to the push constant range.
+         * @param size Number of bytes to write.
          * @param data Data to write. Must point to memory which is at least <c>size</c> bytes large.
          */
         inline void write(uint32_t offset, uint32_t size, const void* data);
 
         /**
-         * Pushes the range to the GPU.
+         * Pushes the range to the command buffer.
          * @param cbo Command buffer in which the push command is recorded.
          * @param layout Pipeline layout used for the push command.
          */
@@ -66,9 +100,39 @@ namespace vka
     };
 
     /**
-     * Defines the layout and enables compile-time checking for the push constant ranges. After creating the push
-     * constants, this object is no longer needed.
-     * @tparam N Specifies the number of push constant ranges.
+     * Defines the layout and enables compile-time checking for push constant ranges. After creating the push constants
+     * from the layout, this object is no longer needed.
+     *
+     * <b>Default initialization:</b>\n
+     * Initializes a push constant layout with a size limit of <c>128</c> bytes. <c>128</c> bytes are guaranteed by the
+     * Vulkan API.
+     *
+     * <b>Initialization:</b>\n
+     * Initializes the push constant layout with a custom size. It is completely fine, if your push constants are larger
+     * than <c>128</c> bytes. However, you need to check how many bytes are supported on your platform.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The view acts like a trivial type and is therefore trivially copyable.
+     *
+     * <b>Moving behaviour:</b>\n
+     * As this is a trivial type moving is equivalent to copying.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>adding</b> -- Adds a push constant range to the layout. If you perform this action in a constexpr context
+     * like inside a <c>consteval</c> function, instead of throwing an exception you will receive a compiler error.
+     * - <b>validating</b> -- Checks if all push constant ranges are used. If you perform this action in a constexpr
+     * context like inside a <c>consteval</c> function, instead of throwing an exception you will receive a compiler
+     * error.
+     * - <b>creating push constants</b> -- Creates the push constants from the layout.
+     *
+     * @tparam N Number of push constant ranges.
      */
     template<uint32_t N>
     class PushConstantLayout final
@@ -100,7 +164,8 @@ namespace vka
         constexpr const VkPushConstantRange* ranges() const noexcept;
 
         /**
-         * Adds a push constant range to the layout.
+         * Adds a push constant range to the layout. If this function is used in a constexpr context like inside a
+         * <c>consteval</c> function, instead of throwing an exception you will receive a compiler error.
          * @param size Size in bytes of the push constant range.
          * @param stages Shader stages where the push constant range is used.
          * @throw std::out_of_range If the number of added ranges exceeds the maximum number of push constant ranges
@@ -112,7 +177,8 @@ namespace vka
 
         /**
          * Checks if all push constant ranges have been used. Unused push constant ranges will have a size of <c>0</c>
-         * and may cause issues when creating a pipeline.
+         * and may cause issues when creating a pipeline. If this function is used in a constexpr context like inside a
+         * <c>consteval</c> function, instead of throwing an exception you will receive a compiler error.
          * @throw std::runtime_error If any push constant range is unused.
          */
         constexpr void validate() const;
@@ -146,7 +212,35 @@ namespace vka
     };
 
     /**
-     * Contains a CPU-side buffer for the push constants.
+     * Contains a CPU-side buffer containing the push constants.
+     *
+     * <b>Default initialization:</b>\n
+     * Empty buffer. Does not allocate any memory.
+     *
+     * <b>Initialization:</b>\n
+     * Allocates memory for a specified push constant layout.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Destroy behaviour:</b>\n
+     * If you want to destroy the buffer / deallocate its memory, move an empty object into it.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>pushing</b> -- Invoked by <c>push()</c> pushes all ranges to the command buffer.
+     *
      * @tparam N Specifies the number of push constant ranges.
      */
     template<uint32_t N>

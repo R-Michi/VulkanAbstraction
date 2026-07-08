@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
 // Range for image array layers [1, 65536] is mapped to [0, 65535] to fit in an uint16_t. No texture with a layer count
@@ -280,7 +279,7 @@ vka::Buffer vka::Texture::stage(VkDevice device, const void* data, VkDeviceSize 
         .bufferQueueFamilyIndexCount = 1,
         .bufferQueueFamilyIndices = &info.queueFamilyIndex,
         .pMemoryNext = nullptr,
-        .memoryPropertyFlags = info.memoryPropertyFlags
+        .memoryType = info.memoryPropertyFlags
     };
     Buffer buffer(device, *info.memoryProperties, crate_info);
     memcpy(buffer.map(), data, size);
@@ -288,7 +287,7 @@ vka::Buffer vka::Texture::stage(VkDevice device, const void* data, VkDeviceSize 
     return buffer;
 }
 
-vka::unique_handle<vka::Texture::TextureHandle> vka::Texture::create_texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info)
+vka::unique_handle<vka::Texture::Handle> vka::Texture::create_texture(VkDevice device, const VkPhysicalDeviceMemoryProperties& properties, const TextureCreateInfo& create_info)
 {
     // create image
     const uint32_t level_count = mip_level_count(create_info);
@@ -380,7 +379,7 @@ vka::unique_handle<vka::Texture::TextureHandle> vka::Texture::create_texture(VkD
     }
 
     const uint32_t view_count = views.count();
-    const TextureHandle handle = {
+    const Handle handle = {
         .image = image_guard.release(),
         .memory = memory_guard.release(),
         .sampler = sampler_guard.release(),

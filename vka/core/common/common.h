@@ -11,7 +11,35 @@
 
 namespace vka
 {
-    /// Helper class for a command buffer that can only be submitted once.
+    /**
+     * Helper class for a command buffer that can only be submitted once.
+     *
+     * <b>Default initialization:</b>\n
+     * Has no default initialization.
+     *
+     * <b>Initialization:</b>\n
+     * The initialization constructor allocates a command buffer from the pool and begins its recording.
+     *
+     * <b>Copy behaviour:</b>\n
+     * The copy constructor and operator are deleted.
+     *
+     * <b>Moving behaviour:</b>\n
+     * When calling the move constructor or operator, the moved object is invalidated and performing any operation on it
+     * is unsafe. This may lead to undefined behaviour or even a crash. If an already valid object is replaced by a
+     * move, the current object is destroyed.
+     *
+     * <b>Inheritance behaviour:</b>\n
+     * This class is final and cannot be inherited.
+     *
+     * <b>Threading behaviour:</b>\n
+     * This class can be created and used from any thread. However, if you use this class across multiple threads,
+     * actions must be externally synchronized.
+     *
+     * <b>Actions:</b>
+     * - <b>end</b> -- Invoked by <c>end()</c> ends the recording and submits the commands to a queue.
+     * - <b>wait</b> -- Invoked by <c>end_wait()</c> ends the recording, submits the commands to a queue and waits until
+     * the execution of the commands is complete.
+     */
     class CommandBufferOTS
     {
     public:

@@ -6,7 +6,6 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <vulkan/vulkan.h>
 #include <vka/vka.h>
 
 VkSurfaceCapabilitiesKHR vka::surface::capabilities(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept
