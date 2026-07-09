@@ -20,18 +20,18 @@ void vka::Window::update(const WindowUpdateInfo& update_info)
         .pNext = nullptr,
         .flags = update_info.flags,
         .surface = this->m_surface.get(),
-        .minImageCount = update_info.min_image_count,
-        .imageFormat = update_info.image_format,
-        .imageColorSpace = update_info.image_color_space,
+        .minImageCount = update_info.minImageCount,
+        .imageFormat = update_info.imageFormat,
+        .imageColorSpace = update_info.imageColorSpace,
         .imageExtent = this->surface_size(),
-        .imageArrayLayers = update_info.image_array_layers,
-        .imageUsage = update_info.image_usage,
-        .imageSharingMode = update_info.image_sharing_mode,
-        .queueFamilyIndexCount = update_info.queue_family_index_count,
-        .pQueueFamilyIndices = update_info.p_queue_family_indices,
-        .preTransform = update_info.pre_transform,
-        .compositeAlpha = update_info.composite_alpha,
-        .presentMode = update_info.present_mode,
+        .imageArrayLayers = update_info.imageArrayLayers,
+        .imageUsage = update_info.imageUsage,
+        .imageSharingMode = update_info.imageSharingMode,
+        .queueFamilyIndexCount = update_info.queueFamilyIndexCount,
+        .pQueueFamilyIndices = update_info.pQueueFamilyIndices,
+        .preTransform = update_info.preTransform,
+        .compositeAlpha = update_info.compositeAlpha,
+        .presentMode = this->get_present_mode(update_info.physicalDevice, update_info.presentMode),
         .clipped = update_info.clipped,
         .oldSwapchain = this->m_swapchain.get()
     };
@@ -67,18 +67,18 @@ vka::unique_handle<VkSwapchainKHR> vka::Window::create_swapchain(VkDevice device
         .pNext = nullptr,
         .flags = create_info.flags,
         .surface = this->m_surface.get(),
-        .minImageCount = create_info.min_image_count,
-        .imageFormat = create_info.image_format,
-        .imageColorSpace = create_info.image_color_space,
+        .minImageCount = create_info.minImageCount,
+        .imageFormat = create_info.imageFormat,
+        .imageColorSpace = create_info.imageColorSpace,
         .imageExtent = { (uint32_t)w, (uint32_t)h },
-        .imageArrayLayers = create_info.image_array_layers,
-        .imageUsage = create_info.image_usage,
-        .imageSharingMode = create_info.image_sharing_mode,
-        .queueFamilyIndexCount = create_info.queue_family_index_count,
-        .pQueueFamilyIndices = create_info.p_queue_family_indices,
-        .preTransform = create_info.pre_transform,
-        .compositeAlpha = create_info.composite_alpha,
-        .presentMode = create_info.present_mode,
+        .imageArrayLayers = create_info.imageArrayLayers,
+        .imageUsage = create_info.imageUsage,
+        .imageSharingMode = create_info.imageSharingMode,
+        .queueFamilyIndexCount = create_info.queueFamilyIndexCount,
+        .pQueueFamilyIndices = create_info.pQueueFamilyIndices,
+        .preTransform = create_info.preTransform,
+        .compositeAlpha = create_info.compositeAlpha,
+        .presentMode = this->get_present_mode(create_info.physicalDevice, create_info.presentMode),
         .clipped = create_info.clipped,
         .oldSwapchain = VK_NULL_HANDLE
     };
@@ -95,6 +95,12 @@ std::vector<VkImage> vka::Window::get_images() const
     std::vector<VkImage> images(image_count);
     vkGetSwapchainImagesKHR(this->m_swapchain.parent(), this->m_swapchain.get(), &image_count, images.data());
     return images;
+}
+
+VkPresentModeKHR vka::Window::get_present_mode(VkPhysicalDevice physical_device, VkPresentModeKHR mode) const noexcept
+{
+    // Fall back to VK_PRESENT_MODE_FIFO_KHR if the specified mode is not supported.
+    return surface::supports_presentmode(surface::presentation_modes(physical_device, this->m_surface.get()), mode) ? mode : VK_PRESENT_MODE_FIFO_KHR;
 }
 
 void vka::Window::pos_callback(GLFWwindow* window, int xpos, int ypos)

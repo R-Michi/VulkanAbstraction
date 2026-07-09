@@ -10,6 +10,10 @@ namespace vka
      * glfwCreateWindow</a>. The rest of the parameters correspond to the parameters of
      * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkSwapchainCreateInfoKHR.html">
      * VkSwapchainCreateInfoKHR</a>.
+     * - <b>physicalDevice</b> -- Physical device with which to check, if the specified presentation mode is supported.
+     * - <b>presentMode</b> -- Presentation mode the swapchain will use. If the specified presentation mode is not
+     * supported, the presentation mode <c>VK_PRESENT_MODE_FIFO_KHR</c> will be used instead. The Vulkan API guarantees
+     * that <c>VK_PRESENT_MODE_FIFO_KHR</c> exists, if the extension <c>VK_KHR_swapchain</c> is supported.
      */
     struct WindowCreateInfo
     {
@@ -18,17 +22,18 @@ namespace vka
         GLFWmonitor*                    monitor;
         GLFWwindow*                     share;
         VkSwapchainCreateFlagsKHR       flags;
-        uint32_t                        min_image_count;
-        VkFormat                        image_format;
-        VkColorSpaceKHR                 image_color_space;
-        uint32_t                        image_array_layers;
-        VkImageUsageFlags               image_usage;
-        VkSharingMode                   image_sharing_mode;
-        uint32_t                        queue_family_index_count;
-        const uint32_t*                 p_queue_family_indices;
-        VkSurfaceTransformFlagBitsKHR   pre_transform;
-        VkCompositeAlphaFlagBitsKHR     composite_alpha;
-        VkPresentModeKHR                present_mode;
+        VkPhysicalDevice                physicalDevice;
+        uint32_t                        minImageCount;
+        VkFormat                        imageFormat;
+        VkColorSpaceKHR                 imageColorSpace;
+        uint32_t                        imageArrayLayers;
+        VkImageUsageFlags               imageUsage;
+        VkSharingMode                   imageSharingMode;
+        uint32_t                        queueFamilyIndexCount;
+        const uint32_t*                 pQueueFamilyIndices;
+        VkSurfaceTransformFlagBitsKHR   preTransform;
+        VkCompositeAlphaFlagBitsKHR     compositeAlpha;
+        VkPresentModeKHR                presentMode;
         VkBool32                        clipped;
     };
 
@@ -37,21 +42,26 @@ namespace vka
      * The parameters correspond to the parameters of
      * <a href="https://docs.vulkan.org/refpages/latest/refpages/source/VkSwapchainCreateInfoKHR.html">
      * VkSwapchainCreateInfoKHR</a>.
+     * - <b>physicalDevice</b> -- Physical device with which to check, if the specified presentation mode is supported.
+     * - <b>presentMode</b> -- Presentation mode the swapchain will use. If the specified presentation mode is not
+     * supported, the presentation mode <c>VK_PRESENT_MODE_FIFO_KHR</c> will be used instead. The Vulkan API guarantees
+     * that <c>VK_PRESENT_MODE_FIFO_KHR</c> exists, if the extension <c>VK_KHR_swapchain</c> is supported.
      */
     struct WindowUpdateInfo
     {
         VkSwapchainCreateFlagsKHR       flags;
-        uint32_t                        min_image_count;
-        VkFormat                        image_format;
-        VkColorSpaceKHR                 image_color_space;
-        uint32_t                        image_array_layers;
-        VkImageUsageFlags               image_usage;
-        VkSharingMode                   image_sharing_mode;
-        uint32_t                        queue_family_index_count;
-        const uint32_t*                 p_queue_family_indices;
-        VkSurfaceTransformFlagBitsKHR   pre_transform;
-        VkCompositeAlphaFlagBitsKHR     composite_alpha;
-        VkPresentModeKHR                present_mode;
+        VkPhysicalDevice                physicalDevice;
+        uint32_t                        minImageCount;
+        VkFormat                        imageFormat;
+        VkColorSpaceKHR                 imageColorSpace;
+        uint32_t                        imageArrayLayers;
+        VkImageUsageFlags               imageUsage;
+        VkSharingMode                   imageSharingMode;
+        uint32_t                        queueFamilyIndexCount;
+        const uint32_t*                 pQueueFamilyIndices;
+        VkSurfaceTransformFlagBitsKHR   preTransform;
+        VkCompositeAlphaFlagBitsKHR     compositeAlpha;
+        VkPresentModeKHR                presentMode;
         VkBool32                        clipped;
     };
 
@@ -705,6 +715,9 @@ namespace vka
 
         /// Queries the swapchain images.
         std::vector<VkImage> get_images() const;
+
+        /// Checks if the specified presentation mode is supported and falls back to VK_PRESENT_MODE_FIFO_KHR.
+        VkPresentModeKHR get_present_mode(VkPhysicalDevice physical_device, VkPresentModeKHR mode) const noexcept;
 
         /// Window position callback that is called by GLFW.
         static void pos_callback(GLFWwindow* window, int xpos, int ypos);
