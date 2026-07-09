@@ -76,13 +76,13 @@ namespace vka
 
         /**
          * Waits until all render commands have been completed.
-         * @param timeout Specifies a timeout value in nanoseconds.
+         * @param timeout Optionally specifies a timeout value in nanoseconds.
          * @return Only returns success codes like <c>VK_SUCCESS</c> or <c>VK_TIMEOUT</c>. Discard the return value, if
          * you do not care about it.
          * @throw std::runtime_error Is thrown, if the wait operation failed.
          * @pre This function is only called on valid renderer objects.
          */
-        VkResult wait(uint64_t timeout);
+        VkResult wait(uint64_t timeout = NO_TIMEOUT);
 
         // default:
         Renderer(Renderer&&) = default;
