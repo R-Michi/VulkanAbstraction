@@ -74,6 +74,16 @@ namespace vka
          */
         bool execute(VkQueue queue, const VkCommandBuffer* cbos, VkPipelineStageFlags sync_stage);
 
+        /**
+         * Waits until all render commands have been completed.
+         * @param timeout Specifies a timeout value in nanoseconds.
+         * @return Only returns success codes like <c>VK_SUCCESS</c> or <c>VK_TIMEOUT</c>. Discard the return value, if
+         * you do not care about it.
+         * @throw std::runtime_error Is thrown, if the wait operation failed.
+         * @pre This function is only called on valid renderer objects.
+         */
+        VkResult wait(uint64_t timeout);
+
         // default:
         Renderer(Renderer&&) = default;
         ~Renderer() = default;
@@ -100,9 +110,6 @@ namespace vka
 
         /// Waits for one fence.
         inline void wait_fence(VkFence fence) const;
-
-        /// Waits for all fences.
-        void wait_all_fences();
 
         /// Acquires the next image.
         VkResult acquire_image(VkSemaphore semaphore, uint32_t& image_index);

@@ -68,6 +68,17 @@ bool vka::Renderer::execute(VkQueue queue, const VkCommandBuffer* cbos, VkPipeli
     return this->preset_image(queue, sem_render, image_index, res);
 }
 
+VkResult vka::Renderer::wait(uint64_t timeout)
+{
+    const VkResult res = vkWaitForFences(this->m_context.parent(), this->m_context.get().fif_count, this->m_context.get().fences, VK_TRUE, timeout);
+    check_result(res, MSG_FENCE_WAIT_FAILED);
+
+    // Reset image index tracking because at this point the queue is empty.
+    for (uint32_t& i : this->m_map_image2frame) i = NPOS;
+    for (uint32_t& i : this->m_map_frame2image) i = NPOS;
+    return res;
+}
+
 inline uint32_t vka::Renderer::next_frame() noexcept
 {
     return this->m_frame_index++ % this->m_context.get().fif_count;
@@ -79,22 +90,12 @@ inline void vka::Renderer::wait_fence(VkFence fence) const
     check_result(res, MSG_FENCE_WAIT_FAILED);
 }
 
-void vka::Renderer::wait_all_fences()
-{
-    const VkResult res = vkWaitForFences(this->m_context.parent(), this->m_context.get().fif_count, this->m_context.get().fences, VK_TRUE, NO_TIMEOUT);
-    check_result(res, MSG_FENCE_WAIT_FAILED);
-
-    // Reset image index tracking because at this point the queue is empty.
-    for (uint32_t& i : this->m_map_image2frame) i = NPOS;
-    for (uint32_t& i : this->m_map_frame2image) i = NPOS;
-}
-
 VkResult vka::Renderer::acquire_image(VkSemaphore semaphore, uint32_t& image_index)
 {
     const VkResult res = vkAcquireNextImageKHR(this->m_context.parent(), this->m_window->swapchain(), NO_TIMEOUT, semaphore, VK_NULL_HANDLE, &image_index);
     if (res == VK_ERROR_OUT_OF_DATE_KHR) [[unlikely]]
     {
-        this->wait_all_fences();
+        this->wait(NO_TIMEOUT);
         return res;
     }
     check_result(res, MSG_ACQUIRE_IMAGE_FAILED);
@@ -118,7 +119,7 @@ bool vka::Renderer::preset_image(VkQueue queue, VkSemaphore semaphore, uint32_t 
     const VkResult res = vkQueuePresentKHR(queue, &present_info);
     if (acquire_result == VK_SUBOPTIMAL_KHR || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR) [[unlikely]]
     {
-        this->wait_all_fences();
+        this->wait(NO_TIMEOUT);
         return true;
     }
     check_result(res, MSG_PRESENT_FAILED);
